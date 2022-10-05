@@ -5,9 +5,12 @@ import (
 	"oh-my-posh/environment"
 	"oh-my-posh/properties"
 	"path"
-	"path/filepath"
 
 	"gopkg.in/ini.v1"
+)
+
+const (
+	GCPNOACTIVECONFIG = "NO ACTIVE CONFIG FOUND"
 )
 
 type Gcp struct {
@@ -17,11 +20,10 @@ type Gcp struct {
 	Account string
 	Project string
 	Region  string
-	Error   string
 }
 
 func (g *Gcp) Template() string {
-	return " {{ if not .Error }}{{ .Project }}{{ end }} "
+	return " {{ .Project }} "
 }
 
 func (g *Gcp) Init(props properties.Properties, env environment.Environment) {
@@ -33,44 +35,47 @@ func (g *Gcp) Enabled() bool {
 	cfgDir := g.getConfigDirectory()
 	configFile, err := g.getActiveConfig(cfgDir)
 	if err != nil {
-		g.Error = err.Error()
-		return true
+		g.env.Log(environment.Error, "Gcp.Enabled()", err.Error())
+		return false
 	}
 
 	cfgpath := path.Join(cfgDir, "configurations", "config_"+configFile)
+	cfg := g.env.FileContent(cfgpath)
 
-	cfg, err := ini.Load(cfgpath)
-	if err != nil {
-		g.Error = "GCLOUD CONFIG ERROR"
-		return true
+	if len(cfg) == 0 {
+		g.env.Log(environment.Error, "Gcp.Enabled()", "config file is empty")
+		return false
 	}
 
-	g.Project = cfg.Section("core").Key("project").String()
-	g.Account = cfg.Section("core").Key("account").String()
-	g.Region = cfg.Section("compute").Key("region").String()
+	data, err := ini.Load([]byte(cfg))
+	if err != nil {
+		g.env.Log(environment.Error, "Gcp.Enabled()", err.Error())
+		return false
+	}
+
+	g.Project = data.Section("core").Key("project").String()
+	g.Account = data.Section("core").Key("account").String()
+	g.Region = data.Section("compute").Key("region").String()
 
 	return true
 }
 
 func (g *Gcp) getActiveConfig(cfgDir string) (string, error) {
 	ap := path.Join(cfgDir, "active_config")
-	absolutePath, err := filepath.Abs(ap)
-	if err != nil {
-		return "", err
-	}
-
-	fileContent := g.env.FileContent(absolutePath)
+	fileContent := g.env.FileContent(ap)
 	if len(fileContent) == 0 {
-		return "", errors.New("NO ACTIVE CONFIG FOUND")
+		return "", errors.New(GCPNOACTIVECONFIG)
 	}
 	return fileContent, nil
 }
 
 func (g *Gcp) getConfigDirectory() string {
 	cfgDir := g.env.Getenv("CLOUDSDK_CONFIG")
-	if len(cfgDir) == 0 {
-		cfgDir = path.Join(g.env.Home(), ".config", "gcloud")
+	if len(cfgDir) != 0 {
+		return cfgDir
 	}
-
-	return cfgDir
+	if g.env.GOOS() == environment.WINDOWS {
+		return path.Join(g.env.Getenv("APPDATA"), "gcloud")
+	}
+	return path.Join(g.env.Home(), ".config", "gcloud")
 }

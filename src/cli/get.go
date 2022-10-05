@@ -34,6 +34,9 @@ This command is used to get the value of the following variables:
 		}
 		env := &environment.ShellEnvironment{
 			Version: cliVersion,
+			CmdFlags: &environment.Flags{
+				Shell: shellName,
+			},
 		}
 		env.Init()
 		defer env.Close()
@@ -58,4 +61,5 @@ This command is used to get the value of the following variables:
 
 func init() { //nolint:gochecknoinits
 	rootCmd.AddCommand(getCmd)
+	getCmd.Flags().StringVar(&shellName, "shell", "", "the shell to print for")
 }
