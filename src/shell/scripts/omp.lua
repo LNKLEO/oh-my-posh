@@ -23,6 +23,7 @@ end
 local endedit_time = 0
 local last_duration = 0
 local tip
+local tooltips_enabled = ::TOOLTIPS::
 local tooltip_active = false
 local cached_prompt = {}
 
@@ -60,7 +61,7 @@ local function os_clock_millis()
     if (clink.version_encoded or 0) >= 10020030 then
         return math.floor(os.clock() * 1000)
     else
-        local prompt_exe = string.format('%s get millis', omp_exe())
+        local prompt_exe = string.format('%s get millis --shell=cmd', omp_exe())
         return run_posh_command(prompt_exe)
     end
 end
@@ -177,7 +178,7 @@ function p:rightfilter(prompt)
     return cached_prompt.right, false
 end
 function p:transientfilter(prompt)
-    local prompt_exe = string.format('%s print transient --config=%s %s', omp_exe(), omp_config(), error_level_option())
+    local prompt_exe = string.format('%s print transient --shell=cmd --config=%s %s', omp_exe(), omp_config(), error_level_option())
     prompt = run_posh_command(prompt_exe)
     if prompt == "" then
         prompt = nil
@@ -216,7 +217,7 @@ function ohmyposh_space(rl_buffer)
     end
 end
 
-if rl.setbinding then
+if tooltips_enabled and rl.setbinding then
     clink.onbeginedit(function () tip = nil cached_prompt = {} end)
     rl.setbinding(' ', [["luafunc:ohmyposh_space"]], 'emacs')
 end

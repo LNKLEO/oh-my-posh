@@ -158,8 +158,6 @@ const (
 	PHP SegmentType = "php"
 	// PLASTIC represents the plastic scm status and information
 	PLASTIC SegmentType = "plastic"
-	// POSHGIT writes the posh git prompt
-	POSHGIT SegmentType = "poshgit"
 	// Project version
 	PROJECT SegmentType = "project"
 	// PYTHON writes the virtual env name
@@ -348,7 +346,7 @@ func (segment *Segment) string() string {
 	var templatesResult string
 	if !segment.Templates.Empty() {
 		templatesResult = segment.Templates.Resolve(segment.writer, segment.env, "", segment.TemplatesLogic)
-		if len(templatesResult) != 0 && len(segment.Template) == 0 {
+		if len(segment.Template) == 0 {
 			return templatesResult
 		}
 	}
