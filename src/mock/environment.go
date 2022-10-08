@@ -213,6 +213,11 @@ func (env *MockedEnvironment) GetAllNetworkInterfaces() (*[]environment.NetworkI
 	return args.Get(0).(*[]environment.NetworkInfo), args.Error(1)
 }
 
+func (env *MockedEnvironment) Connection(connectionType environment.ConnectionType) (*environment.Connection, error) {
+	args := env.Called(connectionType)
+	return args.Get(0).(*environment.Connection), args.Error(1)
+}
+
 func (env *MockedEnvironment) TemplateCache() *environment.TemplateCache {
 	args := env.Called()
 	return args.Get(0).(*environment.TemplateCache)

@@ -235,11 +235,6 @@ func (env *ShellEnvironment) ConvertToLinuxPath(path string) string {
 	return path
 }
 
-var (
-	iphlpapi     = syscall.NewLazyDLL("iphlpapi.dll")
-	hGetIfTable2 = iphlpapi.NewProc("GetIfTable2")
-)
-
 const (
 	// see https://docs.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_if_row2
 
@@ -453,65 +448,6 @@ func (env *ShellEnvironment) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
 	return &networks, nil
 }
 
-type MIN_IF_TABLE2 struct {
-	NumEntries uint64
-	Table      [256]MIB_IF_ROW2
-}
-
-const (
-	IF_MAX_STRING_SIZE         uint64 = 256
-	IF_MAX_PHYS_ADDRESS_LENGTH uint64 = 32
-)
-
-type MIB_IF_ROW2 struct {
-	InterfaceLuid            uint64
-	InterfaceIndex           uint32
-	InterfaceGuid            windows.GUID
-	Alias                    [IF_MAX_STRING_SIZE + 1]uint16
-	Description              [IF_MAX_STRING_SIZE + 1]uint16
-	PhysicalAddressLength    uint32
-	PhysicalAddress          [IF_MAX_PHYS_ADDRESS_LENGTH]uint8
-	PermanentPhysicalAddress [IF_MAX_PHYS_ADDRESS_LENGTH]uint8
-
-	Mtu                uint32
-	Type               uint32
-	TunnelType         uint32
-	MediaType          uint32
-	PhysicalMediumType uint32
-	AccessType         uint32
-	DirectionType      uint32
-
-	InterfaceAndOperStatusFlags uint8
-
-	OperStatus        uint32
-	AdminStatus       uint32
-	MediaConnectState uint32
-	NetworkGuid       windows.GUID
-	ConnectionType    uint32
-
-	TransmitLinkSpeed uint64
-	ReceiveLinkSpeed  uint64
-
-	InOctets           uint64
-	InUcastPkts        uint64
-	InNUcastPkts       uint64
-	InDiscards         uint64
-	InErrors           uint64
-	InUnknownProtos    uint64
-	InUcastOctets      uint64
-	InMulticastOctets  uint64
-	InBroadcastOctets  uint64
-	OutOctets          uint64
-	OutUcastPkts       uint64
-	OutNUcastPkts      uint64
-	OutDiscards        uint64
-	OutErrors          uint64
-	OutUcastOctets     uint64
-	OutMulticastOctets uint64
-	OutBroadcastOctets uint64
-	OutQLen            uint64
-}
-
 func (env *ShellEnvironment) GetAllWifiSSID() (map[string]string, error) {
 	var pdwNegotiatedVersion uint32
 	var phClientHandle uint32
@@ -546,14 +482,6 @@ func (env *ShellEnvironment) GetAllWifiSSID() (map[string]string, error) {
 	return ssid, nil
 }
 
-var (
-	wlanapi             = syscall.NewLazyDLL("wlanapi.dll")
-	hWlanOpenHandle     = wlanapi.NewProc("WlanOpenHandle")
-	hWlanCloseHandle    = wlanapi.NewProc("WlanCloseHandle")
-	hWlanEnumInterfaces = wlanapi.NewProc("WlanEnumInterfaces")
-	hWlanQueryInterface = wlanapi.NewProc("WlanQueryInterface")
-)
-
 const (
 	FHSS   WifiType = "FHSS"
 	DSSS   WifiType = "DSSS"
@@ -584,6 +512,19 @@ const (
 	WEP104 WifiType = "WEP104"
 	WEP    WifiType = "WEP"
 )
+
+type WifiInfo struct {
+	Interface      string
+	SSID           string
+	PhysType       WifiType
+	RadioType      WifiType
+	Signal         int
+	TransmitRate   int
+	ReceiveRate    int
+	Channel        int
+	Authentication WifiType
+	Cipher         WifiType
+}
 
 func (env *ShellEnvironment) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle uint32) (*WifiInfo, error) {
 	info := WifiInfo{}
@@ -722,37 +663,6 @@ type WLAN_INTERFACE_INFO struct { //nolint: revive
 	isState                 uint32
 }
 
-type WLAN_CONNECTION_ATTRIBUTES struct { //nolint: revive
-	isState                   uint32      //nolint: unused
-	wlanConnectionMode        uint32      //nolint: unused
-	strProfileName            [256]uint16 //nolint: unused
-	wlanAssociationAttributes WLAN_ASSOCIATION_ATTRIBUTES
-	wlanSecurityAttributes    WLAN_SECURITY_ATTRIBUTES
-}
-
-type WLAN_ASSOCIATION_ATTRIBUTES struct { //nolint: revive
-	dot11Ssid         DOT11_SSID
-	dot11BssType      uint32
-	dot11Bssid        [6]uint8 //nolint: unused
-	dot11PhyType      uint32
-	uDot11PhyIndex    uint32 //nolint: unused
-	wlanSignalQuality uint32
-	ulRxRate          uint32
-	ulTxRate          uint32
-}
-
-type WLAN_SECURITY_ATTRIBUTES struct { //nolint: revive
-	bSecurityEnabled     uint32
-	bOneXEnabled         uint32 //nolint: unused
-	dot11AuthAlgorithm   uint32
-	dot11CipherAlgorithm uint32
-}
-
-type DOT11_SSID struct { //nolint: revive
-	uSSIDLength uint32
-	ucSSID      [32]uint8
-}
-
 func (env *ShellEnvironment) DirIsWritable(path string) bool {
 	defer env.Trace(time.Now(), "DirIsWritable")
 	info, err := os.Stat(path)
@@ -773,4 +683,21 @@ func (env *ShellEnvironment) DirIsWritable(path string) bool {
 	}
 
 	return true
+}
+
+func (env *ShellEnvironment) Connection(connectionType ConnectionType) (*Connection, error) {
+	if env.networks == nil {
+		networks := env.getConnections()
+		if len(networks) == 0 {
+			return nil, errors.New("No connections found")
+		}
+		env.networks = networks
+	}
+	for _, network := range env.networks {
+		if network.Type == connectionType {
+			return network, nil
+		}
+	}
+	env.Log(Error, "network", fmt.Sprintf("Network type '%s' not found", connectionType))
+	return nil, &NotImplemented{}
 }
