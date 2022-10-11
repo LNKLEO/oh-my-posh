@@ -96,6 +96,8 @@ const (
 	CMAKE SegmentType = "cmake"
 	// CMD writes the output of a shell command
 	CMD SegmentType = "command"
+	// CONNECTION writes a connection's information
+	CONNECTION SegmentType = "connection"
 	// CRYSTAL writes the active crystal version
 	CRYSTAL SegmentType = "crystal"
 	// DART writes the active dart version
@@ -277,6 +279,7 @@ func (segment *Segment) mapSegmentWithWriter(env environment.Environment) error 
 		CF:            &segments.Cf{},
 		CFTARGET:      &segments.CfTarget{},
 		CMD:           &segments.Cmd{},
+		CONNECTION:    &segments.Connection{},
 		CRYSTAL:       &segments.Crystal{},
 		CMAKE:         &segments.Cmake{},
 		DART:          &segments.Dart{},
