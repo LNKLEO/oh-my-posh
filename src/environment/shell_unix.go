@@ -23,7 +23,7 @@ func (env *ShellEnvironment) Home() string {
 }
 
 func (env *ShellEnvironment) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
-	return "", errors.New("not implemented")
+	return "", &NotImplemented{}
 }
 
 func (env *ShellEnvironment) IsWsl() bool {
@@ -94,7 +94,7 @@ func (env *ShellEnvironment) CachePath() string {
 }
 
 func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
-	return nil, errors.New("not implemented")
+	return nil, &NotImplemented{}
 }
 
 func (env *ShellEnvironment) InWSLSharedDrive() bool {
@@ -157,7 +157,7 @@ func (env *ShellEnvironment) DirIsWritable(path string) bool {
 	return true
 }
 
-// workaround for windows only 'networks' on unix
+<<<<<<< HEAD
 const (
 	NdisPhysicalMediumWirelessWan  NDIS_PHYSICAL_MEDIUM = "Wireless WAN"  // 8
 	NdisPhysicalMediumNative802_11 NDIS_PHYSICAL_MEDIUM = "Native 802.11" // 9
@@ -167,4 +167,12 @@ const (
 
 func (env *ShellEnvironment) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (env *ShellEnvironment) Connection(connectionType ConnectionType) (*Connection, error) {
+	// added to disable the linting error, we can implement this later
+	if len(env.networks) == 0 {
+		return nil, &NotImplemented{}
+	}
+	return nil, &NotImplemented{}
 }
