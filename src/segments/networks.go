@@ -28,7 +28,7 @@ const (
 	A    Unit = "A"
 	Hide Unit = "Hide"
 	bps  Unit = "bps"
-	b    Unit = "b"
+	b    Unit = ""
 	Kbps Unit = "Kbps"
 	K    Unit = "K"
 	Mbps Unit = "Mbps"
@@ -250,7 +250,7 @@ func (n *Networks) ConstructNetworkInfo(network environment.NetworkInfo) string 
 			case 4:
 				TransmitLinkSpeedUnit = T
 			}
-			ReceiveSpeedUnitIndex := (len(fmt.Sprintf("%d", network.TransmitLinkSpeed)) - 1) / 3
+			ReceiveSpeedUnitIndex := (len(fmt.Sprintf("%d", network.ReceiveLinkSpeed)) - 1) / 3
 			if ReceiveSpeedUnitIndex > 4 {
 				ReceiveSpeedUnitIndex = 4
 			}
