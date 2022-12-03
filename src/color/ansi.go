@@ -12,6 +12,7 @@ const (
 
 	OSC99 string = "osc99"
 	OSC7  string = "osc7"
+	OSC51 string = "osc51"
 )
 
 type Ansi struct {
@@ -34,6 +35,7 @@ type Ansi struct {
 	hyperlinkRegex        string
 	osc99                 string
 	osc7                  string
+	osc51                 string
 	bold                  string
 	italic                string
 	underline             string
@@ -68,6 +70,7 @@ func (a *Ansi) Init(shellName string) {
 		a.hyperlinkRegex = `(?P<STR>%{\x1b]8;;(.+)\x1b\\%}(?P<TEXT>.+)%{\x1b]8;;\x1b\\%})`
 		a.osc99 = "%%{\x1b]9;9;\"%s\"\x1b\\%%}"
 		a.osc7 = "%%{\x1b]7;file:\"//%s/%s\"\x1b\\%%}"
+		a.osc51 = "%%{\x1b]51;A%s@%s:%s\x1b\\%%}"
 		a.bold = "%%{\x1b[1m%%}%s%%{\x1b[22m%%}"
 		a.italic = "%%{\x1b[3m%%}%s%%{\x1b[23m%%}"
 		a.underline = "%%{\x1b[4m%%}%s%%{\x1b[24m%%}"
@@ -96,6 +99,7 @@ func (a *Ansi) Init(shellName string) {
 		a.hyperlinkRegex = `(?P<STR>\\\[\x1b\]8;;(.+)\x1b\\\\\\\](?P<TEXT>.+)\\\[\x1b\]8;;\x1b\\\\\\\])`
 		a.osc99 = "\\[\x1b]9;9;\"%s\"\x1b\\\\\\]"
 		a.osc7 = "\\[\x1b]7;\"file://%s/%s\"\x1b\\\\\\]"
+		a.osc51 = "\\[\x1b]51;A;%s@%s:%s\x1b\\\\\\]"
 		a.bold = "\\[\x1b[1m\\]%s\\[\x1b[22m\\]"
 		a.italic = "\\[\x1b[3m\\]%s\\[\x1b[23m\\]"
 		a.underline = "\\[\x1b[4m\\]%s\\[\x1b[24m\\]"
@@ -124,6 +128,7 @@ func (a *Ansi) Init(shellName string) {
 		a.hyperlinkRegex = "(?P<STR>\x1b]8;;(.+)\x1b\\\\\\\\?(?P<TEXT>.+)\x1b]8;;\x1b\\\\)"
 		a.osc99 = "\x1b]9;9;\"%s\"\x1b\\"
 		a.osc7 = "\x1b]7;\"file://%s/%s\"\x1b\\"
+		a.osc51 = "\x1b]51;A%s@%s:%s\x1b\\"
 		a.bold = "\x1b[1m%s\x1b[22m"
 		a.italic = "\x1b[3m%s\x1b[23m"
 		a.underline = "\x1b[4m%s\x1b[24m"
@@ -140,20 +145,59 @@ func (a *Ansi) InitPlain() {
 }
 
 func (a *Ansi) GenerateHyperlink(text string) string {
-	parts := strings.SplitAfter(text, ")")
-	var buffer strings.Builder
-	var part string
-	for i := range parts {
-		part += parts[i]
-		if strings.Contains(parts[i], "[") && !strings.Contains(parts[i], "]") {
+	const (
+		LINK  = "link"
+		TEXT  = "text"
+		OTHER = "plain"
+	)
+
+	var result, hyperlink strings.Builder
+	var squareIndex, roundCount int
+	state := OTHER
+
+	for i, s := range text {
+		if s == '[' && state == OTHER {
+			state = TEXT
+			hyperlink.WriteRune(s)
 			continue
 		}
-		buffer.WriteString(a.replaceHyperlink(part))
-		part = ""
+
+		if state == OTHER {
+			result.WriteRune(s)
+			continue
+		}
+
+		hyperlink.WriteRune(s)
+
+		switch s {
+		case ']':
+			// potential end of text part of hyperlink
+			squareIndex = i
+		case '(':
+			// split into link part
+			if squareIndex == i-1 {
+				state = LINK
+			}
+			if state == LINK {
+				roundCount++
+			}
+		case ')':
+			if state != LINK {
+				continue
+			}
+			roundCount--
+			if roundCount != 0 {
+				continue
+			}
+			// end of link part
+			result.WriteString(a.replaceHyperlink(hyperlink.String()))
+			hyperlink.Reset()
+			state = OTHER
+		}
 	}
-	// when we did not process any parts, we return the original text
-	buffer.WriteString(part)
-	return buffer.String()
+
+	result.WriteString(hyperlink.String())
+	return result.String()
 }
 
 func (a *Ansi) replaceHyperlink(text string) string {
@@ -264,13 +308,15 @@ func (a *Ansi) ChangeLine(numberOfLines int) string {
 	return fmt.Sprintf(a.linechange, numberOfLines, position)
 }
 
-func (a *Ansi) ConsolePwd(pwdType, hostName, pwd string) string {
+func (a *Ansi) ConsolePwd(pwdType, userName, hostName, pwd string) string {
 	if strings.HasSuffix(pwd, ":") {
 		pwd += "\\"
 	}
 	switch pwdType {
 	case OSC7:
 		return fmt.Sprintf(a.osc7, hostName, pwd)
+	case OSC51:
+		return fmt.Sprintf(a.osc51, userName, hostName, pwd)
 	case OSC99:
 		fallthrough
 	default:

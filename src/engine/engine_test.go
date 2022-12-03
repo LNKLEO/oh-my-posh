@@ -4,8 +4,8 @@ import (
 	"errors"
 	"oh-my-posh/color"
 	"oh-my-posh/console"
-	"oh-my-posh/environment"
 	"oh-my-posh/mock"
+	"oh-my-posh/platform"
 	"oh-my-posh/shell"
 	"testing"
 
@@ -54,6 +54,7 @@ func TestPrintPWD(t *testing.T) {
 		{Case: "Empty PWD"},
 		{Case: "OSC99", PWD: color.OSC99, Expected: "\x1b]9;9;\"pwd\"\x1b\\"},
 		{Case: "OSC7", PWD: color.OSC7, Expected: "\x1b]7;\"file://host/pwd\"\x1b\\"},
+		{Case: "OSC51", PWD: color.OSC51, Expected: "\x1b]51;Auser@host:pwd\x1b\\"},
 		{Case: "Deprecated OSC99", OSC99: true, Expected: "\x1b]9;9;\"pwd\"\x1b\\"},
 		{Case: "Template (empty)", PWD: "{{ if eq .Shell \"pwsh\" }}osc7{{ end }}"},
 		{Case: "Template (non empty)", PWD: "{{ if eq .Shell \"shell\" }}osc7{{ end }}", Expected: "\x1b]7;\"file://host/pwd\"\x1b\\"},
@@ -63,8 +64,9 @@ func TestPrintPWD(t *testing.T) {
 		env := new(mock.MockedEnvironment)
 		env.On("Pwd").Return("pwd")
 		env.On("Shell").Return("shell")
+		env.On("User").Return("user")
 		env.On("Host").Return("host", nil)
-		env.On("TemplateCache").Return(&environment.TemplateCache{
+		env.On("TemplateCache").Return(&platform.TemplateCache{
 			Env:   make(map[string]string),
 			Shell: "shell",
 		})
@@ -91,7 +93,7 @@ func BenchmarkEngineRender(b *testing.B) {
 }
 
 func engineRender() {
-	env := &environment.ShellEnvironment{}
+	env := &platform.Shell{}
 	env.Init()
 	defer env.Close()
 
@@ -100,7 +102,7 @@ func engineRender() {
 
 	ansi := &color.Ansi{}
 	ansi.InitPlain()
-	writerColors := cfg.MakeColors(env)
+	writerColors := cfg.MakeColors()
 	writer := &color.AnsiWriter{
 		Ansi:               ansi,
 		TerminalBackground: shell.ConsoleBackgroundColor(env, cfg.TerminalBackground),

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"oh-my-posh/color"
 	"oh-my-posh/console"
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/shell"
 	"oh-my-posh/template"
 	"strings"
@@ -13,7 +13,7 @@ import (
 
 type Engine struct {
 	Config       *Config
-	Env          environment.Environment
+	Env          platform.Environment
 	Writer       color.Writer
 	Ansi         *color.Ansi
 	ConsoleTitle *console.Title
@@ -85,7 +85,7 @@ func (e *Engine) printPWD() {
 	cwd := e.Env.Pwd()
 	// Backwards compatibility for deprecated OSC99
 	if e.Config.OSC99 {
-		e.writeANSI(e.Ansi.ConsolePwd(color.OSC99, "", cwd))
+		e.writeANSI(e.Ansi.ConsolePwd(color.OSC99, "", "", cwd))
 		return
 	}
 	// Allow template logic to define when to enable the PWD (when supported)
@@ -97,8 +97,9 @@ func (e *Engine) printPWD() {
 	if err != nil || len(pwdType) == 0 {
 		return
 	}
+	user := e.Env.User()
 	host, _ := e.Env.Host()
-	e.writeANSI(e.Ansi.ConsolePwd(pwdType, host, cwd))
+	e.writeANSI(e.Ansi.ConsolePwd(pwdType, user, host, cwd))
 }
 
 func (e *Engine) newline() {

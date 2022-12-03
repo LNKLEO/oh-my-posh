@@ -239,6 +239,7 @@
             "fossil",
             "gcp",
             "git",
+            "gitversion",
             "go",
             "haskell",
             "ipify",
@@ -277,6 +278,7 @@
             "wakatime",
             "winreg",
             "withings",
+            "xmake",
             "ytm"
           ]
         },
@@ -799,6 +801,12 @@
                     "description": "Display upstream icon or not",
                     "default": false
                   },
+                  "fetch_bare_info": {
+                    "type": "boolean",
+                    "title": "Fetch info when in a bare repo",
+                    "description": "Fetch info when in a bare repo or not",
+                    "default": false
+                  },
                   "branch_icon": {
                     "type": "string",
                     "title": "Branch Icon",
@@ -1259,6 +1267,37 @@
           "if": {
             "properties": {
               "type": {
+                "const": "xmake"
+              }
+            }
+          },
+          "then": {
+            "title": "XMake Segment",
+            "description": "https://ohmyposh.dev/docs/segments/xmake",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "home_enabled": {
+                    "$ref": "#/definitions/home_enabled"
+                  },
+                  "fetch_version": {
+                    "$ref": "#/definitions/fetch_version"
+                  },
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
+                  },
+                  "missing_command_text": {
+                    "$ref": "#/definitions/missing_command_text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "kubectl"
               }
             }
@@ -1528,6 +1567,12 @@
                     "description": "The icon to use for Opensuse",
                     "default": "\uF314"
                   },
+                  "redhat": {
+                    "type": "string",
+                    "title": "Redhat Icon",
+                    "description": "The icon to use for Redhat",
+                    "default": "\uF316"
+                  },
                   "sabayon": {
                     "type": "string",
                     "title": "Sabayon Icon",
@@ -1545,6 +1590,18 @@
                     "title": "Ubuntu Icon",
                     "description": "The icon to use for Ubuntu",
                     "default": "\uF31b"
+                  },
+                  "rocky": {
+                    "type": "string",
+                    "title": "Rocky Icon",
+                    "description": "The icon to use for Rocky",
+                    "default": "\uF32B"
+                  },
+                  "alma": {
+                    "type": "string",
+                    "title": "Alma Icon",
+                    "description": "The icon to use for Alma",
+                    "default": "\uF31D"
                   }
                 }
               }
@@ -2799,6 +2856,17 @@
             "title": "GCP Segment",
             "description": "https://ohmyposh.dev/docs/segments/gcp"
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "gitversion" }
+            }
+          },
+          "then": {
+            "title": "Display GitVersion segment",
+            "description": "https://ohmyposh.dev/docs/segments/gitversion"
+          }
         }
       ]
     }
@@ -2813,7 +2881,7 @@
     },
     "pwd": {
       "type": "string",
-      "title": "Enable OSC99/7",
+      "title": "Enable OSC99/7/51",
       "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
       "default": ""
     },
@@ -2891,6 +2959,27 @@
       "patternProperties": {
         ".*": {
           "$ref": "#/definitions/color"
+        }
+      }
+    },
+    "palettes": {
+      "type": "object",
+      "title": "Palettes",
+      "description": "https://ohmyposh.dev/docs/configuration/colors#palettes",
+      "default": {},
+      "properties": {
+        "template": {
+          "type": "string",
+          "title": "Prompt Template"
+        },
+        "list": {
+          "type": "object",
+          "title": "List of palettes",
+          "patternProperties": {
+            ".*": {
+              "$ref": "#/properties/palette"
+            }
+          }
         }
       }
     },

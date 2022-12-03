@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"oh-my-posh/color"
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/properties"
+	"oh-my-posh/segments"
+	"oh-my-posh/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,63 +32,61 @@ const (
 
 // Config holds all the theme for rendering the prompt
 type Config struct {
-	Version              int           `json:"version"`
-	FinalSpace           bool          `json:"final_space,omitempty"`
-	ConsoleTitleTemplate string        `json:"console_title_template,omitempty"`
-	TerminalBackground   string        `json:"terminal_background,omitempty"`
-	AccentColor          string        `json:"accent_color,omitempty"`
-	Blocks               []*Block      `json:"blocks,omitempty"`
-	Tooltips             []*Segment    `json:"tooltips,omitempty"`
-	TransientPrompt      *Segment      `json:"transient_prompt,omitempty"`
-	ValidLine            *Segment      `json:"valid_line,omitempty"`
-	ErrorLine            *Segment      `json:"error_line,omitempty"`
-	SecondaryPrompt      *Segment      `json:"secondary_prompt,omitempty"`
-	DebugPrompt          *Segment      `json:"debug_prompt,omitempty"`
-	Palette              color.Palette `json:"palette,omitempty"`
-	PWD                  string        `json:"pwd,omitempty"`
+	Version              int             `json:"version"`
+	FinalSpace           bool            `json:"final_space,omitempty"`
+	ConsoleTitleTemplate string          `json:"console_title_template,omitempty"`
+	TerminalBackground   string          `json:"terminal_background,omitempty"`
+	AccentColor          string          `json:"accent_color,omitempty"`
+	Blocks               []*Block        `json:"blocks,omitempty"`
+	Tooltips             []*Segment      `json:"tooltips,omitempty"`
+	TransientPrompt      *Segment        `json:"transient_prompt,omitempty"`
+	ValidLine            *Segment        `json:"valid_line,omitempty"`
+	ErrorLine            *Segment        `json:"error_line,omitempty"`
+	SecondaryPrompt      *Segment        `json:"secondary_prompt,omitempty"`
+	DebugPrompt          *Segment        `json:"debug_prompt,omitempty"`
+	Palette              color.Palette   `json:"palette,omitempty"`
+	Palettes             *color.Palettes `json:"palettes,omitempty"`
+	PWD                  string          `json:"pwd,omitempty"`
 
 	// Deprecated
 	OSC99 bool `json:"osc99,omitempty"`
 
 	Output string `json:"-"`
 
-	format  string
-	origin  string
-	eval    bool
+	format string
+	origin string
+	// eval    bool
 	updated bool
+	env     platform.Environment
 }
 
 // MakeColors creates instance of AnsiColors to use in AnsiWriter according to
 // environment and configuration.
-func (cfg *Config) MakeColors(env environment.Environment) color.AnsiColors {
-	cacheDisabled := env.Getenv("OMP_CACHE_DISABLED") == "1"
-	return color.MakeColors(cfg.Palette, !cacheDisabled, cfg.AccentColor, env)
+func (cfg *Config) MakeColors() color.AnsiColors {
+	cacheDisabled := cfg.env.Getenv("OMP_CACHE_DISABLED") == "1"
+	return color.MakeColors(cfg.getPalette(), !cacheDisabled, cfg.AccentColor, cfg.env)
 }
 
-func (cfg *Config) print(message string) {
-	if cfg.eval {
-		fmt.Printf("echo \"%s\"", message)
-		return
+func (cfg *Config) getPalette() color.Palette {
+	if cfg.Palettes == nil {
+		return cfg.Palette
 	}
-	fmt.Println(message)
-}
-
-func (cfg *Config) exitWithError(err error) {
-	if err == nil {
-		return
+	tmpl := &template.Text{
+		Template: cfg.Palettes.Template,
+		Env:      cfg.env,
 	}
-	defer os.Exit(1)
-	message := "Oh My Posh Error:\n\n" + err.Error()
-	if cfg.eval {
-		fmt.Printf("echo \"%s\"\n", message)
-		return
+	if palette, err := tmpl.Render(); err == nil {
+		if p, ok := cfg.Palettes.List[palette]; ok {
+			return p
+		}
 	}
-	cfg.print(message)
+	return cfg.Palette
 }
 
 // LoadConfig returns the default configuration including possible user overrides
-func LoadConfig(env environment.Environment) *Config {
+func LoadConfig(env platform.Environment) *Config {
 	cfg := loadConfig(env)
+	cfg.env = env
 	// only migrate automatically when the switch isn't set
 	if !env.Flags().Migrate && cfg.Version < configVersion {
 		cfg.BackupAndMigrate(env)
@@ -94,14 +94,15 @@ func LoadConfig(env environment.Environment) *Config {
 	return cfg
 }
 
-func loadConfig(env environment.Environment) *Config {
+func loadConfig(env platform.Environment) *Config {
 	defer env.Trace(time.Now(), "config.loadConfig")
-	var cfg Config
 	configFile := env.Flags().Config
-	if _, err := os.Stat(configFile); err != nil {
-		return defaultConfig()
+
+	if len(configFile) == 0 {
+		return defaultConfig(false)
 	}
 
+	var cfg Config
 	cfg.origin = configFile
 	cfg.format = strings.TrimPrefix(filepath.Ext(configFile), ".")
 	if cfg.format == "yml" {
@@ -118,10 +119,14 @@ func loadConfig(env environment.Environment) *Config {
 	})
 
 	err := config.LoadFiles(configFile)
-	cfg.exitWithError(err)
+	if err != nil {
+		return defaultConfig(true)
+	}
 
 	err = config.BindStruct("", &cfg)
-	cfg.exitWithError(err)
+	if err != nil {
+		return defaultConfig(true)
+	}
 
 	return &cfg
 }
@@ -161,31 +166,32 @@ func (cfg *Config) Export(format string) string {
 	var result bytes.Buffer
 
 	if cfg.format == JSON {
-		data := config.Data()
-		data["$schema"] = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json"
 		jsonEncoder := json2.NewEncoder(&result)
 		jsonEncoder.SetEscapeHTML(false)
 		jsonEncoder.SetIndent("", "  ")
-		err := jsonEncoder.Encode(data)
-		cfg.exitWithError(err)
-		return escapeGlyphs(result.String())
+		_ = jsonEncoder.Encode(cfg)
+		prefix := "{\n  \"$schema\": \"https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json\","
+		data := strings.Replace(result.String(), "{", prefix, 1)
+		return escapeGlyphs(data)
 	}
 
-	_, err := config.DumpTo(&result, cfg.format)
-	cfg.exitWithError(err)
-	if cfg.format == YAML {
+	_, _ = config.DumpTo(&result, cfg.format)
+	switch cfg.format {
+	case YAML:
 		prefix := "# yaml-language-server: $schema=https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json\n\n"
 		return prefix + result.String()
+	case TOML:
+		prefix := "#:schema https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json\n\n"
+		return prefix + escapeGlyphs(result.String())
+	default:
+		return result.String()
 	}
-	prefix := "#:schema https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json\n\n"
-	return prefix + escapeGlyphs(result.String())
 }
 
-func (cfg *Config) BackupAndMigrate(env environment.Environment) {
-	origin := cfg.backup()
+func (cfg *Config) BackupAndMigrate(env platform.Environment) {
+	cfg.backup()
 	cfg.Migrate(env)
 	cfg.Write(cfg.format)
-	cfg.print(fmt.Sprintf("\nOh My Posh config migrated to version %d\nBackup config available at %s\n\n", cfg.Version, origin))
 }
 
 func (cfg *Config) Write(format string) {
@@ -195,25 +201,32 @@ func (cfg *Config) Write(format string) {
 		destination = cfg.origin
 	}
 	f, err := os.OpenFile(destination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	cfg.exitWithError(err)
-	_, err = f.WriteString(content)
-	cfg.exitWithError(err)
-	if err := f.Close(); err != nil {
-		cfg.exitWithError(err)
+	if err != nil {
+		return
 	}
+	_, err = f.WriteString(content)
+	if err != nil {
+		return
+	}
+	_ = f.Close()
 }
 
-func (cfg *Config) backup() string {
+func (cfg *Config) backup() {
 	dst := cfg.origin + ".bak"
 	source, err := os.Open(cfg.origin)
-	cfg.exitWithError(err)
+	if err != nil {
+		return
+	}
 	defer source.Close()
 	destination, err := os.Create(dst)
-	cfg.exitWithError(err)
+	if err != nil {
+		return
+	}
 	defer destination.Close()
 	_, err = io.Copy(destination, source)
-	cfg.exitWithError(err)
-	return dst
+	if err != nil {
+		return
+	}
 }
 
 func escapeGlyphs(s string) string {
@@ -230,7 +243,13 @@ func escapeGlyphs(s string) string {
 	return builder.String()
 }
 
-func defaultConfig() *Config {
+func defaultConfig(warning bool) *Config {
+	exitBackgroundTemplate := "{{ if gt .Code 0 }}p:red{{ end }}"
+	exitTemplate := " {{ if gt .Code 0 }}\uf00d{{ else }}\uf00c{{ end }} "
+	if warning {
+		exitBackgroundTemplate = "p:red"
+		exitTemplate = " CONFIG ERROR "
+	}
 	cfg := &Config{
 		Version:    2,
 		FinalSpace: true,
@@ -242,52 +261,173 @@ func defaultConfig() *Config {
 					{
 						Type:            SESSION,
 						Style:           Diamond,
-						Background:      "#c386f1",
-						Foreground:      "#ffffff",
-						LeadingDiamond:  "\uE0B6",
-						TrailingDiamond: "\uE0B0",
+						LeadingDiamond:  "\ue0b6",
+						TrailingDiamond: "\ue0b0",
+						Background:      "p:yellow",
+						Foreground:      "p:black",
+						Template:        " {{ if .SSHSession }}\uf817 {{ end }}{{ .UserName }} ",
 					},
 					{
 						Type:            PATH,
 						Style:           Powerline,
-						PowerlineSymbol: "\uE0B0",
-						Background:      "#ff479c",
-						Foreground:      "#ffffff",
+						PowerlineSymbol: "\ue0b0",
+						Background:      "p:orange",
+						Foreground:      "p:white",
 						Properties: properties.Map{
 							properties.Style: "folder",
 						},
+						Template: " \uf74a {{ path .Path .Location }} ",
 					},
 					{
-						Type:            SHELL,
+						Type:            GIT,
 						Style:           Powerline,
-						PowerlineSymbol: "\uE0B0",
-						Background:      "#0077c2",
-						Foreground:      "#ffffff",
+						PowerlineSymbol: "\ue0b0",
+						Background:      "p:green",
+						BackgroundTemplates: []string{
+							"{{ if or (.Working.Changed) (.Staging.Changed) }}p:yellow{{ end }}",
+							"{{ if and (gt .Ahead 0) (gt .Behind 0) }}p:red{{ end }}",
+							"{{ if gt .Ahead 0 }}#49416D{{ end }}",
+							"{{ if gt .Behind 0 }}#7A306C{{ end }}",
+						},
+						Foreground: "p:black",
+						ForegroundTemplates: []string{
+							"{{ if or (.Working.Changed) (.Staging.Changed) }}p:black{{ end }}",
+							"{{ if and (gt .Ahead 0) (gt .Behind 0) }}p:white{{ end }}",
+							"{{ if gt .Ahead 0 }}p:white{{ end }}",
+						},
+						Properties: properties.Map{
+							segments.BranchMaxLength:   25,
+							segments.FetchStatus:       true,
+							segments.FetchUpstreamIcon: true,
+							segments.GithubIcon:        "\uf7a3",
+						},
+						Template: " {{ if .UpstreamURL }}{{ url .UpstreamIcon .UpstreamURL }} {{ end }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }} ", //nolint:lll
 					},
 					{
-						Type:            TEXT,
+						Type:            ROOT,
 						Style:           Powerline,
-						PowerlineSymbol: "\uE0B0",
-						Background:      "#ffffff",
-						Foreground:      "#111111",
-						Template:        " no config ",
+						PowerlineSymbol: "\ue0b0",
+						Background:      "p:yellow",
+						Foreground:      "p:white",
+						Template:        " \uf0e7 ",
 					},
 					{
 						Type:            EXIT,
 						Style:           Diamond,
-						Background:      "#2e9599",
-						Foreground:      "#ffffff",
-						LeadingDiamond:  "<transparent,background>\uE0B0</>",
-						TrailingDiamond: "\uE0B4",
+						LeadingDiamond:  "<transparent,background>\ue0b0</>",
+						TrailingDiamond: "\ue0b4",
+						Background:      "p:blue",
 						BackgroundTemplates: []string{
-							"{{ if gt .Code 0 }}#f1184c{{ end }}",
+							exitBackgroundTemplate,
 						},
-						Template: " \uE23A ",
+						Foreground: "p:white",
 						Properties: properties.Map{
 							properties.AlwaysEnabled: true,
 						},
+						Template: exitTemplate,
 					},
 				},
+			},
+			{
+				Type: RPrompt,
+				Segments: []*Segment{
+					{
+						Type:       NODE,
+						Style:      Plain,
+						Background: "transparent",
+						Foreground: "p:green",
+						Template:   "\uf898 ",
+						Properties: properties.Map{
+							segments.HomeEnabled:         false,
+							segments.FetchPackageManager: false,
+							segments.DisplayMode:         "files",
+						},
+					},
+					{
+						Type:       GOLANG,
+						Style:      Plain,
+						Background: "transparent",
+						Foreground: "p:blue",
+						Template:   "\ufcd1 ",
+						Properties: properties.Map{
+							properties.FetchVersion: false,
+						},
+					},
+					{
+						Type:       PYTHON,
+						Style:      Plain,
+						Background: "transparent",
+						Foreground: "p:yellow",
+						Template:   "\ue235 ",
+						Properties: properties.Map{
+							properties.FetchVersion:  false,
+							segments.DisplayMode:     "files",
+							segments.FetchVirtualEnv: false,
+						},
+					},
+					{
+						Type:       SHELL,
+						Style:      Plain,
+						Background: "transparent",
+						Foreground: "p:white",
+						Template:   "in <p:blue><b>{{ .Name }}</b></> ",
+					},
+					{
+						Type:       TIME,
+						Style:      Plain,
+						Background: "transparent",
+						Foreground: "p:white",
+						Template:   "at <p:blue><b>{{ .CurrentDate | date \"15:04:05\" }}</b></>",
+					},
+				},
+			},
+		},
+		ConsoleTitleTemplate: "{{ .Shell }} in {{ .Folder }}",
+		Palette: color.Palette{
+			"black":  "#262B44",
+			"blue":   "#4B95E9",
+			"green":  "#59C9A5",
+			"orange": "#F07623",
+			"red":    "#D81E5B",
+			"white":  "#E0DEF4",
+			"yellow": "#F3AE35",
+		},
+		SecondaryPrompt: &Segment{
+			Background: "transparent",
+			Foreground: "p:black",
+			Template:   "<p:yellow,transparent>\ue0b6</><,p:yellow> > </><p:yellow,transparent>\ue0b0</> ",
+		},
+		TransientPrompt: &Segment{
+			Background: "transparent",
+			Foreground: "p:black",
+			Template:   "<p:yellow,transparent>\ue0b6</><,p:yellow> {{ .Folder }} </><p:yellow,transparent>\ue0b0</> ",
+		},
+		Tooltips: []*Segment{
+			{
+				Type:            AWS,
+				Style:           Diamond,
+				LeadingDiamond:  "\ue0b0",
+				TrailingDiamond: "\ue0b4",
+				Background:      "p:orange",
+				Foreground:      "p:white",
+				Template:        " \ue7ad {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} ",
+				Properties: properties.Map{
+					properties.DisplayDefault: true,
+				},
+				Tips: []string{"aws"},
+			},
+			{
+				Type:            AZ,
+				Style:           Diamond,
+				LeadingDiamond:  "\ue0b0",
+				TrailingDiamond: "\ue0b4",
+				Background:      "p:blue",
+				Foreground:      "p:white",
+				Template:        " \ufd03 {{ .Name }} ",
+				Properties: properties.Map{
+					properties.DisplayDefault: true,
+				},
+				Tips: []string{"az"},
 			},
 		},
 	}

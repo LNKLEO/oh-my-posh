@@ -3,7 +3,7 @@ package segments
 import (
 	"fmt"
 	url2 "net/url"
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/properties"
 	"oh-my-posh/regex"
 	"path/filepath"
@@ -44,6 +44,8 @@ const (
 	FetchWorktreeCount properties.Property = "fetch_worktree_count"
 	// FetchUpstreamIcon fetches the upstream icon
 	FetchUpstreamIcon properties.Property = "fetch_upstream_icon"
+	// FetchBareInfo fetches the bare repo status
+	FetchBareInfo properties.Property = "fetch_bare_info"
 
 	// BranchIcon the icon to use as branch indicator
 	BranchIcon properties.Property = "branch_icon"
@@ -118,19 +120,17 @@ func (g *Git) Template() string {
 }
 
 func (g *Git) Enabled() bool {
+	g.Working = &GitStatus{}
+	g.Staging = &GitStatus{}
+
 	if !g.shouldDisplay() {
 		return false
 	}
 
-	g.RepoName = environment.Base(g.env, g.convertToLinuxPath(g.realDir))
+	g.RepoName = platform.Base(g.env, g.convertToLinuxPath(g.realDir))
 
 	if g.IsBare {
-		head := g.FileContents(g.workingDir, "HEAD")
-		branchIcon := g.props.GetString(BranchIcon, "\uE0A0")
-		g.Ref = strings.Replace(head, "ref: refs/heads/", "", 1)
-		g.HEAD = fmt.Sprintf("%s%s", branchIcon, g.Ref)
-		g.Working = &GitStatus{}
-		g.Staging = &GitStatus{}
+		g.getBareRepoInfo()
 		return true
 	}
 
@@ -167,7 +167,7 @@ func (g *Git) Kraken() string {
 		if len(g.Upstream) == 0 {
 			g.Upstream = "origin"
 		}
-		g.RawUpstreamURL = g.getOriginURL()
+		g.RawUpstreamURL = g.getRemoteURL()
 	}
 	if len(g.Hash) == 0 {
 		g.Hash = g.getGitCommandOutput("rev-parse", "HEAD")
@@ -182,6 +182,9 @@ func (g *Git) shouldDisplay() bool {
 
 	gitdir, err := g.env.HasParentFilePath(".git")
 	if err != nil {
+		if !g.props.GetBool(FetchBareInfo, false) {
+			return false
+		}
 		g.realDir = g.env.Pwd()
 		bare := g.getGitCommandOutput("rev-parse", "--is-bare-repository")
 		if bare == "true" {
@@ -209,16 +212,30 @@ func (g *Git) shouldDisplay() bool {
 	return true
 }
 
+func (g *Git) getBareRepoInfo() {
+	head := g.FileContents(g.workingDir, "HEAD")
+	branchIcon := g.props.GetString(BranchIcon, "\uE0A0")
+	g.Ref = strings.Replace(head, "ref: refs/heads/", "", 1)
+	g.HEAD = fmt.Sprintf("%s%s", branchIcon, g.Ref)
+	if !g.props.GetBool(FetchUpstreamIcon, false) {
+		return
+	}
+	g.Upstream = g.getGitCommandOutput("remote")
+	if len(g.Upstream) != 0 {
+		g.UpstreamIcon = g.getUpstreamIcon()
+	}
+}
+
 func (g *Git) setDir(dir string) {
-	dir = environment.ReplaceHomeDirPrefixWithTilde(g.env, dir) // align with template PWD
-	if g.env.GOOS() == environment.WINDOWS {
+	dir = platform.ReplaceHomeDirPrefixWithTilde(g.env, dir) // align with template PWD
+	if g.env.GOOS() == platform.WINDOWS {
 		g.Dir = strings.TrimSuffix(dir, `\.git`)
 		return
 	}
 	g.Dir = strings.TrimSuffix(dir, "/.git")
 }
 
-func (g *Git) hasWorktree(gitdir *environment.FileInfo) bool {
+func (g *Git) hasWorktree(gitdir *platform.FileInfo) bool {
 	g.rootDir = gitdir.Path
 	dirPointer := strings.Trim(g.env.FileContent(gitdir.Path), " \r\n")
 	matches := regex.FindNamedRegexMatch(`^gitdir: (?P<dir>.*)$`, dirPointer)
@@ -308,7 +325,7 @@ func (g *Git) getUpstreamIcon() string {
 		url = strings.ReplaceAll(url, ":", "/")
 		return fmt.Sprintf("https://%s", url)
 	}
-	g.RawUpstreamURL = g.getOriginURL()
+	g.RawUpstreamURL = g.getRemoteURL()
 	g.UpstreamURL = cleanSSHURL(g.RawUpstreamURL)
 	if strings.Contains(g.UpstreamURL, "github") {
 		return g.props.GetString(GithubIcon, "\uF408 ")
@@ -583,7 +600,7 @@ func (g *Git) getWorktreeContext() int {
 	return count
 }
 
-func (g *Git) getOriginURL() string {
+func (g *Git) getRemoteURL() string {
 	upstream := regex.ReplaceAllString("/.*", g.Upstream, "")
 	cfg, err := ini.Load(g.rootDir + "/config")
 	if err != nil {

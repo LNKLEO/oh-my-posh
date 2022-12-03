@@ -3,7 +3,7 @@ package segments
 import (
 	"fmt"
 	"math"
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/properties"
 	"oh-my-posh/regex"
 	"strconv"
@@ -12,11 +12,11 @@ import (
 
 type Networks struct {
 	props properties.Properties
-	env   environment.Environment
+	env   platform.Environment
 
 	Error string
 
-	NetworksInfo []environment.NetworkInfo
+	NetworksInfo []platform.NetworkInfo
 	Networks     string
 	Status       string
 }
@@ -45,7 +45,7 @@ func (n *Networks) Template() string {
 
 func (n *Networks) Enabled() bool {
 	// This segment only supports Windows/WSL for now
-	if n.env.Platform() != environment.WINDOWS && !n.env.IsWsl() {
+	if n.env.Platform() != platform.WINDOWS && !n.env.IsWsl() {
 		return false
 	}
 	Spliter := n.props.GetString("Spliter", "|")
@@ -73,28 +73,28 @@ func (n *Networks) Enabled() bool {
 	return true
 }
 
-func (n *Networks) Init(props properties.Properties, env environment.Environment) {
+func (n *Networks) Init(props properties.Properties, env platform.Environment) {
 	n.props = props
 	n.env = env
 }
 
-func (n *Networks) ConstructNetworkInfo(network environment.NetworkInfo) string {
+func (n *Networks) ConstructNetworkInfo(network platform.NetworkInfo) string {
 	str := ""
 	IconEthernet := n.props.GetString("IconEthernet", "")
 	IconWiFi := n.props.GetString("IconWiFi", "")
 	IconBluetooth := n.props.GetString("IconBluetooth", "")
 	IconCellular := n.props.GetString("IconCellular", "")
 	IconOther := n.props.GetString("IconOther", "")
-	NDISPhysicalMeidaTypeMap := make(map[environment.NDIS_PHYSICAL_MEDIUM]string)
-	NDISPhysicalMeidaTypeMap[environment.NdisPhysicalMedium802_3] = IconEthernet
-	NDISPhysicalMeidaTypeMap[environment.NdisPhysicalMediumNative802_11] = IconWiFi
-	NDISPhysicalMeidaTypeMap[environment.NdisPhysicalMediumBluetooth] = IconBluetooth
-	NDISPhysicalMeidaTypeMap[environment.NdisPhysicalMediumWirelessWan] = IconCellular
-	NameMap := make(map[environment.NDIS_PHYSICAL_MEDIUM]string)
-	NameMap[environment.NdisPhysicalMedium802_3] = "Ethernet"
-	NameMap[environment.NdisPhysicalMediumNative802_11] = "Wi-Fi"
-	NameMap[environment.NdisPhysicalMediumBluetooth] = "Bluetooth"
-	NameMap[environment.NdisPhysicalMediumWirelessWan] = "Cellular"
+	NDISPhysicalMeidaTypeMap := make(map[platform.NDIS_PHYSICAL_MEDIUM]string)
+	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMedium802_3] = IconEthernet
+	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMediumNative802_11] = IconWiFi
+	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMediumBluetooth] = IconBluetooth
+	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMediumWirelessWan] = IconCellular
+	NameMap := make(map[platform.NDIS_PHYSICAL_MEDIUM]string)
+	NameMap[platform.NdisPhysicalMedium802_3] = "Ethernet"
+	NameMap[platform.NdisPhysicalMediumNative802_11] = "Wi-Fi"
+	NameMap[platform.NdisPhysicalMediumBluetooth] = "Bluetooth"
+	NameMap[platform.NdisPhysicalMediumWirelessWan] = "Cellular"
 
 	IconAsAT := n.props.GetBool("IconAsAT", false)
 	ShowType := n.props.GetBool("ShowType", true)
@@ -112,12 +112,12 @@ func (n *Networks) ConstructNetworkInfo(network environment.NetworkInfo) string 
 		AT = icon
 	} else {
 		str += icon
-		if !ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == environment.NdisPhysicalMediumNative802_11) {
+		if !ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == platform.NdisPhysicalMediumNative802_11) {
 			AT = ""
 		}
 	}
 
-	if ShowSSID && network.NDISPhysicalMeidaType == environment.NdisPhysicalMediumNative802_11 {
+	if ShowSSID && network.NDISPhysicalMeidaType == platform.NdisPhysicalMediumNative802_11 {
 		if SSIDAbbr > 0 {
 			str += regex.ReplaceAllString(fmt.Sprintf("(.{0,%d}[^ #_-])[ #_-].*", SSIDAbbr-1), network.SSID, "$1")
 		} else {
@@ -125,7 +125,7 @@ func (n *Networks) ConstructNetworkInfo(network environment.NetworkInfo) string 
 		}
 	}
 
-	if ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == environment.NdisPhysicalMediumNative802_11) {
+	if ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == platform.NdisPhysicalMediumNative802_11) {
 		if name, OK := NameMap[network.NDISPhysicalMeidaType]; OK {
 			str += name
 		} else {

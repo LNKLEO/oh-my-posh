@@ -157,7 +157,6 @@ func (env *ShellEnvironment) DirIsWritable(path string) bool {
 	return true
 }
 
-<<<<<<< HEAD
 const (
 	NdisPhysicalMediumWirelessWan  NDIS_PHYSICAL_MEDIUM = "Wireless WAN"  // 8
 	NdisPhysicalMediumNative802_11 NDIS_PHYSICAL_MEDIUM = "Native 802.11" // 9
