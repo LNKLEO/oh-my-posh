@@ -7,11 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/properties"
 	"oh-my-posh/segments"
 	"oh-my-posh/shell"
 	"oh-my-posh/template"
+
+	c "golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Segment represent a single segment and it's configuration
@@ -37,7 +40,7 @@ type Segment struct {
 	writer          SegmentWriter
 	Enabled         bool `json:"-"`
 	text            string
-	env             environment.Environment
+	env             platform.Environment
 	backgroundCache string
 	foregroundCache string
 }
@@ -55,7 +58,7 @@ type SegmentTiming struct {
 type SegmentWriter interface {
 	Enabled() bool
 	Template() string
-	Init(props properties.Properties, env environment.Environment)
+	Init(props properties.Properties, env platform.Environment)
 }
 
 // SegmentStyle the style of segment, for more information, see the constants
@@ -118,6 +121,8 @@ const (
 	GCP SegmentType = "gcp"
 	// GIT represents the git status and information
 	GIT SegmentType = "git"
+	// GITVERSION represents the gitversion information
+	GITVERSION SegmentType = "gitversion"
 	// GOLANG writes which go version is currently active
 	GOLANG SegmentType = "go"
 	// HASKELL segment
@@ -200,6 +205,8 @@ const (
 	WINREG SegmentType = "winreg"
 	// WITHINGS queries the Withings API.
 	WITHINGS SegmentType = "withings"
+	// XMAKE write the xmake version if xmake.lua is present
+	XMAKE SegmentType = "xmake"
 	// YTM writes YouTube Music information and status
 	YTM SegmentType = "ytm"
 )
@@ -266,7 +273,7 @@ func (segment *Segment) background() string {
 	return segment.backgroundCache
 }
 
-func (segment *Segment) mapSegmentWithWriter(env environment.Environment) error {
+func (segment *Segment) mapSegmentWithWriter(env platform.Environment) error {
 	segment.env = env
 	functions := map[SegmentType]SegmentWriter{
 		ANGULAR:       &segments.Angular{},
@@ -291,6 +298,7 @@ func (segment *Segment) mapSegmentWithWriter(env environment.Environment) error 
 		FOSSIL:        &segments.Fossil{},
 		GCP:           &segments.Gcp{},
 		GIT:           &segments.Git{},
+		GITVERSION:    &segments.GitVersion{},
 		GOLANG:        &segments.Golang{},
 		HASKELL:       &segments.Haskell{},
 		IPIFY:         &segments.IPify{},
@@ -332,6 +340,7 @@ func (segment *Segment) mapSegmentWithWriter(env environment.Environment) error 
 		WAKATIME:      &segments.Wakatime{},
 		WINREG:        &segments.WindowsRegistry{},
 		WITHINGS:      &segments.Withings{},
+		XMAKE:         &segments.XMake{},
 		YTM:           &segments.Ytm{},
 	}
 	if segment.Properties == nil {
@@ -369,7 +378,7 @@ func (segment *Segment) string() string {
 	return text
 }
 
-func (segment *Segment) SetEnabled(env environment.Environment) {
+func (segment *Segment) SetEnabled(env platform.Environment) {
 	defer func() {
 		err := recover()
 		if err == nil {
@@ -384,11 +393,20 @@ func (segment *Segment) SetEnabled(env environment.Environment) {
 	if err != nil || !segment.shouldIncludeFolder() {
 		return
 	}
+	// validate toggles
+	if toggles, OK := segment.env.Cache().Get(platform.TOGGLECACHE); OK && len(toggles) > 0 {
+		list := strings.Split(toggles, ",")
+		for _, toggle := range list {
+			if SegmentType(toggle) == segment.Type {
+				return
+			}
+		}
+	}
 	if segment.writer.Enabled() {
 		segment.Enabled = true
 		name := segment.Alias
 		if len(name) == 0 {
-			name = string(segment.Type)
+			name = c.Title(language.English).String(string(segment.Type))
 		}
 		env.TemplateCache().AddSegmentData(name, segment.writer)
 	}

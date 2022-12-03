@@ -1,17 +1,17 @@
 //go:build !darwin
 
-package environment
+package platform
 
 import (
-	"oh-my-posh/environment/battery"
+	"oh-my-posh/platform/battery"
 	"time"
 )
 
-func (env *ShellEnvironment) BatteryState() (*battery.Info, error) {
+func (env *Shell) BatteryState() (*battery.Info, error) {
 	defer env.Trace(time.Now(), "BatteryState")
 	info, err := battery.Get()
 	if err != nil {
-		env.Log(Error, "BatteryState", err.Error())
+		env.Error("BatteryState", err)
 		return nil, err
 	}
 	return info, nil

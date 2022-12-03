@@ -1,4 +1,4 @@
-package environment
+package platform
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func (env *ShellEnvironment) Root() bool {
+func (env *Shell) Root() bool {
 	defer env.Trace(time.Now(), "Root")
 	var sid *windows.SID
 
@@ -32,7 +32,7 @@ func (env *ShellEnvironment) Root() bool {
 		0, 0, 0, 0, 0, 0,
 		&sid)
 	if err != nil {
-		env.Log(Error, "Root", err.Error())
+		env.Error("Root", err)
 		return false
 	}
 	defer func() {
@@ -46,17 +46,17 @@ func (env *ShellEnvironment) Root() bool {
 
 	member, err := token.IsMember(sid)
 	if err != nil {
-		env.Log(Error, "Root", err.Error())
+		env.Error("Root", err)
 		return false
 	}
 
 	return member
 }
 
-func (env *ShellEnvironment) Home() string {
+func (env *Shell) Home() string {
 	home := os.Getenv("HOME")
 	defer func() {
-		env.Log(Debug, "Home", home)
+		env.Debug("Home", home)
 	}()
 	if len(home) > 0 {
 		return home
@@ -69,49 +69,49 @@ func (env *ShellEnvironment) Home() string {
 	return home
 }
 
-func (env *ShellEnvironment) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
+func (env *Shell) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
 	defer env.Trace(time.Now(), "WindowTitle", windowTitleRegex)
 	title, err := queryWindowTitles(processName, windowTitleRegex)
 	if err != nil {
-		env.Log(Error, "QueryWindowTitles", err.Error())
+		env.Error("QueryWindowTitles", err)
 	}
 	return title, err
 }
 
-func (env *ShellEnvironment) IsWsl() bool {
+func (env *Shell) IsWsl() bool {
 	defer env.Trace(time.Now(), "IsWsl")
 	return false
 }
 
-func (env *ShellEnvironment) IsWsl2() bool {
+func (env *Shell) IsWsl2() bool {
 	defer env.Trace(time.Now(), "IsWsl2")
 	return false
 }
 
-func (env *ShellEnvironment) TerminalWidth() (int, error) {
+func (env *Shell) TerminalWidth() (int, error) {
 	defer env.Trace(time.Now(), "TerminalWidth")
 	if env.CmdFlags.TerminalWidth != 0 {
 		return env.CmdFlags.TerminalWidth, nil
 	}
 	handle, err := syscall.Open("CONOUT$", syscall.O_RDWR, 0)
 	if err != nil {
-		env.Log(Error, "TerminalWidth", err.Error())
+		env.Error("TerminalWidth", err)
 		return 0, err
 	}
 	info, err := winterm.GetConsoleScreenBufferInfo(uintptr(handle))
 	if err != nil {
-		env.Log(Error, "TerminalWidth", err.Error())
+		env.Error("TerminalWidth", err)
 		return 0, err
 	}
 	// return int(float64(info.Size.X) * 0.57), nil
 	return int(info.Size.X), nil
 }
 
-func (env *ShellEnvironment) Platform() string {
+func (env *Shell) Platform() string {
 	return WINDOWS
 }
 
-func (env *ShellEnvironment) CachePath() string {
+func (env *Shell) CachePath() string {
 	defer env.Trace(time.Now(), "CachePath")
 	// get LOCALAPPDATA if present
 	if cachePath := returnOrBuildCachePath(env.Getenv("LOCALAPPDATA")); len(cachePath) != 0 {
@@ -120,7 +120,7 @@ func (env *ShellEnvironment) CachePath() string {
 	return env.Home()
 }
 
-func (env *ShellEnvironment) LookWinAppPath(file string) (string, error) {
+func (env *Shell) LookWinAppPath(file string) (string, error) {
 	winAppPath := filepath.Join(env.Getenv("LOCALAPPDATA"), `\Microsoft\WindowsApps\`)
 	command := file + ".exe"
 	isWinStoreApp := func() bool {
@@ -142,10 +142,10 @@ func (env *ShellEnvironment) LookWinAppPath(file string) (string, error) {
 // If the path ends in "\", the "(Default)" key in that path is retrieved.
 //
 // Returns a variant type if successful; nil and an error if not.
-func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
+func (env *Shell) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
 	env.Trace(time.Now(), "WindowsRegistryKeyValue", path)
 
-	// Format:
+	// Format:sudo -u postgres psql
 	// "HKLM\Software\Microsoft\Windows NT\CurrentVersion\EditionID"
 	//   1  |                  2                         |   3
 	//
@@ -159,9 +159,9 @@ func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegis
 	//
 	rootKey, regPath, found := strings.Cut(path, `\`)
 	if !found {
-		errorLogMsg := fmt.Sprintf("Error, malformed registry path: '%s'", path)
-		env.Log(Error, "WindowsRegistryKeyValue", errorLogMsg)
-		return nil, errors.New(errorLogMsg)
+		err := fmt.Errorf("Error, malformed registry path: '%s'", path)
+		env.Error("WindowsRegistryKeyValue", err)
+		return nil, err
 	}
 
 	regKey := Base(env, regPath)
@@ -182,19 +182,19 @@ func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegis
 	case "HKU", "HKEY_USERS":
 		key = windows.HKEY_USERS
 	default:
-		errorLogMsg := fmt.Sprintf("Error, unknown registry key: '%s'", rootKey)
-		env.Log(Error, "WindowsRegistryKeyValue", errorLogMsg)
-		return nil, errors.New(errorLogMsg)
+		err := fmt.Errorf("Error, unknown registry key: '%s", rootKey)
+		env.Error("WindowsRegistryKeyValue", err)
+		return nil, err
 	}
 
 	k, err := registry.OpenKey(key, regPath, registry.READ)
 	if err != nil {
-		env.Log(Error, "WindowsRegistryKeyValue", err.Error())
+		env.Error("WindowsRegistryKeyValue", err)
 		return nil, err
 	}
 	_, valType, err := k.GetValue(regKey, nil)
 	if err != nil {
-		env.Log(Error, "WindowsRegistryKeyValue", err.Error())
+		env.Error("WindowsRegistryKeyValue", err)
 		return nil, err
 	}
 
@@ -219,19 +219,19 @@ func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegis
 		errorLogMsg := fmt.Sprintf("Error, no formatter for type: %d", valType)
 		return nil, errors.New(errorLogMsg)
 	}
-	env.Log(Debug, "WindowsRegistryKeyValue", fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
+	env.Debug("WindowsRegistryKeyValue", fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
 	return regValue, nil
 }
 
-func (env *ShellEnvironment) InWSLSharedDrive() bool {
+func (env *Shell) InWSLSharedDrive() bool {
 	return false
 }
 
-func (env *ShellEnvironment) ConvertToWindowsPath(path string) string {
+func (env *Shell) ConvertToWindowsPath(path string) string {
 	return strings.ReplaceAll(path, `\`, "/")
 }
 
-func (env *ShellEnvironment) ConvertToLinuxPath(path string) string {
+func (env *Shell) ConvertToLinuxPath(path string) string {
 	return path
 }
 
@@ -300,7 +300,7 @@ const (
 	NdisPhysicalMediumUnknown      NDIS_PHYSICAL_MEDIUM = "Unknown"
 )
 
-func (env *ShellEnvironment) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
+func (env *Shell) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
 	var pIFTable2 *MIN_IF_TABLE2
 	hGetIfTable2.Call(uintptr(unsafe.Pointer(&pIFTable2)))
 
@@ -448,7 +448,7 @@ func (env *ShellEnvironment) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
 	return &networks, nil
 }
 
-func (env *ShellEnvironment) GetAllWifiSSID() (map[string]string, error) {
+func (env *Shell) GetAllWifiSSID() (map[string]string, error) {
 	var pdwNegotiatedVersion uint32
 	var phClientHandle uint32
 	e, _, err := hWlanOpenHandle.Call(uintptr(uint32(2)), uintptr(unsafe.Pointer(nil)), uintptr(unsafe.Pointer(&pdwNegotiatedVersion)), uintptr(unsafe.Pointer(&phClientHandle)))
@@ -513,7 +513,7 @@ const (
 	WEP    WifiType = "WEP"
 )
 
-func (env *ShellEnvironment) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle uint32) (*WifiInfo, error) {
+func (env *Shell) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle uint32) (*WifiInfo, error) {
 	info := WifiInfo{}
 	info.Interface = strings.TrimRight(string(utf16.Decode(network.strInterfaceDescription[:])), "\x00")
 
@@ -528,7 +528,6 @@ func (env *ShellEnvironment) parseWlanInterface(network *WLAN_INTERFACE_INFO, cl
 		uintptr(unsafe.Pointer(&wlanAttr)),
 		uintptr(unsafe.Pointer(nil)))
 	if e != 0 {
-		env.Log(Error, "parseWlanInterface", "wlan_intf_opcode_current_connection error")
 		return &info, err
 	}
 
@@ -585,7 +584,6 @@ func (env *ShellEnvironment) parseWlanInterface(network *WLAN_INTERFACE_INFO, cl
 		uintptr(unsafe.Pointer(&channel)),
 		uintptr(unsafe.Pointer(nil)))
 	if e != 0 {
-		env.Log(Error, "parseWlanInterface", "wlan_intf_opcode_channel_number error")
 		return &info, err
 	}
 	info.Channel = int(*channel)
@@ -638,29 +636,12 @@ func (env *ShellEnvironment) parseWlanInterface(network *WLAN_INTERFACE_INFO, cl
 	return &info, nil
 }
 
-func (env *ShellEnvironment) DirIsWritable(path string) bool {
+func (env *Shell) DirIsWritable(path string) bool {
 	defer env.Trace(time.Now(), "DirIsWritable")
-	info, err := os.Stat(path)
-	if err != nil {
-		env.Log(Error, "DirIsWritable", err.Error())
-		return false
-	}
-
-	if !info.IsDir() {
-		env.Log(Error, "DirIsWritable", "Path isn't a directory")
-		return false
-	}
-
-	// Check if the user bit is enabled in file permission
-	if info.Mode().Perm()&(1<<(uint(7))) == 0 {
-		env.Log(Error, "DirIsWritable", "Write permission bit is not set on this file for user")
-		return false
-	}
-
-	return true
+	return env.isWriteable(path)
 }
 
-func (env *ShellEnvironment) Connection(connectionType ConnectionType) (*Connection, error) {
+func (env *Shell) Connection(connectionType ConnectionType) (*Connection, error) {
 	if env.networks == nil {
 		networks := env.getConnections()
 		if len(networks) == 0 {
@@ -673,6 +654,6 @@ func (env *ShellEnvironment) Connection(connectionType ConnectionType) (*Connect
 			return network, nil
 		}
 	}
-	env.Log(Error, "network", fmt.Sprintf("Network type '%s' not found", connectionType))
+	env.Error("network", fmt.Errorf("Network type '%s' not found", connectionType))
 	return nil, &NotImplemented{}
 }

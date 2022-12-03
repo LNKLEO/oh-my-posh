@@ -3,8 +3,7 @@ package template
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/regex"
 	"strings"
 	"text/template"
@@ -19,14 +18,14 @@ const (
 type Text struct {
 	Template        string
 	Context         interface{}
-	Env             environment.Environment
+	Env             platform.Environment
 	TemplatesResult string
 }
 
 type Data interface{}
 
 type Context struct {
-	*environment.TemplateCache
+	*platform.TemplateCache
 
 	// Simple container to hold ANY object
 	Data
@@ -43,10 +42,13 @@ func (c *Context) init(t *Text) {
 }
 
 func (t *Text) Render() (string, error) {
+	if !strings.Contains(t.Template, "{{") || !strings.Contains(t.Template, "}}") {
+		return t.Template, nil
+	}
 	t.cleanTemplate()
 	tmpl, err := template.New(t.Template).Funcs(funcMap()).Parse(t.Template)
 	if err != nil {
-		t.Env.Log(environment.Error, "Render", err.Error())
+		t.Env.Error("Render", err)
 		return "", errors.New(InvalidTemplate)
 	}
 	context := &Context{}
@@ -55,7 +57,7 @@ func (t *Text) Render() (string, error) {
 	defer buffer.Reset()
 	err = tmpl.Execute(buffer, context)
 	if err != nil {
-		t.Env.Log(environment.Error, "Render", err.Error())
+		t.Env.Error("Render", err)
 		return "", errors.New(IncorrectTemplate)
 	}
 	text := buffer.String()
@@ -66,21 +68,6 @@ func (t *Text) Render() (string, error) {
 }
 
 func (t *Text) cleanTemplate() {
-	unknownVariable := func(variable string, knownVariables *[]string) (string, bool) {
-		variable = strings.TrimPrefix(variable, ".")
-		splitted := strings.Split(variable, ".")
-		if len(splitted) == 0 {
-			return "", false
-		}
-		for _, b := range *knownVariables {
-			if b == splitted[0] {
-				return "", false
-			}
-		}
-		*knownVariables = append(*knownVariables, splitted[0])
-		return splitted[0], true
-	}
-
 	knownVariables := []string{
 		"Root",
 		"PWD",
@@ -97,14 +84,68 @@ func (t *Text) cleanTemplate() {
 		"Segments",
 		"Templates",
 	}
-	matches := regex.FindAllNamedRegexMatch(`(?: |{|\()(?P<VAR>(\.[a-zA-Z_][a-zA-Z0-9]*)+)`, t.Template)
-	for _, match := range matches {
-		if variable, OK := unknownVariable(match["VAR"], &knownVariables); OK {
-			pattern := fmt.Sprintf(`\.%s\b`, variable)
-			dataVar := fmt.Sprintf(".Data.%s", variable)
-			t.Template = regex.ReplaceAllString(pattern, t.Template, dataVar)
+
+	knownVariable := func(variable string) bool {
+		variable = strings.TrimPrefix(variable, ".")
+		splitted := strings.Split(variable, ".")
+		if len(splitted) == 0 {
+			return true
+		}
+		variable = splitted[0]
+		// check if alphanumeric
+		if !regex.MatchString(`^[a-zA-Z0-9]+$`, variable) {
+			return true
+		}
+		for _, b := range knownVariables {
+			if variable == b {
+				return true
+			}
+		}
+		return false
+	}
+
+	var result string
+	var property string
+	var inProperty bool
+	for _, char := range t.Template {
+		switch char {
+		case '.':
+			var lastChar rune
+			if len(result) > 0 {
+				lastChar = rune(result[len(result)-1])
+			}
+			// only replace if we're in a valid property start
+			// with a space, { or ( character
+			switch lastChar {
+			case ' ', '{', '(':
+				property += string(char)
+				inProperty = true
+			default:
+				result += string(char)
+			}
+		case ' ', '}', ')': // space or }
+			if !inProperty {
+				result += string(char)
+				continue
+			}
+			// end of a variable, needs to be appended
+			if !knownVariable(property) {
+				result += ".Data" + property
+			} else {
+				result += property
+			}
+			property = ""
+			result += string(char)
+			inProperty = false
+		default:
+			if inProperty {
+				property += string(char)
+				continue
+			}
+			result += string(char)
 		}
 	}
-	// allow literal dots in template
-	t.Template = strings.ReplaceAll(t.Template, `\.`, ".")
+
+	// return the result and remaining unresolved property
+	t.Template = result + property
 }

@@ -1,13 +1,13 @@
 package segments
 
 import (
-	"oh-my-posh/environment"
+	"oh-my-posh/platform"
 	"oh-my-posh/properties"
 )
 
 type Os struct {
 	props properties.Properties
-	env   environment.Environment
+	env   platform.Environment
 
 	Icon string
 }
@@ -19,6 +19,8 @@ const (
 	Linux properties.Property = "linux"
 	// Windows the string/icon to use for windows
 	Windows properties.Property = "windows"
+	// Alma the string/icon to use for Alma
+	Alma properties.Property = "alma"
 	// Alpine the string/icon to use for Alpine
 	Alpine properties.Property = "alpine"
 	// Aosc the string/icon to use for Aosc
@@ -51,6 +53,10 @@ const (
 	Nixos properties.Property = "nixos"
 	// Opensuse the string/icon to use for Opensuse
 	Opensuse properties.Property = "opensuse"
+	// Redhat the string/icon to use for Redhat
+	Redhat properties.Property = "redhat"
+	// Rocky the string/icon to use for Rocky linux
+	Rocky properties.Property = "rocky"
 	// Sabayon the string/icon to use for Sabayon
 	Sabayon properties.Property = "sabayon"
 	// Slackware the string/icon to use for Slackware
@@ -68,18 +74,18 @@ func (oi *Os) Template() string {
 func (oi *Os) Enabled() bool {
 	goos := oi.env.GOOS()
 	switch goos {
-	case environment.WINDOWS:
+	case platform.WINDOWS:
 		oi.Icon = oi.props.GetString(Windows, "\uE62A")
-	case environment.DARWIN:
+	case platform.DARWIN:
 		oi.Icon = oi.props.GetString(MacOS, "\uF179")
-	case environment.LINUX:
-		platform := oi.env.Platform()
+	case platform.LINUX:
+		pf := oi.env.Platform()
 		displayDistroName := oi.props.GetBool(DisplayDistroName, false)
 		if displayDistroName {
-			oi.Icon = platform
+			oi.Icon = pf
 			break
 		}
-		oi.Icon = oi.getDistroIcon(platform)
+		oi.Icon = oi.getDistroIcon(pf)
 	default:
 		oi.Icon = goos
 	}
@@ -88,6 +94,8 @@ func (oi *Os) Enabled() bool {
 
 func (oi *Os) getDistroIcon(distro string) string {
 	switch distro {
+	case "alma":
+		return oi.props.GetString(Alma, "\uF31D")
 	case "alpine":
 		return oi.props.GetString(Alpine, "\uF300")
 	case "aosc":
@@ -118,8 +126,12 @@ func (oi *Os) getDistroIcon(distro string) string {
 		return oi.props.GetString(Mint, "\uF30e")
 	case "nixos":
 		return oi.props.GetString(Nixos, "\uF313")
-	case "opensuse":
+	case "opensuse", "opensuse-tumbleweed":
 		return oi.props.GetString(Opensuse, "\uF314")
+	case "redhat":
+		return oi.props.GetString(Redhat, "\uF316")
+	case "rocky":
+		return oi.props.GetString(Rocky, "\uF32B")
 	case "sabayon":
 		return oi.props.GetString(Sabayon, "\uF317")
 	case "slackware":
@@ -130,7 +142,7 @@ func (oi *Os) getDistroIcon(distro string) string {
 	return oi.props.GetString(Linux, "\uF17C")
 }
 
-func (oi *Os) Init(props properties.Properties, env environment.Environment) {
+func (oi *Os) Init(props properties.Properties, env platform.Environment) {
 	oi.props = props
 	oi.env = env
 }
