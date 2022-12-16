@@ -5,7 +5,6 @@ import (
 	"math"
 	"oh-my-posh/platform"
 	"oh-my-posh/properties"
-	"oh-my-posh/regex"
 	"strconv"
 	"strings"
 )
@@ -119,7 +118,15 @@ func (n *Networks) ConstructNetworkInfo(network platform.NetworkInfo) string {
 
 	if ShowSSID && network.NDISPhysicalMeidaType == platform.NdisPhysicalMediumNative802_11 {
 		if SSIDAbbr > 0 {
-			str += regex.ReplaceAllString(fmt.Sprintf("(.{0,%d}[^ #_-])[ #_-].*", SSIDAbbr-1), network.SSID, "$1")
+			abbr := network.SSID
+			for len(abbr) > SSIDAbbr {
+				idx := strings.LastIndexAny(abbr, " #_-")
+				if idx == -1 {
+					break
+				}
+				abbr = abbr[:idx]
+			}
+			str += abbr
 		} else {
 			str += network.SSID
 		}
