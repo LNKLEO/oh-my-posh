@@ -36,11 +36,13 @@ type Segment struct {
 	Properties          properties.Map `json:"properties,omitempty"`
 	Interactive         bool           `json:"interactive,omitempty"`
 	Alias               string         `json:"alias,omitempty"`
+	MaxWidth            int            `json:"max_width,omitempty"`
+	MinWidth            int            `json:"min_width,omitempty"`
 
+	env             platform.Environment
 	writer          SegmentWriter
 	Enabled         bool `json:"-"`
 	text            string
-	env             platform.Environment
 	backgroundCache string
 	foregroundCache string
 }
@@ -401,6 +403,9 @@ func (segment *Segment) SetEnabled(env platform.Environment) {
 				return
 			}
 		}
+	}
+	if shouldHideForWidth(segment.env, segment.MinWidth, segment.MaxWidth) {
+		return
 	}
 	if segment.writer.Enabled() {
 		segment.Enabled = true
