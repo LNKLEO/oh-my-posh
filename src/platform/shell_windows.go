@@ -476,11 +476,10 @@ func (env *Shell) GetAllWifiSSID() (map[string]string, error) {
 		return nil, err
 	}
 
-	// use first interface that is connected
 	numberOfInterfaces := int(interfaceList.dwNumberOfItems)
-	infoSize := unsafe.Sizeof(interfaceList.InterfaceInfo[0])
 	for i := 0; i < numberOfInterfaces; i++ {
-		network := (*WLAN_INTERFACE_INFO)(unsafe.Pointer(uintptr(unsafe.Pointer(&interfaceList.InterfaceInfo[0])) + uintptr(i)*infoSize))
+		infoSize := unsafe.Sizeof(interfaceList.InterfaceInfo[i])
+		network := (*WLAN_INTERFACE_INFO)(unsafe.Pointer(uintptr(unsafe.Pointer(&interfaceList.InterfaceInfo[i])) + uintptr(i)*infoSize))
 		if network.isState == 1 {
 			wifi, _ := env.parseWlanInterface(network, phClientHandle)
 			ssid[wifi.Interface] = wifi.SSID
