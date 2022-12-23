@@ -62,6 +62,7 @@ type Flags struct {
 	Strict        bool
 	Debug         bool
 	Manual        bool
+	Plain         bool
 }
 
 type CommandError struct {
@@ -570,12 +571,6 @@ func (env *Shell) CommandPath(command string) string {
 		env.Debug("CommandPath", path)
 		return path
 	}
-	path, err = env.LookWinAppPath(command)
-	if err == nil {
-		env.cmdCache.set(command, path)
-		env.Debug("CommandPath", path)
-		return path
-	}
 	env.Error("CommandPath", err)
 	return ""
 }
@@ -734,7 +729,7 @@ func (env *Shell) Close() {
 
 func (env *Shell) LoadTemplateCache() {
 	defer env.Trace(time.Now(), "LoadTemplateCache")
-	val, OK := env.fileCache.Get(TEMPLATECACHE)
+	val, OK := env.fileCache.Get("template_cache_91508")
 	if !OK {
 		return
 	}

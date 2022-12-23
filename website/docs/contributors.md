@@ -209,6 +209,12 @@ Thanks goes to these wonderful people ([emoji key][acek]):
       <td align="center"><a href="https://github.com/astronaako"><img src="https://avatars.githubusercontent.com/u/18577543?v=4?s=100" width="100px;" alt="Mohamed Naamy"/><br /><sub><b>Mohamed Naamy</b></sub></a><br /><a href="#design-astronaako" title="Design">🎨</a></td>
       <td align="center"><a href="http://bend-n.github.io"><img src="https://avatars.githubusercontent.com/u/70787919?v=4?s=100" width="100px;" alt="bendn"/><br /><sub><b>bendn</b></sub></a><br /><a href="#design-bend-n" title="Design">🎨</a></td>
     </tr>
+    <tr>
+      <td align="center"><a href="http://www.david-anthoff.com"><img src="https://avatars.githubusercontent.com/u/1036561?v=4?s=100" width="100px;" alt="David Anthoff"/><br /><sub><b>David Anthoff</b></sub></a><br /><a href="https://github.com/JanDeDobbeleer/oh-my-posh/commits?author=davidanthoff" title="Code">💻</a> <a href="https://github.com/JanDeDobbeleer/oh-my-posh/commits?author=davidanthoff" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/jooooel"><img src="https://avatars.githubusercontent.com/u/9303280?v=4?s=100" width="100px;" alt="jooooel"/><br /><sub><b>jooooel</b></sub></a><br /><a href="https://github.com/JanDeDobbeleer/oh-my-posh/commits?author=jooooel" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/maxlandon"><img src="https://avatars.githubusercontent.com/u/25826036?v=4?s=100" width="100px;" alt="maxlandon"/><br /><sub><b>maxlandon</b></sub></a><br /><a href="https://github.com/JanDeDobbeleer/oh-my-posh/commits?author=maxlandon" title="Code">💻</a></td>
+      <td align="center"><a href="https://linolevan.com"><img src="https://avatars.githubusercontent.com/u/11367844?v=4?s=100" width="100px;" alt="Lino Le Van"/><br /><sub><b>Lino Le Van</b></sub></a><br /><a href="https://github.com/JanDeDobbeleer/oh-my-posh/commits?author=lino-levan" title="Documentation">📖</a></td>
+    </tr>
   </tbody>
 </table>
 
