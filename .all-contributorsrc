@@ -1280,7 +1280,8 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/121028?v=4",
       "profile": "https://github.com/mjcarman",
       "contributions": [
-        "code"
+        "code",
+        "doc"
       ]
     },
     {
@@ -1449,6 +1450,26 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/11367844?v=4",
       "profile": "https://linolevan.com",
       "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "dvlprJobayer",
+      "name": "Jobayer Ahammed Patwary",
+      "avatar_url": "https://avatars.githubusercontent.com/u/76583359?v=4",
+      "profile": "https://github.com/dvlprJobayer",
+      "contributions": [
+        "design"
+      ]
+    },
+    {
+      "login": "NoF0rte",
+      "name": "NoF0rte",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64100993?v=4",
+      "profile": "https://github.com/NoF0rte",
+      "contributions": [
+        "code",
+        "design",
         "doc"
       ]
     }

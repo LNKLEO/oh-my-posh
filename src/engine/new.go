@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"oh-my-posh/color"
-	"oh-my-posh/console"
-	"oh-my-posh/platform"
-	"oh-my-posh/shell"
+	"github.com/jandedobbeleer/oh-my-posh/color"
+	"github.com/jandedobbeleer/oh-my-posh/console"
+	"github.com/jandedobbeleer/oh-my-posh/platform"
+	"github.com/jandedobbeleer/oh-my-posh/shell"
 )
 
 // New returns a prompt engine initialized with the
@@ -16,7 +16,6 @@ func New(flags *platform.Flags) *Engine {
 	}
 
 	env.Init()
-	defer env.Close()
 	cfg := LoadConfig(env)
 	ansi := &color.Ansi{}
 	ansi.Init(env.Shell())

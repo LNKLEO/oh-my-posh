@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"oh-my-posh/engine"
-	"oh-my-posh/platform"
+
+	"github.com/jandedobbeleer/oh-my-posh/engine"
+	"github.com/jandedobbeleer/oh-my-posh/platform"
 
 	"github.com/spf13/cobra"
 )
@@ -59,6 +60,7 @@ var printCmd = &cobra.Command{
 		}
 
 		eng := engine.New(flags)
+		defer eng.Env.Close()
 
 		switch args[0] {
 		case "debug":
