@@ -503,7 +503,7 @@ func (env *Shell) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle 
 	info.Interface = strings.TrimRight(string(utf16.Decode(network.strInterfaceDescription[:])), "\x00")
 
 	// Query wifi connection state
-	var dataSize uint16
+	var dataSize uint32
 	var wlanAttr *WLAN_CONNECTION_ATTRIBUTES
 	e, _, err := hWlanQueryInterface.Call(uintptr(clientHandle),
 		uintptr(unsafe.Pointer(&network.InterfaceGuid)),
