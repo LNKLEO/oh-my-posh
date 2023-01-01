@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 
-	"github.com/jandedobbeleer/oh-my-posh/color"
-	"github.com/jandedobbeleer/oh-my-posh/console"
-	"github.com/jandedobbeleer/oh-my-posh/engine"
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/shell"
+	"github.com/LNKLEO/oh-my-posh/color"
+	"github.com/LNKLEO/oh-my-posh/console"
+	"github.com/LNKLEO/oh-my-posh/engine"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/shell"
 
 	"github.com/spf13/cobra"
 )

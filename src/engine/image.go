@@ -30,8 +30,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/jandedobbeleer/oh-my-posh/color"
-	"github.com/jandedobbeleer/oh-my-posh/regex"
+	"github.com/LNKLEO/oh-my-posh/color"
+	"github.com/LNKLEO/oh-my-posh/regex"
 
 	"github.com/esimov/stackblur-go"
 	"github.com/fogleman/gg"

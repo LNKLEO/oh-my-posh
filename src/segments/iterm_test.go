@@ -3,7 +3,7 @@ package segments
 import (
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/mock"
+	"github.com/LNKLEO/oh-my-posh/mock"
 
 	"github.com/stretchr/testify/assert"
 )

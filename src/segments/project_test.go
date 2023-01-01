@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/mock"
-	"github.com/jandedobbeleer/oh-my-posh/properties"
+	"github.com/LNKLEO/oh-my-posh/mock"
+	"github.com/LNKLEO/oh-my-posh/properties"
 
 	"github.com/alecthomas/assert"
 

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/properties"
-	"github.com/jandedobbeleer/oh-my-posh/segments"
-	"github.com/jandedobbeleer/oh-my-posh/shell"
-	"github.com/jandedobbeleer/oh-my-posh/template"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/properties"
+	"github.com/LNKLEO/oh-my-posh/segments"
+	"github.com/LNKLEO/oh-my-posh/shell"
+	"github.com/LNKLEO/oh-my-posh/template"
 
 	c "golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -264,6 +264,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	KUBECTL:       func() SegmentWriter { return &segments.Kubectl{} },
 	LUA:           func() SegmentWriter { return &segments.Lua{} },
 	NBGV:          func() SegmentWriter { return &segments.Nbgv{} },
+	NETWORKS:      func() SegmentWriter { return &segments.Networks{} },
 	NIGHTSCOUT:    func() SegmentWriter { return &segments.Nightscout{} },
 	NODE:          func() SegmentWriter { return &segments.Node{} },
 	NPM:           func() SegmentWriter { return &segments.Npm{} },

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/regex"
-	"github.com/jandedobbeleer/oh-my-posh/shell"
+	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/oh-my-posh/shell"
 )
 
 const (

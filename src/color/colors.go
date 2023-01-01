@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/platform"
 
 	"github.com/gookit/color"
 )
