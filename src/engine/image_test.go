@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/color"
+	"github.com/LNKLEO/oh-my-posh/color"
 
 	"github.com/stretchr/testify/assert"
 )

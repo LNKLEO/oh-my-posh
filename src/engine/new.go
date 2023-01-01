@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"github.com/jandedobbeleer/oh-my-posh/color"
-	"github.com/jandedobbeleer/oh-my-posh/console"
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/shell"
+	"github.com/LNKLEO/oh-my-posh/color"
+	"github.com/LNKLEO/oh-my-posh/console"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/shell"
 )
 
 // New returns a prompt engine initialized with the

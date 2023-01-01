@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/engine"
-	"github.com/jandedobbeleer/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/engine"
+	"github.com/LNKLEO/oh-my-posh/platform"
 
 	"github.com/spf13/cobra"
 )

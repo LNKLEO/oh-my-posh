@@ -3,7 +3,7 @@ package color
 import (
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/regex"
+	"github.com/LNKLEO/oh-my-posh/regex"
 
 	"github.com/mattn/go-runewidth"
 )

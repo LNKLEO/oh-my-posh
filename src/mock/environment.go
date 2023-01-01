@@ -5,8 +5,8 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/platform/battery"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/platform/battery"
 
 	mock "github.com/stretchr/testify/mock"
 )

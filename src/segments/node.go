@@ -3,9 +3,9 @@ package segments
 import (
 	"fmt"
 
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/properties"
-	"github.com/jandedobbeleer/oh-my-posh/regex"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/properties"
+	"github.com/LNKLEO/oh-my-posh/regex"
 )
 
 type Node struct {

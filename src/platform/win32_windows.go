@@ -9,7 +9,7 @@ import (
 	"unicode/utf16"
 	"unsafe"
 
-	"github.com/jandedobbeleer/oh-my-posh/regex"
+	"github.com/LNKLEO/oh-my-posh/regex"
 
 	"golang.org/x/sys/windows"
 )

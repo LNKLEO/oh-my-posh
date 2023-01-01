@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/mock"
-	"github.com/jandedobbeleer/oh-my-posh/properties"
+	"github.com/LNKLEO/oh-my-posh/mock"
+	"github.com/LNKLEO/oh-my-posh/properties"
 
 	"github.com/alecthomas/assert"
 	mock2 "github.com/stretchr/testify/mock"

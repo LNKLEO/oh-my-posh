@@ -3,10 +3,10 @@ package segments
 import (
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/constants"
-	"github.com/jandedobbeleer/oh-my-posh/mock"
-	"github.com/jandedobbeleer/oh-my-posh/platform"
-	"github.com/jandedobbeleer/oh-my-posh/properties"
+	"github.com/LNKLEO/oh-my-posh/constants"
+	"github.com/LNKLEO/oh-my-posh/mock"
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/properties"
 
 	"github.com/stretchr/testify/assert"
 )

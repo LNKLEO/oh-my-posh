@@ -3,7 +3,7 @@ package color
 import (
 	"testing"
 
-	"github.com/jandedobbeleer/oh-my-posh/shell"
+	"github.com/LNKLEO/oh-my-posh/shell"
 
 	"github.com/stretchr/testify/assert"
 )

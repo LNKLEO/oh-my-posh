@@ -3,10 +3,11 @@ package segments
 import (
 	"fmt"
 	"math"
-	"oh-my-posh/platform"
-	"oh-my-posh/properties"
 	"strconv"
 	"strings"
+
+	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/properties"
 )
 
 type Networks struct {
