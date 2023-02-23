@@ -32,11 +32,11 @@ func runImageTest(config, content string) (string, error) {
 		return "", err
 	}
 	defer os.Remove(file.Name())
-	ansi := &color.Ansi{}
-	ansi.InitPlain()
+	writer := &ansi.Writer{}
+	writer.Init(shell.GENERIC)
 	image := &ImageRenderer{
 		AnsiString: content,
-		Ansi:       ansi,
+		Ansi:       writer,
 	}
 	image.Init(config)
 	err = image.SavePNG()

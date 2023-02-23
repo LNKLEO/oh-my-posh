@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/color"
+	"github.com/LNKLEO/oh-my-posh/ansi"
 	"github.com/LNKLEO/oh-my-posh/platform"
 	"github.com/LNKLEO/oh-my-posh/shell"
 )
@@ -52,27 +52,23 @@ type Block struct {
 	MinWidth int `json:"min_width,omitempty"`
 
 	env                   platform.Environment
-	writer                color.Writer
-	ansi                  *color.Ansi
+	writer                *ansi.Writer
 	activeSegment         *Segment
 	previousActiveSegment *Segment
 }
 
-func (b *Block) Init(env platform.Environment, writer color.Writer, ansi *color.Ansi) {
+func (b *Block) Init(env platform.Environment, writer *ansi.Writer) {
 	b.env = env
 	b.writer = writer
-	b.ansi = ansi
 	b.executeSegmentLogic()
 }
 
 func (b *Block) InitPlain(env platform.Environment, config *Config) {
-	b.ansi = &color.Ansi{}
-	b.ansi.InitPlain()
-	b.writer = &color.AnsiWriter{
-		Ansi:               b.ansi,
+	b.writer = &ansi.Writer{
 		TerminalBackground: shell.ConsoleBackgroundColor(env, config.TerminalBackground),
 		AnsiColors:         config.MakeColors(),
 	}
+	b.writer.Init(shell.GENERIC)
 	b.env = env
 	b.executeSegmentLogic()
 }
@@ -134,6 +130,10 @@ func (b *Block) RenderSegments() (string, int) {
 		if !segment.Enabled && segment.style() != Accordion {
 			continue
 		}
+		if colors, newCycle := cycle.Loop(); colors != nil {
+			cycle = &newCycle
+			segment.colors = colors
+		}
 		b.setActiveSegment(segment)
 		b.renderActiveSegment()
 	}
@@ -145,14 +145,14 @@ func (b *Block) renderActiveSegment() {
 	b.writePowerline(false)
 	switch b.activeSegment.style() {
 	case Plain, Powerline:
-		b.writer.Write(color.Background, color.Foreground, b.activeSegment.text)
+		b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
 	case Diamond:
-		b.writer.Write(color.Transparent, color.Background, b.activeSegment.LeadingDiamond)
-		b.writer.Write(color.Background, color.Foreground, b.activeSegment.text)
-		b.writer.Write(color.Transparent, color.Background, b.activeSegment.TrailingDiamond)
+		b.writer.Write(ansi.Transparent, ansi.Background, b.activeSegment.LeadingDiamond)
+		b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
+		b.writer.Write(ansi.Transparent, ansi.Background, b.activeSegment.TrailingDiamond)
 	case Accordion:
 		if b.activeSegment.Enabled {
-			b.writer.Write(color.Background, color.Foreground, b.activeSegment.text)
+			b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
 		}
 	}
 	b.previousActiveSegment = b.activeSegment
@@ -173,12 +173,12 @@ func (b *Block) writePowerline(final bool) {
 	if len(symbol) == 0 {
 		return
 	}
-	bgColor := color.Background
+	bgColor := ansi.Background
 	if final || !b.activeSegment.isPowerline() {
-		bgColor = color.Transparent
+		bgColor = ansi.Transparent
 	}
 	if b.activeSegment.style() == Diamond && len(b.activeSegment.LeadingDiamond) == 0 {
-		bgColor = color.Background
+		bgColor = ansi.Background
 	}
 	if b.activeSegment.InvertPowerline {
 		b.writer.Write(b.getPowerlineColor(), bgColor, symbol)
@@ -189,7 +189,7 @@ func (b *Block) writePowerline(final bool) {
 
 func (b *Block) getPowerlineColor() string {
 	if b.previousActiveSegment == nil {
-		return color.Transparent
+		return ansi.Transparent
 	}
 	if b.previousActiveSegment.style() == Diamond && len(b.previousActiveSegment.TrailingDiamond) == 0 {
 		return b.previousActiveSegment.background()
@@ -198,7 +198,7 @@ func (b *Block) getPowerlineColor() string {
 		return b.previousActiveSegment.background()
 	}
 	if !b.previousActiveSegment.isPowerline() {
-		return color.Transparent
+		return ansi.Transparent
 	}
 	return b.previousActiveSegment.background()
 }

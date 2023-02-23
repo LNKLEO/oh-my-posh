@@ -3,8 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/LNKLEO/oh-my-posh/color"
-	"github.com/LNKLEO/oh-my-posh/console"
+	"github.com/LNKLEO/oh-my-posh/ansi"
 	"github.com/LNKLEO/oh-my-posh/engine"
 	"github.com/LNKLEO/oh-my-posh/platform"
 	"github.com/LNKLEO/oh-my-posh/shell"
@@ -52,46 +51,45 @@ Exports the config to an image file using customized output options.`,
 			Version: cliVersion,
 			CmdFlags: &platform.Flags{
 				Config: config,
-				Shell:  shell.PLAIN,
+				Shell:  shell.GENERIC,
 			},
 		}
 		env.Init()
 		defer env.Close()
 		cfg := engine.LoadConfig(env)
-		ansi := &color.Ansi{}
-		ansi.InitPlain()
+
+		// set dsane defaults for things we don't print
+		cfg.ConsoleTitleTemplate = ""
+		cfg.PWD = ""
+
 		writerColors := cfg.MakeColors()
-		writer := &color.AnsiWriter{
-			Ansi:               ansi,
+		writer := &ansi.Writer{
 			TerminalBackground: shell.ConsoleBackgroundColor(env, cfg.TerminalBackground),
 			AnsiColors:         writerColors,
 		}
-		consoleTitle := &console.Title{
-			Env:      env,
-			Ansi:     ansi,
-			Template: cfg.ConsoleTitleTemplate,
-		}
+		writer.Init(shell.GENERIC)
 		eng := &engine.Engine{
-			Config:       cfg,
-			Env:          env,
-			Writer:       writer,
-			ConsoleTitle: consoleTitle,
-			Ansi:         ansi,
+			Config: cfg,
+			Env:    env,
+			Writer: writer,
 		}
+
 		prompt := eng.PrintPrimary()
+
 		imageCreator := &engine.ImageRenderer{
 			AnsiString:    prompt,
 			Author:        author,
 			CursorPadding: cursorPadding,
 			RPromptOffset: rPromptOffset,
 			BgColor:       bgColor,
-			Ansi:          ansi,
+			Ansi:          writer,
 		}
 		if outputImage != "" {
 			imageCreator.Path = cleanOutputPath(outputImage, env)
 		}
 		imageCreator.Init(env.Flags().Config)
 		err := imageCreator.SavePNG()
+
 		if err != nil {
 			fmt.Print(err.Error())
 		}

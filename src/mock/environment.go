@@ -233,6 +233,11 @@ func (env *MockedEnvironment) MockGitCommand(dir, returnValue string, args ...st
 	env.On("RunCommand", "git", args).Return(returnValue, nil)
 }
 
+func (env *MockedEnvironment) MockHgCommand(dir, returnValue string, args ...string) {
+	args = append([]string{"-R", dir}, args...)
+	env.On("RunCommand", "hg", args).Return(returnValue, nil)
+}
+
 func (env *MockedEnvironment) MockSvnCommand(dir, returnValue string, args ...string) {
 	args = append([]string{"-C", dir, "--no-optional-locks", "-c", "core.quotepath=false", "-c", "color.status=false"}, args...)
 	env.On("RunCommand", "svn", args).Return(returnValue, nil)
@@ -248,19 +253,33 @@ func (env *MockedEnvironment) DirMatchesOneOf(dir string, regexes []string) bool
 	return args.Bool(0)
 }
 
-func (env *MockedEnvironment) Trace(start time.Time, function string, args ...string) {
-	_ = env.Called(start, function, args)
+func (env *MockedEnvironment) Trace(start time.Time, args ...string) {
+	_ = env.Called(start, args)
 }
 
-func (env *MockedEnvironment) Debug(funcName, message string) {
-	_ = env.Called(funcName, message)
+func (env *MockedEnvironment) Debug(message string) {
+	_ = env.Called(message)
 }
 
-func (env *MockedEnvironment) Error(funcName string, err error) {
-	_ = env.Called(funcName, err)
+func (env *MockedEnvironment) Error(err error) {
+	_ = env.Called(err)
 }
 
 func (env *MockedEnvironment) DirIsWritable(path string) bool {
 	args := env.Called(path)
 	return args.Bool(0)
+}
+
+func (env *MockedEnvironment) SetPromptCount() {
+	_ = env.Called()
+}
+
+func (env *MockedEnvironment) CursorPosition() (int, int) {
+	args := env.Called()
+	return args.Int(0), args.Int(1)
+}
+
+func (env *MockedEnvironment) SystemInfo() (*platform.SystemInfo, error) {
+	args := env.Called()
+	return args.Get(0).(*platform.SystemInfo), args.Error(1)
 }

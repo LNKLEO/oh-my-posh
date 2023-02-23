@@ -16,7 +16,7 @@ import (
 )
 
 func (env *Shell) Root() bool {
-	defer env.Trace(time.Now(), "Root")
+	defer env.Trace(time.Now())
 	var sid *windows.SID
 
 	// Although this looks scary, it is directly copied from the
@@ -31,7 +31,7 @@ func (env *Shell) Root() bool {
 		0, 0, 0, 0, 0, 0,
 		&sid)
 	if err != nil {
-		env.Error("Root", err)
+		env.Error(err)
 		return false
 	}
 	defer func() {
@@ -45,7 +45,7 @@ func (env *Shell) Root() bool {
 
 	member, err := token.IsMember(sid)
 	if err != nil {
-		env.Error("Root", err)
+		env.Error(err)
 		return false
 	}
 
@@ -55,7 +55,7 @@ func (env *Shell) Root() bool {
 func (env *Shell) Home() string {
 	home := os.Getenv("HOME")
 	defer func() {
-		env.Debug("Home", home)
+		env.Debug(home)
 	}()
 	if len(home) > 0 {
 		return home
@@ -69,37 +69,37 @@ func (env *Shell) Home() string {
 }
 
 func (env *Shell) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
-	defer env.Trace(time.Now(), "WindowTitle", windowTitleRegex)
+	defer env.Trace(time.Now(), windowTitleRegex)
 	title, err := queryWindowTitles(processName, windowTitleRegex)
 	if err != nil {
-		env.Error("QueryWindowTitles", err)
+		env.Error(err)
 	}
 	return title, err
 }
 
 func (env *Shell) IsWsl() bool {
-	defer env.Trace(time.Now(), "IsWsl")
+	defer env.Trace(time.Now())
 	return false
 }
 
 func (env *Shell) IsWsl2() bool {
-	defer env.Trace(time.Now(), "IsWsl2")
+	defer env.Trace(time.Now())
 	return false
 }
 
 func (env *Shell) TerminalWidth() (int, error) {
-	defer env.Trace(time.Now(), "TerminalWidth")
+	defer env.Trace(time.Now())
 	if env.CmdFlags.TerminalWidth != 0 {
 		return env.CmdFlags.TerminalWidth, nil
 	}
 	handle, err := syscall.Open("CONOUT$", syscall.O_RDWR, 0)
 	if err != nil {
-		env.Error("TerminalWidth", err)
+		env.Error(err)
 		return 0, err
 	}
 	info, err := winterm.GetConsoleScreenBufferInfo(uintptr(handle))
 	if err != nil {
-		env.Error("TerminalWidth", err)
+		env.Error(err)
 		return 0, err
 	}
 	// return int(float64(info.Size.X) * 0.57), nil
@@ -111,7 +111,7 @@ func (env *Shell) Platform() string {
 }
 
 func (env *Shell) CachePath() string {
-	defer env.Trace(time.Now(), "CachePath")
+	defer env.Trace(time.Now())
 	// get LOCALAPPDATA if present
 	if cachePath := returnOrBuildCachePath(env.Getenv("LOCALAPPDATA")); len(cachePath) != 0 {
 		return cachePath
@@ -129,7 +129,7 @@ func (env *Shell) CachePath() string {
 //
 // Returns a variant type if successful; nil and an error if not.
 func (env *Shell) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
-	env.Trace(time.Now(), "WindowsRegistryKeyValue", path)
+	env.Trace(time.Now(), path)
 
 	// Format:sudo -u postgres psql
 	// "HKLM\Software\Microsoft\Windows NT\CurrentVersion\EditionID"
@@ -146,7 +146,7 @@ func (env *Shell) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, e
 	rootKey, regPath, found := strings.Cut(path, `\`)
 	if !found {
 		err := fmt.Errorf("Error, malformed registry path: '%s'", path)
-		env.Error("WindowsRegistryKeyValue", err)
+		env.Error(err)
 		return nil, err
 	}
 
@@ -169,18 +169,18 @@ func (env *Shell) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, e
 		key = windows.HKEY_USERS
 	default:
 		err := fmt.Errorf("Error, unknown registry key: '%s", rootKey)
-		env.Error("WindowsRegistryKeyValue", err)
+		env.Error(err)
 		return nil, err
 	}
 
 	k, err := registry.OpenKey(key, regPath, registry.READ)
 	if err != nil {
-		env.Error("WindowsRegistryKeyValue", err)
+		env.Error(err)
 		return nil, err
 	}
 	_, valType, err := k.GetValue(regKey, nil)
 	if err != nil {
-		env.Error("WindowsRegistryKeyValue", err)
+		env.Error(err)
 		return nil, err
 	}
 
@@ -205,7 +205,7 @@ func (env *Shell) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, e
 		errorLogMsg := fmt.Sprintf("Error, no formatter for type: %d", valType)
 		return nil, errors.New(errorLogMsg)
 	}
-	env.Debug("WindowsRegistryKeyValue", fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
+	env.Debug(fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
 	return regValue, nil
 }
 
@@ -622,7 +622,7 @@ func (env *Shell) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle 
 }
 
 func (env *Shell) DirIsWritable(path string) bool {
-	defer env.Trace(time.Now(), "DirIsWritable")
+	defer env.Trace(time.Now())
 	return env.isWriteable(path)
 }
 
@@ -639,6 +639,6 @@ func (env *Shell) Connection(connectionType ConnectionType) (*Connection, error)
 			return network, nil
 		}
 	}
-	env.Error("network", fmt.Errorf("Network type '%s' not found", connectionType))
+	env.Error(fmt.Errorf("Network type '%s' not found", connectionType))
 	return nil, &NotImplemented{}
 }

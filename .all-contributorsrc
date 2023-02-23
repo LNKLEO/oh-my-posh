@@ -1472,6 +1472,109 @@
         "design",
         "doc"
       ]
+    },
+    {
+      "login": "LNKLEO",
+      "name": "LNKLEO",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10334184?v=4",
+      "profile": "https://github.com/LNKLEO",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "kamfaima",
+      "name": "kamfaima",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23546392?v=4",
+      "profile": "https://github.com/kamfaima",
+      "contributions": [
+        "design"
+      ]
+    },
+    {
+      "login": "dhrdlicka",
+      "name": "David Hrdlička",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13226155?v=4",
+      "profile": "https://github.com/dhrdlicka",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "davidcourtney",
+      "name": "David Courtney",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1019134?v=4",
+      "profile": "http://davidcourtney.com",
+      "contributions": [
+        "code",
+        "design",
+        "doc"
+      ]
+    },
+    {
+      "login": "Jensdevloo",
+      "name": "jensdevloo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2276152?v=4",
+      "profile": "https://github.com/Jensdevloo",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "thomasdoerr",
+      "name": "Thomas Dörr",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6919685?v=4",
+      "profile": "https://github.com/thomasdoerr",
+      "contributions": [
+        "design"
+      ]
+    },
+    {
+      "login": "SvenAelterman",
+      "name": "Sven Aelterman",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17446043?v=4",
+      "profile": "https://blog.aelterman.com",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "CodexLink",
+      "name": "Janrey Licas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5953927?v=4",
+      "profile": "https://github.com/CodexLink",
+      "contributions": [
+        "design",
+        "doc"
+      ]
+    },
+    {
+      "login": "padilo",
+      "name": "Pablo Díaz-López",
+      "avatar_url": "https://avatars.githubusercontent.com/u/783959?v=4",
+      "profile": "https://github.com/padilo",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "DarkMagicSource",
+      "name": "Caitlyn Williams",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35950530?v=4",
+      "profile": "https://github.com/DarkMagicSource",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "gork3n",
+      "name": "Christopher Henderson",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1086155?v=4",
+      "profile": "https://github.com/gork3n",
+      "contributions": [
+        "design"
+      ]
     }
   ],
   "contributorsPerLine": 7,

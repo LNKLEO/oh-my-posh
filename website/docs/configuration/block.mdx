@@ -82,11 +82,13 @@ Tells the engine what to do with the block. There are two options:
 
 - `prompt` renders one or more segments
 - `rprompt` renders one or more segments aligned to the right of the cursor. Only one `rprompt` block is permitted.
-  Supported on zsh, bash, PowerShell, cmd and fish.
+  Supported on zsh, bash, PowerShell, cmd, nu and fish.
 
 ### Newline
 
-Start the block on a new line - defaults to `false`.
+Start the block on a new line - defaults to `false`. For `bash`, `zsh`, `pwsh` and `cmd` this will not print a newline
+that's defined on the first block when the prompt is on the first line (when using clear), or when the shell session
+starts (1st prompt).
 
 ### Alignment
 

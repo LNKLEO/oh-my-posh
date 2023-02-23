@@ -29,6 +29,9 @@ See the documentation to initialize your shell: https://ohmyposh.dev/docs/instal
 			"pwsh",
 			"cmd",
 			"nu",
+			"tcsh",
+			"elvish",
+			"xonsh",
 		},
 		Args: NoArgsOrOneValidArg,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -65,7 +68,11 @@ func runInit(shellName string) {
 	shell.Transient = cfg.TransientPrompt != nil
 	shell.ErrorLine = cfg.ErrorLine != nil || cfg.ValidLine != nil
 	shell.Tooltips = len(cfg.Tooltips) > 0
-	for _, block := range cfg.Blocks {
+	for i, block := range cfg.Blocks {
+		// only fetch cursor position when relevant
+		if i == 0 && block.Newline {
+			shell.Cursor = true
+		}
 		if block.Type == engine.RPrompt {
 			shell.RPrompt = true
 		}
