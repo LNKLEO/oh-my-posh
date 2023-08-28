@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "http://example.com/example.json",
+  "$id": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
   "type": "object",
   "title": "The Oh My Posh theme definition",
   "description": "https://ohmyposh.dev/docs/configuration/overview",
@@ -101,6 +101,12 @@
       "title": "Version Url Template",
       "description": "Template that creates the URL of the version info / release notes",
       "default": ""
+    },
+    "status_formats": {
+      "type": "object",
+      "title": "Status string formats",
+      "description": "Override the status format for a specific change. Example: {\"Added\": \"Added: %d\"}",
+      "default": {}
     },
     "extra_prompt": {
       "type": "object",
@@ -258,7 +264,6 @@
             "docker",
             "dotnet",
             "dart",
-            "exit",
             "executiontime",
             "flutter",
             "fossil",
@@ -292,7 +297,9 @@
             "r",
             "sapling",
             "session",
+            "sitecore",
             "spotify",
+            "status",
             "shell",
             "sysinfo",
             "strava",
@@ -303,6 +310,7 @@
             "terraform",
             "ui5tooling",
             "unity",
+            "upgrade",
             "wakatime",
             "winreg",
             "withings",
@@ -432,7 +440,7 @@
           },
           "then": {
             "title": "Project Segment",
-            "description": "https://ohmyposh.dev/docs/project"
+            "description": "https://ohmyposh.dev/docs/segments/project"
           }
         },
         {
@@ -445,7 +453,7 @@
           },
           "then": {
             "title": "NPM Segment",
-            "description": "https://ohmyposh.dev/docs/npm",
+            "description": "https://ohmyposh.dev/docs/segments/npm",
             "properties": {
               "properties": {
                 "properties": {
@@ -529,14 +537,14 @@
           },
           "then": {
             "title": "Azure Segment",
-            "description": "https://ohmyposh.dev/docs/az",
+            "description": "https://ohmyposh.dev/docs/segments/az",
             "properties": {
               "properties": {
                 "properties": {
                   "source": {
                     "type": "string",
                     "title": "Source",
-                    "description": "https://ohmyposh.dev/docs/az#properties",
+                    "description": "https://ohmyposh.dev/docs/segments/az#properties",
                     "default": "first_match",
                     "enum": [
                       "first_match",
@@ -769,13 +777,13 @@
           "if": {
             "properties": {
               "type": {
-                "const": "exit"
+                "const": "status"
               }
             }
           },
           "then": {
-            "title": "Exit Segment",
-            "description": "https://ohmyposh.dev/docs/segments/exit",
+            "title": "Status Segment",
+            "description": "https://ohmyposh.dev/docs/segments/status",
             "properties": {
               "properties": {
                 "properties": {
@@ -1006,6 +1014,15 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "fetch_user": {
+                    "type": "boolean",
+                    "title": "Fetch the user",
+                    "description": "Fetch the current configured user for the repository",
+                    "default": false
+                  },
+                  "status_formats": {
+                    "$ref": "#/definitions/status_formats"
                   }
                 }
               }
@@ -1399,6 +1416,12 @@
                     "title": "Parse kubeconfig",
                     "description": "Parse kubeconfig files instead of calling out to kubectl to improve performance.",
                     "default": false
+                  },
+                  "context_aliases": {
+                    "type": "object",
+                    "title": "Context aliases",
+                    "description": "Custom context names.",
+                    "default": {}
                   }
                 }
               }
@@ -1682,6 +1705,12 @@
                     "title": "Alma Icon",
                     "description": "The icon to use for Alma",
                     "default": "\uF31D"
+                  },
+                  "android": {
+                    "type": "string",
+                    "title": "Android Icon",
+                    "description": "The icon to use for Alma",
+                    "default": "\uf17b"
                   }
                 }
               }
@@ -1740,7 +1769,8 @@
                       "folder",
                       "mixed",
                       "letter",
-                      "unique"
+                      "unique",
+                      "powerlevel"
                     ],
                     "default": "folder"
                   },
@@ -1773,6 +1803,31 @@
                     "title": "Hide the root location",
                     "description": "Hides the root location, when using agnoster_short style, if it doesn't fit in the last max_depth folders.",
                     "default": false
+                  },
+                  "cycle": {
+                    "type": "array",
+                    "title": "Color overrides to use to cycle through and color the path per folder",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "cycle_folder_separator": {
+                    "type": "boolean",
+                    "title": "Cycle the folder_separator_icon",
+                    "description": "Colorize the folder_separator_icon as well when using a cycle.",
+                    "default": false
+                  },
+                  "folder_format": {
+                    "type": "string",
+                    "title": "The folder format",
+                    "description": "Golang string format to apply to the folder name",
+                    "pattern": ".*%s.*"
+                  },
+                  "edge_format": {
+                    "type": "string",
+                    "title": "The format to use on the start and end folder",
+                    "description": "Golang string format to apply to the start and end folder",
+                    "pattern": ".*%s.*"
                   }
                 }
               }
@@ -1829,6 +1884,43 @@
           "if": {
             "properties": {
               "type": {
+                "const": "quasar"
+              }
+            }
+          },
+          "then": {
+            "title": "Quasar Segment",
+            "description": "https://ohmyposh.dev/docs/segments/quasar",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "home_enabled": {
+                    "$ref": "#/definitions/home_enabled"
+                  },
+                  "fetch_version": {
+                    "$ref": "#/definitions/fetch_version"
+                  },
+                  "missing_command_text": {
+                    "$ref": "#/definitions/missing_command_text"
+                  },
+                  "version_url_template": {
+                    "$ref": "#/definitions/version_url_template"
+                  },
+                  "fetch_dependencies": {
+                    "type": "boolean",
+                    "title": "Fetch Dependencies",
+                    "description": "Fetch the vite and @quasar/app-vite dependency information or not",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "root"
               }
             }
@@ -1857,6 +1949,9 @@
                     "title": "Display Status",
                     "description": "Display the local changes or not",
                     "default": true
+                  },
+                  "status_formats": {
+                    "$ref": "#/definitions/status_formats"
                   }
                 }
               }
@@ -1907,6 +2002,31 @@
                     "title": "Custom Text",
                     "description": "Custom glyph/text for specific shells",
                     "default": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "sitecore"
+              }
+            }
+          },
+          "then": {
+            "title": "Sitecore Segment",
+            "description": "https://ohmyposh.dev/docs/segments/sitecore",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "display_default": {
+                    "type": "boolean",
+                    "title": "Display Default",
+                    "description": "Display the segment or not when the Sitecore environment name matches `default`",
+                    "default": true
                   }
                 }
               }
@@ -2188,7 +2308,8 @@
                       "galvestonms",
                       "houston",
                       "amarillo",
-                      "round"
+                      "round",
+                      "lucky7"
                     ],
                     "default": "austin"
                   }
@@ -2246,13 +2367,13 @@
                     "type": "string",
                     "title": "Alternative icon",
                     "description": "Alternative icon for this activity type",
-                    "default": "\uf5a2"
+                    "default": "\uf206"
                   },
                   "run_icon": {
                     "type": "string",
                     "title": "Alternative icon",
                     "description": "Alternative icon for this activity type",
-                    "default": "\ufc0c"
+                    "default": "\ue213"
                   },
                   "skiing_icon": {
                     "type": "string",
@@ -2311,6 +2432,9 @@
                     "title": "Display Status",
                     "description": "Display the local changes or not",
                     "default": true
+                  },
+                  "status_formats": {
+                    "$ref": "#/definitions/status_formats"
                   }
                 }
               }
@@ -2524,6 +2648,9 @@
                     "title": "Full branch path",
                     "description": "display the full branch path instead of only the branch name",
                     "default": false
+                  },
+                  "status_formats": {
+                    "$ref": "#/definitions/status_formats"
                   }
                 }
               }
@@ -2540,7 +2667,7 @@
           },
           "then": {
             "title": "Brewfather Batch Status",
-            "description": "https://ohmyposh.dev/docs/brewfather",
+            "description": "https://ohmyposh.dev/docs/segments/brewfather",
             "properties": {
               "properties": {
                 "properties": {
@@ -2770,17 +2897,41 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "unity" }
+              "type": {
+                "const": "unity"
+              }
             }
           },
           "then": {
             "title": "Unity Segment",
-            "description": "https://ohmyposh.dev/docs/unity",
+            "description": "https://ohmyposh.dev/docs/segments/unity",
             "properties": {
               "properties": {
                 "properties": {
                   "http_timeout": {
                     "$ref": "#/definitions/http_timeout"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "upgrade"
+              }
+            }
+          },
+          "then": {
+            "title": "Upgrade Segment",
+            "description": "https://ohmyposh.dev/docs/segments/upgrade",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "cache_timeout": {
+                    "$ref": "#/definitions/cache_timeout"
                   }
                 }
               }
@@ -2862,7 +3013,16 @@
           },
           "then": {
             "title": "Clound Foundry Target segment",
-            "description": "https://ohmyposh.dev/docs/segments/cftarget"
+            "description": "https://ohmyposh.dev/docs/segments/cftarget",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
+                  }
+                }
+              }
+            }
           }
         },
         {
@@ -3078,7 +3238,7 @@
           },
           "then": {
             "title": "Mercurial Segment",
-            "description": "https://ohmyposh.dev/docs/mercurial",
+            "description": "https://ohmyposh.dev/docs/segments/mercurial",
             "properties": {
               "properties": {
                 "properties": {
@@ -3087,6 +3247,9 @@
                     "title": "Display Status",
                     "description": "Display the local changes or not",
                     "default": true
+                  },
+                  "status_formats": {
+                    "$ref": "#/definitions/status_formats"
                   }
                 }
               }
@@ -3105,6 +3268,17 @@
       "title": "Final Space",
       "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
       "default": true
+    },
+    "disable_cursor_positioning": {
+      "type": "boolean",
+      "title": "Disable Cursor Positioning",
+      "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
+      "default": false
+    },
+    "shell_integration": {
+      "type": "boolean",
+      "title": "FTCS command marks for shell integration",
+      "default": false
     },
     "pwd": {
       "type": "string",
@@ -3158,7 +3332,14 @@
     "transient_prompt": {
       "$ref": "#/definitions/extra_prompt",
       "title": "Transient Prompt Setting",
-      "description": "https://ohmyposh.dev/docs/configuration/transient"
+      "description": "https://ohmyposh.dev/docs/configuration/transient",
+      "properties": {
+        "filler": {
+          "type": "string",
+          "title": "Filler",
+          "description": "Right aligned filler text, will span the remaining width"
+        }
+      }
     },
     "valid_line": {
       "$ref": "#/definitions/extra_prompt",

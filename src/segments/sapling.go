@@ -52,6 +52,7 @@ type Sapling struct {
 	Author      string
 	Bookmark    string
 	Description string
+	New         bool
 
 	Working *SaplingStatus
 }
@@ -105,7 +106,8 @@ func (sl *Sapling) setDir(dir string) {
 func (sl *Sapling) setHeadContext() {
 	sl.setCommitContext()
 
-	sl.Working = &SaplingStatus{}
+	statusFormats := sl.props.GetKeyValueMap(StatusFormats, map[string]string{})
+	sl.Working = &SaplingStatus{ScmStatus: ScmStatus{Formats: statusFormats}}
 
 	displayStatus := sl.props.GetBool(FetchStatus, true)
 	if !displayStatus {
@@ -129,6 +131,10 @@ func (sl *Sapling) setHeadContext() {
 
 func (sl *Sapling) setCommitContext() {
 	body := sl.getSaplingCommandOutput("log", "--limit", "1", "--template", SLCOMMITTEMPLATE)
+	if len(body) == 0 {
+		sl.New = true
+		return
+	}
 	splitted := strings.Split(strings.TrimSpace(body), "\n")
 	for _, line := range splitted {
 		line = strings.TrimSpace(line)

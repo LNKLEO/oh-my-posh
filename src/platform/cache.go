@@ -56,7 +56,7 @@ func (fc *fileCache) Close() {
 	if !fc.dirty {
 		return
 	}
-	cache := fc.cache.List()
+	cache := fc.cache.SimpleMap()
 	if dump, err := json.MarshalIndent(cache, "", "    "); err == nil {
 		cacheFilePath := filepath.Join(fc.cachePath, CacheFile)
 		_ = os.WriteFile(cacheFilePath, dump, 0644)
@@ -83,5 +83,11 @@ func (fc *fileCache) Set(key, value string, ttl int) {
 		Timestamp: time.Now().Unix(),
 		TTL:       ttl,
 	})
+	fc.dirty = true
+}
+
+// delete the key from the cache
+func (fc *fileCache) Delete(key string) {
+	fc.cache.Delete(key)
 	fc.dirty = true
 }

@@ -105,9 +105,9 @@ func (env *MockedEnvironment) RunShellCommand(shell, command string) string {
 	return args.String(0)
 }
 
-func (env *MockedEnvironment) ErrorCode() int {
+func (env *MockedEnvironment) StatusCodes() (int, string) {
 	args := env.Called()
-	return args.Int(0)
+	return args.Int(0), args.String(1)
 }
 
 func (env *MockedEnvironment) ExecutionTime() float64 {
@@ -145,7 +145,7 @@ func (env *MockedEnvironment) WindowsRegistryKeyValue(path string) (*platform.Wi
 	return args.Get(0).(*platform.WindowsRegistryValue), args.Error(1)
 }
 
-func (env *MockedEnvironment) HTTPRequest(url string, body io.Reader, timeout int, requestModifiers ...platform.HTTPRequestModifier) ([]byte, error) {
+func (env *MockedEnvironment) HTTPRequest(url string, _ io.Reader, _ int, _ ...platform.HTTPRequestModifier) ([]byte, error) {
 	args := env.Called(url)
 	return args.Get(0).([]byte), args.Error(1)
 }
@@ -199,12 +199,12 @@ func (env *MockedEnvironment) InWSLSharedDrive() bool {
 	return args.Bool(0)
 }
 
-func (env *MockedEnvironment) ConvertToWindowsPath(path string) string {
+func (env *MockedEnvironment) ConvertToWindowsPath(_ string) string {
 	args := env.Called()
 	return args.String(0)
 }
 
-func (env *MockedEnvironment) ConvertToLinuxPath(path string) string {
+func (env *MockedEnvironment) ConvertToLinuxPath(_ string) string {
 	args := env.Called()
 	return args.String(0)
 }
@@ -259,6 +259,10 @@ func (env *MockedEnvironment) Trace(start time.Time, args ...string) {
 
 func (env *MockedEnvironment) Debug(message string) {
 	_ = env.Called(message)
+}
+
+func (env *MockedEnvironment) DebugF(format string, a ...any) {
+	_ = env.Called(format, a)
 }
 
 func (env *MockedEnvironment) Error(err error) {

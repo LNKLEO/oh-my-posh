@@ -1,44 +1,41 @@
-package segments
+package template
 
-import (
-	"strconv"
+import "strconv"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
-)
-
-type Exit struct {
-	props properties.Properties
-	env   platform.Environment
-
-	Meaning string
-}
-
-func (e *Exit) Template() string {
-	return " {{ if gt .Code 0 }}\uf00d {{ .Meaning }}{{ else }}\uf42e{{ end }} "
-}
-
-func (e *Exit) Enabled() bool {
-	e.Meaning = e.getMeaningFromExitCode(e.env.ErrorCode())
-	if e.props.GetBool(properties.AlwaysEnabled, false) {
-		return true
-	}
-	return e.env.ErrorCode() != 0
-}
-
-func (e *Exit) Init(props properties.Properties, env platform.Environment) {
-	e.props = props
-	e.env = env
-}
-
-func (e *Exit) getMeaningFromExitCode(code int) string {
+func GetReasonFromStatus(code int) string { //nolint: gocyclo
 	switch code {
 	case 1:
 		return "ERROR"
-	case 2:
+	case 2, 64:
 		return "USAGE"
-	case 126:
+	case 65:
+		return "DATAERR"
+	case 66:
+		return "NOINPUT"
+	case 67:
+		return "NOUSER"
+	case 68:
+		return "NOHOST"
+	case 69:
+		return "UNAVAILABLE"
+	case 70:
+		return "SOFTWARE"
+	case 71:
+		return "OSERR"
+	case 72:
+		return "OSFILE"
+	case 73:
+		return "CANTCREAT"
+	case 74:
+		return "IOERR"
+	case 75:
+		return "TEMPFAIL"
+	case 76:
+		return "PROTOCOL"
+	case 77, 126:
 		return "NOPERM"
+	case 78:
+		return "CONFIG"
 	case 127:
 		return "NOTFOUND"
 	case 128 + 1:

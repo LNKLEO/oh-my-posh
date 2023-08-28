@@ -24,7 +24,8 @@ var (
 		{AnchorStart: `<f>`, AnchorEnd: `</f>`, Start: "\x1b[5m", End: "\x1b[25m"},
 		{AnchorStart: `<r>`, AnchorEnd: `</r>`, Start: "\x1b[7m", End: "\x1b[27m"},
 	}
-	colorStyle = &style{AnchorStart: "COLOR", AnchorEnd: `</>`, End: "\x1b[0m"}
+	resetStyle      = &style{AnchorStart: "RESET", AnchorEnd: `</>`, End: "\x1b[0m"}
+	backgroundStyle = &style{AnchorStart: "BACKGROUND", AnchorEnd: `</>`, End: "\x1b[49m"}
 )
 
 type style struct {
@@ -53,7 +54,7 @@ const (
 	// Foreground takes the current segment's foreground color
 	Foreground = "foreground"
 
-	anchorRegex    = `^(?P<ANCHOR><(?P<FG>[^,>]+)?,?(?P<BG>[^>]+)?>)`
+	AnchorRegex    = `^(?P<ANCHOR><(?P<FG>[^,>]+)?,?(?P<BG>[^>]+)?>)`
 	colorise       = "\x1b[%sm"
 	transparent    = "\x1b[0m\x1b[%s;49m\x1b[7m"
 	transparentEnd = "\x1b[27m"
@@ -80,6 +81,7 @@ type Writer struct {
 	ParentColors       []*Colors
 	AnsiColors         ColorString
 	Plain              bool
+	TrueColor          bool
 
 	builder strings.Builder
 	length  int
@@ -95,7 +97,6 @@ type Writer struct {
 	shell                 string
 	format                string
 	left                  string
-	right                 string
 	title                 string
 	linechange            string
 	clearBelow            string
@@ -120,11 +121,11 @@ type Writer struct {
 func (w *Writer) Init(shellName string) {
 	w.hyperlinkState = OTHER
 	w.shell = shellName
+	w.format = "%s"
 	switch w.shell {
 	case shell.BASH:
 		w.format = "\\[%s\\]"
 		w.linechange = "\\[\x1b[%d%s\\]"
-		w.right = "\\[\x1b[%dC\\]"
 		w.left = "\\[\x1b[%dD\\]"
 		w.clearBelow = "\\[\x1b[0J\\]"
 		w.clearLine = "\\[\x1b[K\\]"
@@ -141,7 +142,6 @@ func (w *Writer) Init(shellName string) {
 	case shell.ZSH, shell.TCSH:
 		w.format = "%%{%s%%}"
 		w.linechange = "%%{\x1b[%d%s%%}"
-		w.right = "%%{\x1b[%dC%%}"
 		w.left = "%%{\x1b[%dD%%}"
 		w.clearBelow = "%{\x1b[0J%}"
 		w.clearLine = "%{\x1b[K%}"
@@ -157,7 +157,6 @@ func (w *Writer) Init(shellName string) {
 		w.osc51 = "%%{\x1b]51;A%s@%s:%s\x1b\\%%}"
 	default:
 		w.linechange = "\x1b[%d%s"
-		w.right = "\x1b[%dC"
 		w.left = "\x1b[%dD"
 		w.clearBelow = "\x1b[0J"
 		w.clearLine = "\x1b[K"
@@ -190,15 +189,6 @@ func (w *Writer) SetParentColors(background, foreground string) {
 		Background: background,
 		Foreground: foreground,
 	}}, w.ParentColors...)
-}
-
-func (w *Writer) CarriageForward() string {
-	return fmt.Sprintf(w.right, 1000)
-}
-
-func (w *Writer) GetCursorForRightWrite(length, offset int) string {
-	strippedLen := length + (-offset)
-	return fmt.Sprintf(w.left, strippedLen)
 }
 
 func (w *Writer) ChangeLine(numberOfLines int) string {
@@ -269,6 +259,22 @@ func (w *Writer) RestoreCursorPosition() string {
 	return w.restoreCursorPosition
 }
 
+func (w *Writer) PromptStart() string {
+	return fmt.Sprintf(w.format, "\x1b]133;A\007")
+}
+
+func (w *Writer) CommandStart() string {
+	return fmt.Sprintf(w.format, "\x1b]133;B\007")
+}
+
+func (w *Writer) CommandFinished(code int, ignore bool) string {
+	if ignore {
+		return fmt.Sprintf(w.format, "\x1b]133;D\007")
+	}
+	mark := fmt.Sprintf("\x1b]133;D;%d\007", code)
+	return fmt.Sprintf(w.format, mark)
+}
+
 func (w *Writer) LineBreak() string {
 	cr := fmt.Sprintf(w.left, 1000)
 	lf := fmt.Sprintf(w.linechange, 1, "B")
@@ -283,10 +289,10 @@ func (w *Writer) Write(background, foreground, text string) {
 	w.background, w.foreground = w.asAnsiColors(background, foreground)
 	// default to white foreground
 	if w.foreground.IsEmpty() {
-		w.foreground = w.AnsiColors.ToColor("white", false)
+		w.foreground = w.AnsiColors.ToColor("white", false, w.TrueColor)
 	}
 	// validate if we start with a color override
-	match := regex.FindNamedRegexMatch(anchorRegex, text)
+	match := regex.FindNamedRegexMatch(AnchorRegex, text)
 	if len(match) != 0 {
 		colorOverride := true
 		for _, style := range knownStyles {
@@ -318,7 +324,7 @@ func (w *Writer) Write(background, foreground, text string) {
 
 		// color/end overrides first
 		text = string(w.runes[i:])
-		match = regex.FindNamedRegexMatch(anchorRegex, text)
+		match = regex.FindNamedRegexMatch(AnchorRegex, text)
 		if len(match) > 0 {
 			i = w.writeColorOverrides(match, background, i)
 			continue
@@ -334,7 +340,7 @@ func (w *Writer) Write(background, foreground, text string) {
 	w.hyperlinkState = OTHER
 
 	// reset colors
-	w.writeEscapedAnsiString(colorStyle.End)
+	w.writeEscapedAnsiString(resetStyle.End)
 
 	// reset current
 	w.currentBackground = ""
@@ -365,7 +371,7 @@ func (w *Writer) writeEscapedAnsiString(text string) {
 }
 
 func (w *Writer) getAnsiFromColorString(colorString string, isBackground bool) Color {
-	return w.AnsiColors.ToColor(colorString, isBackground)
+	return w.AnsiColors.ToColor(colorString, isBackground, w.TrueColor)
 }
 
 func (w *Writer) writeSegmentColors() {
@@ -406,21 +412,21 @@ func (w *Writer) writeSegmentColors() {
 	w.currentForeground = fg
 }
 
-func (w *Writer) writeColorOverrides(match map[string]string, background string, i int) (position int) {
-	position = i
+func (w *Writer) writeColorOverrides(match map[string]string, background string, i int) int {
+	position := i
 	// check color reset first
-	if match[ANCHOR] == colorStyle.AnchorEnd {
+	if match[ANCHOR] == resetStyle.AnchorEnd {
 		// make sure to reset the colors if needed
-		position += len([]rune(colorStyle.AnchorEnd)) - 1
+		position += len([]rune(resetStyle.AnchorEnd)) - 1
 
 		// do not reset when colors are identical
 		if w.currentBackground == w.background && w.currentForeground == w.foreground {
-			return
+			return position
 		}
 
 		// do not restore colors at the end of the string, we print it anyways
 		if position == len(w.runes)-1 {
-			return
+			return position
 		}
 
 		if w.transparent {
@@ -428,7 +434,7 @@ func (w *Writer) writeColorOverrides(match map[string]string, background string,
 		}
 
 		if w.background.IsClear() {
-			w.writeEscapedAnsiString(colorStyle.End)
+			w.writeEscapedAnsiString(backgroundStyle.End)
 		}
 
 		if w.currentBackground != w.background && !w.background.IsClear() {
@@ -440,7 +446,7 @@ func (w *Writer) writeColorOverrides(match map[string]string, background string,
 		}
 
 		w.transparent = false
-		return
+		return position
 	}
 
 	position += len([]rune(match[ANCHOR])) - 1
@@ -448,11 +454,11 @@ func (w *Writer) writeColorOverrides(match map[string]string, background string,
 	for _, style := range knownStyles {
 		if style.AnchorEnd == match[ANCHOR] {
 			w.writeEscapedAnsiString(style.End)
-			return
+			return position
 		}
 		if style.AnchorStart == match[ANCHOR] {
 			w.writeEscapedAnsiString(style.Start)
-			return
+			return position
 		}
 	}
 
@@ -464,7 +470,7 @@ func (w *Writer) writeColorOverrides(match map[string]string, background string,
 	// ignore processing fully tranparent colors
 	w.invisible = w.currentForeground.IsTransparent() && w.currentBackground.IsTransparent()
 	if w.invisible {
-		return
+		return position
 	}
 
 	// make sure we have colors
@@ -479,13 +485,13 @@ func (w *Writer) writeColorOverrides(match map[string]string, background string,
 		background := w.getAnsiFromColorString(w.TerminalBackground, false)
 		w.writeEscapedAnsiString(fmt.Sprintf(colorise, background))
 		w.writeEscapedAnsiString(fmt.Sprintf(colorise, w.currentBackground.ToForeground()))
-		return
+		return position
 	}
 
 	if w.currentForeground.IsTransparent() && !w.currentBackground.IsTransparent() {
 		w.transparent = true
 		w.writeEscapedAnsiString(fmt.Sprintf(transparent, w.currentBackground))
-		return
+		return position
 	}
 
 	if w.currentBackground != w.background {

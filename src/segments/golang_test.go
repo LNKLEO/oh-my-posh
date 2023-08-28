@@ -11,6 +11,7 @@ import (
 	"github.com/LNKLEO/oh-my-posh/properties"
 
 	"github.com/stretchr/testify/assert"
+	mock2 "github.com/stretchr/testify/mock"
 )
 
 type mockedLanguageParams struct {
@@ -30,6 +31,7 @@ func getMockedLanguageEnv(params *mockedLanguageParams) (*mock.MockedEnvironment
 	env.On("TemplateCache").Return(&platform.TemplateCache{
 		Env: make(map[string]string),
 	})
+	env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 	props := properties.Map{
 		properties.FetchVersion: true,
 	}

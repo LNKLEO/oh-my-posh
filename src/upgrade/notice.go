@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/LNKLEO/oh-my-posh/build"
 	"github.com/LNKLEO/oh-my-posh/platform"
 )
 
@@ -29,21 +30,21 @@ type release struct {
 }
 
 const (
-	releaseURL    = "https://api.github.com/repos/jandedobbeleer/oh-my-posh/releases/latest"
+	RELEASEURL    = "https://api.github.com/repos/jandedobbeleer/oh-my-posh/releases/latest"
 	upgradeNotice = `
 A new release of Oh My Posh is available: %s → %s
 %s
 `
 	windows = `To upgrade, use the guide for your favorite package manager in the documentation:
 https://ohmyposh.dev/docs/installation/windows#update`
-	unix   = "To upgrade, use your favorite package manager or, if you used Homebrew to install, run: 'brew upgrade oh-my-posh'"
-	darwin = "To upgrade, run: 'brew upgrade oh-my-posh'"
+	unix   = "To upgrade, use your favorite package manager or, if you used Homebrew to install, run: 'brew update && brew upgrade oh-my-posh'"
+	darwin = "To upgrade, run: 'brew update && brew upgrade oh-my-posh'"
 
-	UPGRADECACHEKEY = "upgrade_check"
+	CACHEKEY = "upgrade_check"
 )
 
-func getLatestVersion(env platform.Environment) (string, error) {
-	body, err := env.HTTPRequest(releaseURL, nil, 1000)
+func Latest(env platform.Environment) (string, error) {
+	body, err := env.HTTPRequest(RELEASEURL, nil, 1000)
 	if err != nil {
 		return "", err
 	}
@@ -58,20 +59,24 @@ func getLatestVersion(env platform.Environment) (string, error) {
 //
 // The upgrade check is only performed every other week.
 func Notice(env platform.Environment) (string, bool) {
+	// never validate when we install using the Windows Store
+	if env.Getenv("POSH_INSTALLER") == "ws" {
+		return "", false
+	}
 	// do not check when last validation was < 1 week ago
-	if _, OK := env.Cache().Get(UPGRADECACHEKEY); OK {
+	if _, OK := env.Cache().Get(CACHEKEY); OK {
 		return "", false
 	}
 
-	latest, err := getLatestVersion(env)
+	latest, err := Latest(env)
 	if err != nil {
 		return "", false
 	}
 
 	oneWeek := 10080
-	env.Cache().Set(UPGRADECACHEKEY, latest, oneWeek)
+	env.Cache().Set(CACHEKEY, latest, oneWeek)
 
-	version := fmt.Sprintf("v%s", env.Flags().Version)
+	version := fmt.Sprintf("v%s", build.Version)
 	if latest == version {
 		return "", false
 	}

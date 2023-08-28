@@ -5,6 +5,7 @@ package environment
 import (
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -14,13 +15,8 @@ import (
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 )
 
-<<<<<<< HEAD
-func (env *ShellEnvironment) Root() bool {
-	defer env.Trace(time.Now(), "Root")
-=======
 func (env *Shell) Root() bool {
 	defer env.Trace(time.Now())
->>>>>>> upstream/main
 	return os.Geteuid() == 0
 }
 
@@ -28,31 +24,28 @@ func (env *ShellEnvironment) Home() string {
 	return os.Getenv("HOME")
 }
 
-func (env *ShellEnvironment) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
+func (env *Shell) QueryWindowTitles(_, _ string) (string, error) {
 	return "", &NotImplemented{}
 }
 
-<<<<<<< HEAD
-func (env *ShellEnvironment) IsWsl() bool {
-	defer env.Trace(time.Now(), "IsWsl")
-=======
 func (env *Shell) IsWsl() bool {
 	defer env.Trace(time.Now())
->>>>>>> upstream/main
-	// one way to check
-	// version := env.FileContent("/proc/version")
-	// return strings.Contains(version, "microsoft")
-	// using env variable
-	return env.Getenv("WSL_DISTRO_NAME") != ""
+	const key = "is_wsl"
+	if val, found := env.Cache().Get(key); found {
+		env.Debug(val)
+		return val == "true"
+	}
+	var val bool
+	defer func() {
+		env.Cache().Set(key, strconv.FormatBool(val), -1)
+	}()
+	val = env.HasCommand("wslpath")
+	env.Debug(strconv.FormatBool(val))
+	return val
 }
 
-<<<<<<< HEAD
-func (env *ShellEnvironment) IsWsl2() bool {
-	defer env.Trace(time.Now(), "IsWsl2")
-=======
 func (env *Shell) IsWsl2() bool {
 	defer env.Trace(time.Now())
->>>>>>> upstream/main
 	if !env.IsWsl() {
 		return false
 	}
@@ -60,25 +53,22 @@ func (env *Shell) IsWsl2() bool {
 	return strings.Contains(uname, "WSL2")
 }
 
-<<<<<<< HEAD
-func (env *ShellEnvironment) TerminalWidth() (int, error) {
-	defer env.Trace(time.Now(), "TerminalWidth")
-=======
 func (env *Shell) TerminalWidth() (int, error) {
 	defer env.Trace(time.Now())
->>>>>>> upstream/main
-	if env.CmdFlags.TerminalWidth != 0 {
+
+	if env.CmdFlags.TerminalWidth > 0 {
+		env.DebugF("terminal width: %d", env.CmdFlags.TerminalWidth)
 		return env.CmdFlags.TerminalWidth, nil
 	}
+
 	width, err := terminal.Width()
 	if err != nil {
-<<<<<<< HEAD
-		env.Log(Error, "TerminalWidth", err.Error())
-=======
 		env.Error(err)
->>>>>>> upstream/main
 	}
-	return int(width), err
+
+	env.CmdFlags.TerminalWidth = int(width)
+	env.DebugF("terminal width: %d", env.CmdFlags.TerminalWidth)
+	return env.CmdFlags.TerminalWidth, err
 }
 
 func (env *ShellEnvironment) Platform() string {
@@ -104,20 +94,12 @@ func (env *ShellEnvironment) Platform() string {
 			platform = "manjaro"
 		}
 	}
-<<<<<<< HEAD
-	return platform
-}
-
-func (env *ShellEnvironment) CachePath() string {
-	defer env.Trace(time.Now(), "CachePath")
-=======
 	env.Debug(platform)
 	return platform
 }
 
 func (env *Shell) CachePath() string {
 	defer env.Trace(time.Now())
->>>>>>> upstream/main
 	// get XDG_CACHE_HOME if present
 	if cachePath := returnOrBuildCachePath(env.Getenv("XDG_CACHE_HOME")); len(cachePath) != 0 {
 		return cachePath
@@ -129,7 +111,7 @@ func (env *Shell) CachePath() string {
 	return env.Home()
 }
 
-func (env *ShellEnvironment) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
+func (env *Shell) WindowsRegistryKeyValue(_ string) (*WindowsRegistryValue, error) {
 	return nil, &NotImplemented{}
 }
 
@@ -156,47 +138,13 @@ func (env *ShellEnvironment) ConvertToLinuxPath(path string) string {
 	return path
 }
 
-func (env *ShellEnvironment) LookWinAppPath(file string) (string, error) {
+func (env *Shell) LookWinAppPath(_ string) (string, error) {
 	return "", errors.New("not relevant")
 }
 
-<<<<<<< HEAD
-func (env *ShellEnvironment) DirIsWritable(path string) bool {
-	defer env.Trace(time.Now(), "DirIsWritable")
-	info, err := os.Stat(path)
-	if err != nil {
-		env.Log(Error, "DirIsWritable", err.Error())
-		return false
-	}
-
-	if !info.IsDir() {
-		env.Log(Error, "DirIsWritable", "Path isn't a directory")
-		return false
-	}
-
-	// Check if the user bit is enabled in file permission
-	if info.Mode().Perm()&(1<<(uint(7))) == 0 {
-		env.Log(Error, "DirIsWritable", "Write permission bit is not set on this file for user")
-		return false
-	}
-
-	var stat syscall.Stat_t
-	if err = syscall.Stat(path, &stat); err != nil {
-		env.Log(Error, "DirIsWritable", err.Error())
-		return false
-	}
-
-	if uint32(os.Geteuid()) != stat.Uid {
-		env.Log(Error, "DirIsWritable", "User doesn't have permission to write to this directory")
-		return false
-	}
-
-	return true
-=======
 func (env *Shell) DirIsWritable(path string) bool {
 	defer env.Trace(time.Now(), path)
 	return unix.Access(path, unix.W_OK) == nil
->>>>>>> upstream/main
 }
 
 const (

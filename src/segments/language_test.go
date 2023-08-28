@@ -8,6 +8,7 @@ import (
 	"github.com/LNKLEO/oh-my-posh/properties"
 
 	"github.com/stretchr/testify/assert"
+	mock2 "github.com/stretchr/testify/mock"
 )
 
 const (
@@ -54,6 +55,7 @@ func bootStrapLanguageTest(args *languageArgs) *language {
 	}
 	env.On("Pwd").Return(cwd)
 	env.On("Home").Return(home)
+	env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 	env.On("TemplateCache").Return(&platform.TemplateCache{
 		Env: make(map[string]string),
 	})
@@ -155,6 +157,31 @@ func TestLanguageEnabledOneExtensionFound(t *testing.T) {
 	assert.True(t, lang.Enabled())
 	assert.Equal(t, universion, lang.Full, "unicorn is available and uni files are found")
 	assert.Equal(t, "unicorn", lang.Executable, "unicorn was used")
+}
+
+func TestLanguageEnabledMismatch(t *testing.T) {
+	expectedVersion := "1.2.009"
+
+	args := &languageArgs{
+		commands: []*cmd{
+			{
+				executable: "unicorn",
+				args:       []string{"--version"},
+				regex:      "(?P<version>.*)",
+			},
+		},
+		extensions:        []string{uni, corn},
+		enabledExtensions: []string{uni},
+		enabledCommands:   []string{"unicorn"},
+		version:           universion,
+		matchesVersionFile: func() (string, bool) {
+			return expectedVersion, false
+		},
+	}
+	lang := bootStrapLanguageTest(args)
+	assert.True(t, lang.Enabled())
+	assert.Equal(t, expectedVersion, lang.Expected, "the expected unicorn version is 1.2.009")
+	assert.True(t, lang.Mismatch, "we require a different version of unicorn")
 }
 
 func TestLanguageDisabledInHome(t *testing.T) {

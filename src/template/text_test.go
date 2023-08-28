@@ -160,6 +160,7 @@ func TestRenderTemplate(t *testing.T) {
 		Env: make(map[string]string),
 	})
 	env.On("Error", mock2.Anything)
+	env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 	for _, tc := range cases {
 		tmpl := &Text{
 			Template: tc.Template,
@@ -170,9 +171,8 @@ func TestRenderTemplate(t *testing.T) {
 		if tc.ShouldError {
 			assert.Error(t, err)
 			continue
-		} else {
-			assert.NoError(t, err)
 		}
+		assert.NoError(t, err)
 		assert.Equal(t, tc.Expected, text, tc.Case)
 	}
 }
@@ -210,13 +210,43 @@ func TestRenderTemplateEnvVar(t *testing.T) {
 		{Case: "no env var", Expected: "hello world", Template: "{{.Text}} world", Context: struct{ Text string }{Text: "hello"}},
 		{Case: "map", Expected: "hello world", Template: "{{.Text}} world", Context: map[string]interface{}{"Text": "hello"}},
 		{Case: "empty map", Expected: " world", Template: "{{.Text}} world", Context: map[string]string{}},
+		{
+			Case:     "Struct with duplicate property",
+			Expected: "posh",
+			Template: "{{ .OS }}",
+			Context:  struct{ OS string }{OS: "posh"},
+			Env:      map[string]string{"HELLO": "hello"},
+		},
+		{
+			Case:     "Struct with duplicate property, but global override",
+			Expected: "darwin",
+			Template: "{{ .$.OS }}",
+			Context:  struct{ OS string }{OS: "posh"},
+			Env:      map[string]string{"HELLO": "hello"},
+		},
+		{
+			Case:     "Map with duplicate property",
+			Expected: "posh",
+			Template: "{{ .OS }}",
+			Context:  map[string]interface{}{"OS": "posh"},
+			Env:      map[string]string{"HELLO": "hello"},
+		},
+		{
+			Case:     "Non-supported map",
+			Expected: "darwin",
+			Template: "{{ .OS }}",
+			Context:  map[int]interface{}{},
+			Env:      map[string]string{"HELLO": "hello"},
+		},
 	}
 	for _, tc := range cases {
 		env := &mock.MockedEnvironment{}
 		env.On("TemplateCache").Return(&platform.TemplateCache{
 			Env: tc.Env,
+			OS:  "darwin",
 		})
 		env.On("Error", mock2.Anything)
+		env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 		tmpl := &Text{
 			Template: tc.Template,
 			Context:  tc.Context,
@@ -282,10 +312,31 @@ func TestCleanTemplate(t *testing.T) {
 			Expected: "{{ if or (.Data.Working.Changed) (.Data.Staging.Changed) }}#FF9248{{ end }}",
 			Template: "{{ if or (.Working.Changed) (.Staging.Changed) }}#FF9248{{ end }}",
 		},
+		{
+			Case:     "Global property override",
+			Expected: "{{.OS}}",
+			Template: "{{.$.OS}}",
+		},
+		{
+			Case:     "Local property override",
+			Expected: "{{.Data.OS}}",
+			Template: "{{.OS}}",
+		},
+		{
+			Case:     "Keep .Contains intact for Segments",
+			Expected: `{{.Segments.Contains "Git"}}`,
+			Template: `{{.Segments.Contains "Git"}}`,
+		},
+		{
+			Case:     "Replace a direct call to .Segments with .Segments.List",
+			Expected: `{{.Segments.SimpleMap.Git.Repo}}`,
+			Template: `{{.Segments.Git.Repo}}`,
+		},
 	}
 	for _, tc := range cases {
 		tmpl := &Text{
 			Template: tc.Template,
+			Context:  map[string]interface{}{"OS": "posh"},
 		}
 		tmpl.cleanTemplate()
 		assert.Equal(t, tc.Expected, tmpl.Template, tc.Case)
@@ -303,11 +354,12 @@ func TestSegmentContains(t *testing.T) {
 	}
 
 	env := &mock.MockedEnvironment{}
+	segments := platform.NewConcurrentMap()
+	segments.Set("Git", "foo")
+	env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 	env.On("TemplateCache").Return(&platform.TemplateCache{
-		Env: make(map[string]string),
-		Segments: map[string]interface{}{
-			"Git": nil,
-		},
+		Env:      make(map[string]string),
+		Segments: segments,
 	})
 	for _, tc := range cases {
 		tmpl := &Text{

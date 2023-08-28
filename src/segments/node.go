@@ -2,6 +2,7 @@ package segments
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/LNKLEO/oh-my-posh/platform"
 	"github.com/LNKLEO/oh-my-posh/properties"
@@ -46,12 +47,7 @@ func (n *Node) Init(props properties.Properties, env platform.Environment) {
 }
 
 func (n *Node) Enabled() bool {
-	if n.language.Enabled() {
-		n.Mismatch = !n.matchesVersionFile()
-		return true
-	}
-
-	return false
+	return n.language.Enabled()
 }
 
 func (n *Node) loadContext() {
@@ -59,18 +55,18 @@ func (n *Node) loadContext() {
 		return
 	}
 	if n.language.env.HasFiles("yarn.lock") {
-		n.PackageManagerIcon = n.language.props.GetString(YarnIcon, " \uF61A")
+		n.PackageManagerIcon = n.language.props.GetString(YarnIcon, "\uF61A")
 		return
 	}
 	if n.language.env.HasFiles("package-lock.json") || n.language.env.HasFiles("package.json") {
-		n.PackageManagerIcon = n.language.props.GetString(NPMIcon, " \uE71E")
+		n.PackageManagerIcon = n.language.props.GetString(NPMIcon, "\uE71E")
 	}
 }
 
-func (n *Node) matchesVersionFile() bool {
+func (n *Node) matchesVersionFile() (string, bool) {
 	fileVersion := n.language.env.FileContent(".nvmrc")
 	if len(fileVersion) == 0 {
-		return true
+		return "", true
 	}
 
 	re := fmt.Sprintf(
@@ -80,5 +76,8 @@ func (n *Node) matchesVersionFile() bool {
 		n.language.version.Patch,
 	)
 
-	return regex.MatchString(re, fileVersion)
+	version := strings.TrimSpace(fileVersion)
+	version = strings.TrimPrefix(version, "v")
+
+	return version, regex.MatchString(re, fileVersion)
 }

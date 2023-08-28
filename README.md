@@ -8,6 +8,8 @@
 </p>
 <!-- markdownlint-enable -->
 
+[![License][license]](COPYING)
+
 ![Release Status][release-status]
 
 [![Release][release-badge]][release]
@@ -52,6 +54,10 @@ a modern and more efficient tool was needed to suit my personal needs.
 
 [![Documentation][docs-badge]][docs]
 
+## Reviews
+
+* [Repo review][repo-review] by [TameWizard][tamewizard]
+
 ## Thanks
 
 * [Chris Benti][chrisbenti-psconfig] for providing the first influence to start oh-my-posh
@@ -62,8 +68,9 @@ using Go (and the amazing [README][powerline-go])
 * [Starship][starship] for creating an amazing way to initialize the prompt
 
 [release-status]: https://img.shields.io/github/actions/workflow/status/jandedobbeleer/oh-my-posh/release.yml?branch=main
+[license]: https://img.shields.io/github/license/JanDeDobbeleer/oh-my-posh.svg
 [gh-downloads]: https://img.shields.io/github/downloads/jandedobbeleer/oh-my-posh/total?color=pink&label=GitHub%20Downloads
-[mastodon]: https://img.shields.io/mastodon/follow/109326234705859737?domain=https%3A%2F%2Fsocial.ohmyposh.dev&label=Mastodon&style=social
+[mastodon]: https://img.shields.io/mastodon/follow/110275292073181892?domain=https%3A%2F%2Fhachyderm.io&label=Mastodon&style=social
 [discord]: https://img.shields.io/discord/1023597603331526656
 [kraken]: https://img.shields.io/badge/GitKraken-Legendary%20Git%20Tools-teal?style=plastic&logo=gitkraken
 [kraken-ref]: https://www.gitkraken.com/invite/nQmDPR9D
@@ -84,3 +91,5 @@ using Go (and the amazing [README][powerline-go])
 [justjanne]: https://github.com/justjanne
 [powerline-go]: https://github.com/justjanne/powerline-go
 [starship]: https://github.com/starship/starship/blob/master/src/init/mod.rs
+[repo-review]: https://repo-reviews.github.io//reviews/2023-06-21_TameWizard_JanDeDobbeleer_oh-my-posh
+[tamewizard]: https://github.com/TameWizard

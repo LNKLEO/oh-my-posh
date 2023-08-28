@@ -21,6 +21,7 @@ type Commit struct {
 	Committer *User
 	Subject   string
 	Timestamp time.Time
+	Sha       string
 }
 
 type User struct {
@@ -63,6 +64,8 @@ const (
 	FetchUpstreamIcon properties.Property = "fetch_upstream_icon"
 	// FetchBareInfo fetches the bare repo status
 	FetchBareInfo properties.Property = "fetch_bare_info"
+	// FetchUser fetches the current user for the repo
+	FetchUser properties.Property = "fetch_user"
 
 	// BranchIcon the icon to use as branch indicator
 	BranchIcon properties.Property = "branch_icon"
@@ -129,6 +132,7 @@ type Git struct {
 	UpstreamGone   bool
 	IsWorkTree     bool
 	IsBare         bool
+	User           *User
 
 	// needed for posh-git support
 	poshgit       bool
@@ -143,11 +147,15 @@ func (g *Git) Template() string {
 }
 
 func (g *Git) Enabled() bool {
-	g.Working = &GitStatus{}
-	g.Staging = &GitStatus{}
+	g.User = &User{}
 
 	if !g.shouldDisplay() {
 		return false
+	}
+
+	fetchUser := g.props.GetBool(FetchUser, false)
+	if fetchUser {
+		g.setUser()
 	}
 
 	g.RepoName = platform.Base(g.env, g.convertToLinuxPath(g.realDir))
@@ -188,7 +196,7 @@ func (g *Git) Commit() *Commit {
 		Author:    &User{},
 		Committer: &User{},
 	}
-	commitBody := g.getGitCommandOutput("log", "-1", "--pretty=format:an:%an%nae:%ae%ncn:%cn%nce:%ce%nat:%at%nsu:%s")
+	commitBody := g.getGitCommandOutput("log", "-1", "--pretty=format:an:%an%nae:%ae%ncn:%cn%nce:%ce%nat:%at%nsu:%s%nha:%H")
 	splitted := strings.Split(strings.TrimSpace(commitBody), "\n")
 	for _, line := range splitted {
 		line = strings.TrimSpace(line)
@@ -212,6 +220,8 @@ func (g *Git) Commit() *Commit {
 			}
 		case "su:":
 			g.commit.Subject = line
+		case "ha:":
+			g.commit.Sha = line
 		}
 	}
 	return g.commit
@@ -279,6 +289,11 @@ func (g *Git) shouldDisplay() bool {
 	// convert the worktree file path to a windows one when in a WSL shared folder
 	g.realDir = strings.TrimSuffix(g.convertToWindowsPath(gitdir.Path), "/.git")
 	return true
+}
+
+func (g *Git) setUser() {
+	g.User.Name = g.getGitCommandOutput("config", "user.name")
+	g.User.Email = g.getGitCommandOutput("config", "user.email")
 }
 
 func (g *Git) getBareRepoInfo() {
@@ -388,26 +403,42 @@ func (g *Git) setBranchStatus() {
 	g.BranchStatus = getBranchStatus()
 }
 
-func (g *Git) getUpstreamIcon() string {
-	cleanSSHURL := func(url string) string {
-		if strings.HasPrefix(url, "http") {
-			return url
-		}
-		url = strings.TrimPrefix(url, "ssh://")
-		url = strings.TrimPrefix(url, "git://")
-		if i := strings.Index(url, "@"); i >= 0 {
-			url = url[i+1:]
-			url = strings.Replace(url, ":", "/", 1)
-		}
-		url = strings.TrimSuffix(url, ".git")
-		return fmt.Sprintf("https://%s", url)
+func (g *Git) cleanUpstreamURL(url string) string {
+	if strings.HasPrefix(url, "http") {
+		return url
 	}
+	// /path/to/repo.git/
+	match := regex.FindNamedRegexMatch(`^(?P<URL>[a-z0-9./]+)$`, url)
+	if len(match) != 0 {
+		url := strings.Trim(match["URL"], "/")
+		url = strings.TrimSuffix(url, ".git")
+		return fmt.Sprintf("https://%s", strings.TrimPrefix(url, "/"))
+	}
+	// ssh://user@host.xz:1234/path/to/repo.git/
+	match = regex.FindNamedRegexMatch(`(ssh|ftp|git|rsync)://(.*@)?(?P<URL>[a-z0-9.]+)(:[0-9]{4})?/(?P<PATH>.*).git`, url)
+	if len(match) == 0 {
+		// host.xz:/path/to/repo.git/
+		match = regex.FindNamedRegexMatch(`^(?P<URL>[a-z0-9./]+):(?P<PATH>[a-z0-9./]+)$`, url)
+	}
+	if len(match) != 0 {
+		path := strings.Trim(match["PATH"], "/")
+		path = strings.TrimSuffix(path, ".git")
+		return fmt.Sprintf("https://%s/%s", match["URL"], path)
+	}
+	// user@host.xz:/path/to/repo.git
+	match = regex.FindNamedRegexMatch(`.*@(?P<URL>.*):(?P<PATH>.*).git`, url)
+	if len(match) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("https://%s/%s", match["URL"], match["PATH"])
+}
 
+func (g *Git) getUpstreamIcon() string {
 	g.RawUpstreamURL = g.getRemoteURL()
 	if len(g.RawUpstreamURL) == 0 {
 		return ""
 	}
-	g.UpstreamURL = cleanSSHURL(g.RawUpstreamURL)
+	g.UpstreamURL = g.cleanUpstreamURL(g.RawUpstreamURL)
 
 	// allow overrides first
 	custom := g.props.GetKeyValueMap(UpstreamIcons, map[string]string{})
@@ -458,8 +489,9 @@ func (g *Git) setGitStatus() {
 	)
 	// firstly assume that upstream is gone
 	g.UpstreamGone = true
-	g.Working = &GitStatus{}
-	g.Staging = &GitStatus{}
+	statusFormats := g.props.GetKeyValueMap(StatusFormats, map[string]string{})
+	g.Working = &GitStatus{ScmStatus: ScmStatus{Formats: statusFormats}}
+	g.Staging = &GitStatus{ScmStatus: ScmStatus{Formats: statusFormats}}
 	untrackedMode := g.getUntrackedFilesMode()
 	args := []string{"status", untrackedMode, "--branch", "--porcelain=2"}
 	ignoreSubmodulesMode := g.getIgnoreSubmodulesMode()

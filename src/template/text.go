@@ -3,6 +3,7 @@ package template
 import (
 	"bytes"
 	"errors"
+	"reflect"
 	"strings"
 	"text/template"
 
@@ -14,6 +15,29 @@ const (
 	// Errors to show when the template handling fails
 	InvalidTemplate   = "invalid template text"
 	IncorrectTemplate = "unable to create text based on template"
+
+	globalRef = ".$"
+)
+
+var (
+	knownVariables = []string{
+		"Root",
+		"PWD",
+		"Folder",
+		"Shell",
+		"ShellVersion",
+		"UserName",
+		"HostName",
+		"Env",
+		"Data",
+		"Code",
+		"OS",
+		"WSL",
+		"Segments",
+		"Templates",
+		"PromptCount",
+		"Var",
+	}
 )
 
 type Text struct {
@@ -43,6 +67,7 @@ func (c *Context) init(t *Text) {
 }
 
 func (t *Text) Render() (string, error) {
+	t.Env.DebugF("Rendering template: %s", t.Template)
 	if !strings.Contains(t.Template, "{{") || !strings.Contains(t.Template, "}}") {
 		return t.Template, nil
 	}
@@ -73,26 +98,7 @@ func (t *Text) Render() (string, error) {
 }
 
 func (t *Text) cleanTemplate() {
-	knownVariables := []string{
-		"Root",
-		"PWD",
-		"Folder",
-		"Shell",
-		"ShellVersion",
-		"UserName",
-		"HostName",
-		"Env",
-		"Data",
-		"Code",
-		"OS",
-		"WSL",
-		"Segments",
-		"Templates",
-		"PromptCount",
-		"Var",
-	}
-
-	knownVariable := func(variable string) bool {
+	isKnownVariable := func(variable string) bool {
 		variable = strings.TrimPrefix(variable, ".")
 		splitted := strings.Split(variable, ".")
 		if len(splitted) == 0 {
@@ -110,6 +116,9 @@ func (t *Text) cleanTemplate() {
 		}
 		return false
 	}
+
+	fields := make(fields)
+	fields.init(t.Context)
 
 	var result, property string
 	var inProperty, inTemplate bool
@@ -149,9 +158,23 @@ func (t *Text) cleanTemplate() {
 				continue
 			}
 			// end of a variable, needs to be appended
-			if !knownVariable(property) {
+			if !isKnownVariable(property) {
 				result += ".Data" + property
+			} else if strings.HasPrefix(property, ".Segments") && !strings.HasSuffix(property, ".Contains") {
+				// as we can't provide a clean way to access the list
+				// of segments, we need to replace the property with
+				// the list of segments so they can be accessed directly
+				property = strings.Replace(property, ".Segments", ".Segments.SimpleMap", 1)
+				result += property
 			} else {
+				// check if we have the same property in Data
+				// and replace it with the Data property so it
+				// can take precedence
+				if fields.hasField(property) {
+					property = ".Data" + property
+				}
+				// remove the global reference so we can use it directly
+				property = strings.TrimPrefix(property, globalRef)
 				result += property
 			}
 			property = ""
@@ -168,4 +191,37 @@ func (t *Text) cleanTemplate() {
 
 	// return the result and remaining unresolved property
 	t.Template = result + property
+}
+
+type fields map[string]bool
+
+func (f *fields) init(data interface{}) {
+	if data == nil {
+		return
+	}
+
+	val := reflect.TypeOf(data)
+	switch val.Kind() { //nolint:exhaustive
+	case reflect.Struct:
+		fieldsNum := val.NumField()
+		for i := 0; i < fieldsNum; i++ {
+			(*f)[val.Field(i).Name] = true
+		}
+	case reflect.Map:
+		m, ok := data.(map[string]interface{})
+		if !ok {
+			return
+		}
+		for key := range m {
+			(*f)[key] = true
+		}
+	case reflect.Ptr:
+		f.init(reflect.ValueOf(data).Elem().Interface())
+	}
+}
+
+func (f fields) hasField(field string) bool {
+	field = strings.TrimPrefix(field, ".")
+	_, ok := f[field]
+	return ok
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/LNKLEO/oh-my-posh/platform"
 	"github.com/LNKLEO/oh-my-posh/properties"
 	"github.com/LNKLEO/oh-my-posh/segments"
+	"github.com/LNKLEO/oh-my-posh/shell"
 	"github.com/LNKLEO/oh-my-posh/template"
 
 	"github.com/gookit/config/v2"
@@ -33,23 +34,26 @@ const (
 
 // Config holds all the theme for rendering the prompt
 type Config struct {
-	Version              int                    `json:"version"`
-	FinalSpace           bool                   `json:"final_space,omitempty"`
-	ConsoleTitleTemplate string                 `json:"console_title_template,omitempty"`
-	TerminalBackground   string                 `json:"terminal_background,omitempty"`
-	AccentColor          string                 `json:"accent_color,omitempty"`
-	Blocks               []*Block               `json:"blocks,omitempty"`
-	Tooltips             []*Segment             `json:"tooltips,omitempty"`
-	TransientPrompt      *Segment               `json:"transient_prompt,omitempty"`
-	ValidLine            *Segment               `json:"valid_line,omitempty"`
-	ErrorLine            *Segment               `json:"error_line,omitempty"`
-	SecondaryPrompt      *Segment               `json:"secondary_prompt,omitempty"`
-	DebugPrompt          *Segment               `json:"debug_prompt,omitempty"`
-	Palette              ansi.Palette           `json:"palette,omitempty"`
-	Palettes             *ansi.Palettes         `json:"palettes,omitempty"`
-	Cycle                ansi.Cycle             `json:"cycle,omitempty"`
-	PWD                  string                 `json:"pwd,omitempty"`
-	Var                  map[string]interface{} `json:"var,omitempty"`
+	Version                  int                    `json:"version"`
+	FinalSpace               bool                   `json:"final_space,omitempty"`
+	ConsoleTitleTemplate     string                 `json:"console_title_template,omitempty"`
+	TerminalBackground       string                 `json:"terminal_background,omitempty"`
+	AccentColor              string                 `json:"accent_color,omitempty"`
+	Blocks                   []*Block               `json:"blocks,omitempty"`
+	Tooltips                 []*Segment             `json:"tooltips,omitempty"`
+	TransientPrompt          *Segment               `json:"transient_prompt,omitempty"`
+	ValidLine                *Segment               `json:"valid_line,omitempty"`
+	ErrorLine                *Segment               `json:"error_line,omitempty"`
+	SecondaryPrompt          *Segment               `json:"secondary_prompt,omitempty"`
+	DebugPrompt              *Segment               `json:"debug_prompt,omitempty"`
+	Palette                  ansi.Palette           `json:"palette,omitempty"`
+	Palettes                 *ansi.Palettes         `json:"palettes,omitempty"`
+	Cycle                    ansi.Cycle             `json:"cycle,omitempty"`
+	ShellIntegration         bool                   `json:"shell_integration,omitempty"`
+	PWD                      string                 `json:"pwd,omitempty"`
+	Var                      map[string]interface{} `json:"var,omitempty"`
+	DisableCursorPositioning bool                   `json:"disable_cursor_positioning,omitempty"`
+	PatchPwshBleed           bool                   `json:"patch_pwsh_bleed,omitempty"`
 
 	// Deprecated
 	OSC99 bool `json:"osc99,omitempty"`
@@ -90,10 +94,30 @@ func (cfg *Config) getPalette() ansi.Palette {
 // LoadConfig returns the default configuration including possible user overrides
 func LoadConfig(env platform.Environment) *Config {
 	cfg := loadConfig(env)
+
 	// only migrate automatically when the switch isn't set
 	if !env.Flags().Migrate && cfg.Version < configVersion {
 		cfg.BackupAndMigrate()
 	}
+
+	if !cfg.ShellIntegration {
+		return cfg
+	}
+
+	// bash  - ok
+	// fish  - ok
+	// pwsh  - ok
+	// zsh   - ok
+	// cmd   - ok, as of v1.4.25 (chrisant996/clink#457, fixed in chrisant996/clink@8a5d7ea)
+	// nu    - built-in (and bugged) feature - nushell/nushell#5585, https://www.nushell.sh/blog/2022-08-16-nushell-0_67.html#shell-integration-fdncred-and-tyriar
+	// elv   - broken OSC sequences
+	// xonsh - broken OSC sequences
+	// tcsh  - overall broken, FTCS_COMMAND_EXECUTED could be added to POSH_POSTCMD in the future
+	switch env.Shell() {
+	case shell.ELVISH, shell.XONSH, shell.TCSH, shell.NU:
+		cfg.ShellIntegration = false
+	}
+
 	return cfg
 }
 
@@ -110,12 +134,17 @@ func loadConfig(env platform.Environment) *Config {
 	cfg.origin = configFile
 	cfg.Format = strings.TrimPrefix(filepath.Ext(configFile), ".")
 	cfg.env = env
-	if cfg.Format == "yml" {
+
+	// support different extensions
+	switch cfg.Format {
+	case "yml":
 		cfg.Format = YAML
+	case "jsonc":
+		cfg.Format = JSON
 	}
 
-	config.AddDriver(yaml.Driver)
-	config.AddDriver(json.Driver)
+	config.AddDriver(yaml.Driver.WithAliases("yaml", "yml"))
+	config.AddDriver(json.Driver.WithAliases("json", "jsonc"))
 	config.AddDriver(toml.Driver)
 
 	if config.Default().IsEmpty() {
@@ -270,8 +299,12 @@ func escapeGlyphs(s string, migrate bool) string {
 	}
 
 	var cp codePoints
+	var err error
 	if migrate {
-		cp = getGlyphCodePoints()
+		cp, err = getGlyphCodePoints()
+		if err != nil {
+			migrate = false
+		}
 	}
 
 	var builder strings.Builder
@@ -325,7 +358,7 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 						TrailingDiamond: "\ue0b0",
 						Background:      "p:yellow",
 						Foreground:      "p:black",
-						Template:        " {{ if .SSHSession }}\uf817 {{ end }}{{ .UserName }} ",
+						Template:        " {{ if .SSHSession }}\ueba9 {{ end }}{{ .UserName }} ",
 					},
 					{
 						Type:            PATH,
@@ -336,7 +369,7 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 						Properties: properties.Map{
 							properties.Style: "folder",
 						},
-						Template: " \uf74a {{ path .Path .Location }} ",
+						Template: " \uea83 {{ path .Path .Location }} ",
 					},
 					{
 						Type:            GIT,
@@ -359,7 +392,6 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 							segments.BranchMaxLength:   25,
 							segments.FetchStatus:       true,
 							segments.FetchUpstreamIcon: true,
-							segments.GithubIcon:        "\uf7a3",
 						},
 						Template: " {{ if .UpstreamURL }}{{ url .UpstreamIcon .UpstreamURL }} {{ end }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }} ", //nolint:lll
 					},
@@ -396,7 +428,7 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 						Style:      Plain,
 						Background: "transparent",
 						Foreground: "p:green",
-						Template:   "\uf898 ",
+						Template:   "\ue718 ",
 						Properties: properties.Map{
 							segments.HomeEnabled:         false,
 							segments.FetchPackageManager: false,
@@ -408,7 +440,7 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 						Style:      Plain,
 						Background: "transparent",
 						Foreground: "p:blue",
-						Template:   "\ufcd1 ",
+						Template:   "\ue626 ",
 						Properties: properties.Map{
 							properties.FetchVersion: false,
 						},
@@ -483,7 +515,7 @@ func defaultConfig(env platform.Environment, warning bool) *Config {
 				TrailingDiamond: "\ue0b4",
 				Background:      "p:blue",
 				Foreground:      "p:white",
-				Template:        " \ufd03 {{ .Name }} ",
+				Template:        " \uebd8 {{ .Name }} ",
 				Properties: properties.Map{
 					properties.DisplayDefault: true,
 				},

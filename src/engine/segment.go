@@ -39,6 +39,7 @@ type Segment struct {
 	Alias               string         `json:"alias,omitempty"`
 	MaxWidth            int            `json:"max_width,omitempty"`
 	MinWidth            int            `json:"min_width,omitempty"`
+	Filler              string         `json:"filler,omitempty"`
 
 	Enabled bool `json:"-"`
 
@@ -48,15 +49,10 @@ type Segment struct {
 	text       string
 	styleCache SegmentStyle
 	name       string
-}
 
-// SegmentTiming holds the timing context for a segment
-type SegmentTiming struct {
-	name       string
-	nameLength int
-	active     bool
-	text       string
+	// debug info
 	duration   time.Duration
+	nameLength int
 }
 
 // SegmentWriter is the interface used to define what and if to write to the prompt
@@ -98,6 +94,8 @@ const (
 
 	// ANGULAR writes which angular cli version us currently active
 	ANGULAR SegmentType = "angular"
+	// ARGOCD writes the current argocd context
+	ARGOCD SegmentType = "argocd"
 	// AWS writes the active aws context
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
@@ -196,6 +194,8 @@ const (
 	PROJECT SegmentType = "project"
 	// PYTHON writes the virtual env name
 	PYTHON SegmentType = "python"
+	// QUASAR writes the QUASAR version and context
+	QUASAR SegmentType = "quasar"
 	// R version
 	R SegmentType = "r"
 	// ROOT writes root symbol
@@ -210,8 +210,12 @@ const (
 	SESSION SegmentType = "session"
 	// SHELL writes which shell we're currently in
 	SHELL SegmentType = "shell"
+	// SITECORE displays the current context for the Sitecore CLI
+	SITECORE SegmentType = "sitecore"
 	// SPOTIFY writes the SPOTIFY status for Mac
 	SPOTIFY SegmentType = "spotify"
+	// STATUS writes the last know command status
+	STATUS SegmentType = "status"
 	// STRAVA is a sports activity tracker
 	STRAVA SegmentType = "strava"
 	// Subversion segment
@@ -230,6 +234,8 @@ const (
 	UI5TOOLING SegmentType = "ui5tooling"
 	// UNITY writes which Unity version is currently active
 	UNITY SegmentType = "unity"
+	// UPGRADE lets you know if you can upgrade Oh My Posh
+	UPGRADE SegmentType = "upgrade"
 	// VALA writes the active vala version
 	VALA SegmentType = "vala"
 	// WAKATIME writes tracked time spend in dev editors
@@ -248,6 +254,7 @@ const (
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
 	ANGULAR:       func() SegmentWriter { return &segments.Angular{} },
+	ARGOCD:        func() SegmentWriter { return &segments.Argocd{} },
 	AWS:           func() SegmentWriter { return &segments.Aws{} },
 	AZ:            func() SegmentWriter { return &segments.Az{} },
 	AZFUNC:        func() SegmentWriter { return &segments.AzFunc{} },
@@ -267,7 +274,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	DOTNET:        func() SegmentWriter { return &segments.Dotnet{} },
 	EXECUTIONTIME: func() SegmentWriter { return &segments.Executiontime{} },
 	ELIXIR:        func() SegmentWriter { return &segments.Elixir{} },
-	EXIT:          func() SegmentWriter { return &segments.Exit{} },
+	EXIT:          func() SegmentWriter { return &segments.Status{} },
 	FLUTTER:       func() SegmentWriter { return &segments.Flutter{} },
 	FOSSIL:        func() SegmentWriter { return &segments.Fossil{} },
 	GCP:           func() SegmentWriter { return &segments.Gcp{} },
@@ -297,6 +304,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	PLASTIC:       func() SegmentWriter { return &segments.Plastic{} },
 	PROJECT:       func() SegmentWriter { return &segments.Project{} },
 	PYTHON:        func() SegmentWriter { return &segments.Python{} },
+	QUASAR:        func() SegmentWriter { return &segments.Quasar{} },
 	R:             func() SegmentWriter { return &segments.R{} },
 	ROOT:          func() SegmentWriter { return &segments.Root{} },
 	RUBY:          func() SegmentWriter { return &segments.Ruby{} },
@@ -304,7 +312,9 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	SAPLING:       func() SegmentWriter { return &segments.Sapling{} },
 	SESSION:       func() SegmentWriter { return &segments.Session{} },
 	SHELL:         func() SegmentWriter { return &segments.Shell{} },
+	SITECORE:      func() SegmentWriter { return &segments.Sitecore{} },
 	SPOTIFY:       func() SegmentWriter { return &segments.Spotify{} },
+	STATUS:        func() SegmentWriter { return &segments.Status{} },
 	STRAVA:        func() SegmentWriter { return &segments.Strava{} },
 	SVN:           func() SegmentWriter { return &segments.Svn{} },
 	SWIFT:         func() SegmentWriter { return &segments.Swift{} },
@@ -314,6 +324,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	TIME:          func() SegmentWriter { return &segments.Time{} },
 	UI5TOOLING:    func() SegmentWriter { return &segments.UI5Tooling{} },
 	UNITY:         func() SegmentWriter { return &segments.Unity{} },
+	UPGRADE:       func() SegmentWriter { return &segments.Upgrade{} },
 	VALA:          func() SegmentWriter { return &segments.Vala{} },
 	WAKATIME:      func() SegmentWriter { return &segments.Wakatime{} },
 	WINREG:        func() SegmentWriter { return &segments.WindowsRegistry{} },
@@ -408,7 +419,11 @@ func (segment *Segment) mapSegmentWithWriter(env platform.Environment) error {
 
 	if f, ok := Segments[segment.Type]; ok {
 		writer := f()
-		writer.Init(segment.Properties, env)
+		wrapper := &properties.Wrapper{
+			Properties: segment.Properties,
+			Env:        env,
+		}
+		writer.Init(wrapper, env)
 		segment.writer = writer
 		return nil
 	}
@@ -463,10 +478,24 @@ func (segment *Segment) SetEnabled(env platform.Environment) {
 		fmt.Println(message)
 		segment.Enabled = true
 	}()
+
+	// segment timings for debug purposes
+	var start time.Time
+	if env.Flags().Debug {
+		start = time.Now()
+		segment.nameLength = len(segment.Name())
+		defer func() {
+			segment.duration = time.Since(start)
+		}()
+	}
+
 	err := segment.mapSegmentWithWriter(env)
 	if err != nil || !segment.shouldIncludeFolder() {
 		return
 	}
+
+	segment.env.DebugF("Segment: %s", segment.Name())
+
 	// validate toggles
 	if toggles, OK := segment.env.Cache().Get(platform.TOGGLECACHE); OK && len(toggles) > 0 {
 		list := strings.Split(toggles, ",")
@@ -476,9 +505,11 @@ func (segment *Segment) SetEnabled(env platform.Environment) {
 			}
 		}
 	}
+
 	if shouldHideForWidth(segment.env, segment.MinWidth, segment.MaxWidth) {
 		return
 	}
+
 	if segment.writer.Enabled() {
 		segment.Enabled = true
 		env.TemplateCache().AddSegmentData(segment.Name(), segment.writer)

@@ -7,7 +7,6 @@ import (
 	"github.com/LNKLEO/oh-my-posh/mock"
 	"github.com/LNKLEO/oh-my-posh/properties"
 
-	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,12 +72,6 @@ func TestSysInfo(t *testing.T) {
 					SwapPercentUsed:     0,
 				},
 			},
-		},
-		{
-			Case:           "2 physical cpus",
-			ExpectedString: "1200 1200",
-			Template:       "{{range $cpu := .CPU}}{{round $cpu.Mhz 2 }} {{end}}",
-			SysInfo:        platform.SystemInfo{CPU: []cpu.InfoStat{{Mhz: 1200}, {Mhz: 1200}}},
 		},
 	}
 

@@ -51,7 +51,7 @@ func TestEnabledInWorkingDirectory(t *testing.T) {
 	env.On("IsWsl").Return(false)
 	env.On("HasParentFilePath", ".git").Return(fileInfo, nil)
 	env.On("PathSeparator").Return("/")
-	env.On("Home").Return("/Users/posh")
+	env.On("Home").Return(poshHome)
 	env.On("Getenv", poshGitEnv).Return("")
 	env.On("DirMatchesOneOf", mock2.Anything, mock2.Anything).Return(false)
 	g := &Git{
@@ -554,6 +554,8 @@ func TestSetGitStatus(t *testing.T) {
 		if tc.ExpectedStaging == nil {
 			tc.ExpectedStaging = &GitStatus{}
 		}
+		tc.ExpectedStaging.Formats = map[string]string{}
+		tc.ExpectedWorking.Formats = map[string]string{}
 		g.setGitStatus()
 		assert.Equal(t, tc.ExpectedStaging, g.Staging, tc.Case)
 		assert.Equal(t, tc.ExpectedWorking, g.Working, tc.Case)
@@ -586,6 +588,31 @@ func TestGetStashContextZeroEntries(t *testing.T) {
 		}
 		got := g.StashCount()
 		assert.Equal(t, tc.Expected, got)
+	}
+}
+
+func TestGitCleanSSHURL(t *testing.T) {
+	cases := []struct {
+		Case     string
+		Expected string
+		Upstream string
+	}{
+		{Case: "regular URL", Expected: "https://src.example.com/user/repo", Upstream: "/src.example.com/user/repo.git"},
+		{Case: "domain:path", Expected: "https://host.xz/path/to/repo", Upstream: "host.xz:/path/to/repo.git/"},
+		{Case: "ssh with port", Expected: "https://host.xz/path/to/repo", Upstream: "ssh://user@host.xz:1234/path/to/repo.git"},
+		{Case: "ssh with port, trailing slash", Expected: "https://host.xz/path/to/repo", Upstream: "ssh://user@host.xz:1234/path/to/repo.git/"},
+		{Case: "ssh without port", Expected: "https://host.xz/path/to/repo", Upstream: "ssh://user@host.xz/path/to/repo.git/"},
+		{Case: "ssh port, no user", Expected: "https://host.xz/path/to/repo", Upstream: "ssh://host.xz:1234/path/to/repo.git"},
+		{Case: "ssh no port, no user", Expected: "https://host.xz/path/to/repo", Upstream: "ssh://host.xz/path/to/repo.git"},
+		{Case: "rsync no port, no user", Expected: "https://host.xz/path/to/repo", Upstream: "rsync://host.xz/path/to/repo.git/"},
+		{Case: "git no port, no user", Expected: "https://host.xz/path/to/repo", Upstream: "git://host.xz/path/to/repo.git"},
+		{Case: "gitea no port, no user", Expected: "https://src.example.com/user/repo", Upstream: "_gitea@src.example.com:user/repo.git"},
+		{Case: "unsupported", Upstream: "\\test\\repo.git"},
+	}
+	for _, tc := range cases {
+		g := &Git{}
+		upstreamIcon := g.cleanUpstreamURL(tc.Upstream)
+		assert.Equal(t, tc.Expected, upstreamIcon, tc.Case)
 	}
 }
 
@@ -756,8 +783,8 @@ func TestGitTemplateString(t *testing.T) {
 		},
 		{
 			Case:     "Working and staging area changes with separator and stash count",
-			Expected: "main \uF046 +5 ~1 | \uF044 +2 ~3 \uf692 3",
-			Template: "{{ .HEAD }}{{ if .Staging.Changed }} \uF046 {{ .Staging.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Working.Changed }} \uF044 {{ .Working.String }}{{ end }}{{ if gt .StashCount 0 }} \uF692 {{ .StashCount }}{{ end }}", //nolint:lll
+			Expected: "main \uF046 +5 ~1 | \uF044 +2 ~3 \ueb4b 3",
+			Template: "{{ .HEAD }}{{ if .Staging.Changed }} \uF046 {{ .Staging.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Working.Changed }} \uF044 {{ .Working.String }}{{ end }}{{ if gt .StashCount 0 }} \ueb4b {{ .StashCount }}{{ end }}", //nolint:lll
 			Git: &Git{
 				HEAD: branchName,
 				Working: &GitStatus{
@@ -915,6 +942,7 @@ func TestGitCommit(t *testing.T) {
 			ce:jan@ohmyposh.dev
 			at:1673176335
 			su:docs(error): you can't use cross segment properties
+			ha:1234567891011121314
 			`,
 			Expected: &Commit{
 				Author: &User{
@@ -927,6 +955,7 @@ func TestGitCommit(t *testing.T) {
 				},
 				Subject:   "docs(error): you can't use cross segment properties",
 				Timestamp: time.Unix(1673176335, 0),
+				Sha:       "1234567891011121314",
 			},
 		},
 		{
@@ -970,7 +999,7 @@ func TestGitCommit(t *testing.T) {
 
 	for _, tc := range cases {
 		env := new(mock.MockedEnvironment)
-		env.MockGitCommand("", tc.Output, "log", "-1", "--pretty=format:an:%an%nae:%ae%ncn:%cn%nce:%ce%nat:%at%nsu:%s")
+		env.MockGitCommand("", tc.Output, "log", "-1", "--pretty=format:an:%an%nae:%ae%ncn:%cn%nce:%ce%nat:%at%nsu:%s%nha:%H")
 		g := &Git{
 			scm: scm{
 				env:     env,

@@ -1,11 +1,12 @@
 package engine
 
 import (
+	"strings"
 	"sync"
-	"time"
 
 	"github.com/LNKLEO/oh-my-posh/ansi"
 	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/oh-my-posh/regex"
 	"github.com/LNKLEO/oh-my-posh/shell"
 )
 
@@ -67,6 +68,7 @@ func (b *Block) InitPlain(env platform.Environment, config *Config) {
 	b.writer = &ansi.Writer{
 		TerminalBackground: shell.ConsoleBackgroundColor(env, config.TerminalBackground),
 		AnsiColors:         config.MakeColors(),
+		TrueColor:          env.Flags().TrueColor,
 	}
 	b.writer.Init(shell.GENERIC)
 	b.env = env
@@ -74,9 +76,6 @@ func (b *Block) InitPlain(env platform.Environment, config *Config) {
 }
 
 func (b *Block) executeSegmentLogic() {
-	if b.env.Flags().Debug {
-		return
-	}
 	if shouldHideForWidth(b.env, b.MinWidth, b.MaxWidth) {
 		return
 	}
@@ -137,19 +136,18 @@ func (b *Block) RenderSegments() (string, int) {
 		b.setActiveSegment(segment)
 		b.renderActiveSegment()
 	}
-	b.writePowerline(true)
+	b.writeSeparator(true)
 	return b.writer.String()
 }
 
 func (b *Block) renderActiveSegment() {
-	b.writePowerline(false)
+	b.writeSeparator(false)
 	switch b.activeSegment.style() {
 	case Plain, Powerline:
 		b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
 	case Diamond:
 		b.writer.Write(ansi.Transparent, ansi.Background, b.activeSegment.LeadingDiamond)
 		b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
-		b.writer.Write(ansi.Transparent, ansi.Background, b.activeSegment.TrailingDiamond)
 	case Accordion:
 		if b.activeSegment.Enabled {
 			b.writer.Write(ansi.Background, ansi.Foreground, b.activeSegment.text)
@@ -159,7 +157,25 @@ func (b *Block) renderActiveSegment() {
 	b.writer.SetParentColors(b.previousActiveSegment.background(), b.previousActiveSegment.foreground())
 }
 
-func (b *Block) writePowerline(final bool) {
+func (b *Block) writeSeparator(final bool) {
+	isCurrentDiamond := b.activeSegment.style() == Diamond
+	if final && isCurrentDiamond {
+		b.writer.Write(ansi.Transparent, ansi.Background, b.activeSegment.TrailingDiamond)
+		return
+	}
+
+	isPreviousDiamond := b.previousActiveSegment != nil && b.previousActiveSegment.style() == Diamond
+	if isPreviousDiamond {
+		b.adjustTrailingDiamondColorOverrides()
+	}
+	if isPreviousDiamond && isCurrentDiamond && len(b.activeSegment.LeadingDiamond) == 0 {
+		b.writer.Write(ansi.Background, ansi.ParentBackground, b.previousActiveSegment.TrailingDiamond)
+		return
+	}
+	if isPreviousDiamond && len(b.previousActiveSegment.TrailingDiamond) > 0 {
+		b.writer.Write(ansi.Transparent, ansi.ParentBackground, b.previousActiveSegment.TrailingDiamond)
+	}
+
 	resolvePowerlineSymbol := func() string {
 		var symbol string
 		if b.activeSegment.isPowerline() {
@@ -187,6 +203,50 @@ func (b *Block) writePowerline(final bool) {
 	b.writer.Write(bgColor, b.getPowerlineColor(), symbol)
 }
 
+func (b *Block) adjustTrailingDiamondColorOverrides() {
+	// as we now already adjusted the activeSegment, we need to change the value
+	// of background and foreground to parentBackground and parentForeground
+	// this will still break when using parentBackground and parentForeground as keywords
+	// in a trailing diamond, but let's fix that when it happens as it requires either a rewrite
+	// of the logic for diamonds or storing grandparents as well like one happy family.
+	if b.previousActiveSegment == nil || len(b.previousActiveSegment.TrailingDiamond) == 0 {
+		return
+	}
+
+	if !strings.Contains(b.previousActiveSegment.TrailingDiamond, ansi.Background) && !strings.Contains(b.previousActiveSegment.TrailingDiamond, ansi.Foreground) {
+		return
+	}
+
+	match := regex.FindNamedRegexMatch(ansi.AnchorRegex, b.previousActiveSegment.TrailingDiamond)
+	if len(match) == 0 {
+		return
+	}
+
+	adjustOverride := func(anchor, override string) {
+		newOverride := override
+		switch override {
+		case ansi.Foreground:
+			newOverride = ansi.ParentForeground
+		case ansi.Background:
+			newOverride = ansi.ParentBackground
+		}
+
+		if override == newOverride {
+			return
+		}
+
+		newAnchor := strings.Replace(match[ansi.ANCHOR], override, newOverride, 1)
+		b.previousActiveSegment.TrailingDiamond = strings.Replace(b.previousActiveSegment.TrailingDiamond, anchor, newAnchor, 1)
+	}
+
+	if len(match[ansi.BG]) > 0 {
+		adjustOverride(match[ansi.ANCHOR], match[ansi.BG])
+	}
+	if len(match[ansi.FG]) > 0 {
+		adjustOverride(match[ansi.ANCHOR], match[ansi.FG])
+	}
+}
+
 func (b *Block) getPowerlineColor() string {
 	if b.previousActiveSegment == nil {
 		return ansi.Transparent
@@ -201,29 +261,4 @@ func (b *Block) getPowerlineColor() string {
 		return ansi.Transparent
 	}
 	return b.previousActiveSegment.background()
-}
-
-func (b *Block) Debug() (int, []*SegmentTiming) {
-	var segmentTimings []*SegmentTiming
-	largestSegmentNameLength := 0
-	for _, segment := range b.Segments {
-		var segmentTiming SegmentTiming
-		segmentTiming.name = string(segment.Type)
-		segmentTiming.nameLength = len(segmentTiming.name)
-		if segmentTiming.nameLength > largestSegmentNameLength {
-			largestSegmentNameLength = segmentTiming.nameLength
-		}
-		start := time.Now()
-		segment.SetEnabled(b.env)
-		segment.SetText()
-		segmentTiming.active = segment.Enabled
-		if segmentTiming.active || segment.style() == Accordion {
-			b.setActiveSegment(segment)
-			b.renderActiveSegment()
-			segmentTiming.text, _ = b.writer.String()
-		}
-		segmentTiming.duration = time.Since(start)
-		segmentTimings = append(segmentTimings, &segmentTiming)
-	}
-	return largestSegmentNameLength, segmentTimings
 }

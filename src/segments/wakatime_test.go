@@ -73,8 +73,7 @@ func TestWTTrackedTime(t *testing.T) {
 
 	for _, tc := range cases {
 		env := &mock.MockedEnvironment{}
-
-		response := fmt.Sprintf(`{"cummulative_total": {"seconds": %.2f, "text": "x"}}`, float64(tc.Seconds))
+		response := fmt.Sprintf(`{"cumulative_total": {"seconds": %.2f, "text": "x"}}`, float64(tc.Seconds))
 
 		env.On("HTTPRequest", FAKEAPIURL).Return([]byte(response), tc.Error)
 
@@ -82,6 +81,7 @@ func TestWTTrackedTime(t *testing.T) {
 		cache.On("Get", FAKEAPIURL).Return(response, !tc.CacheFoundFail)
 		cache.On("Set", FAKEAPIURL, response, tc.CacheTimeout).Return()
 		env.On("Cache").Return(cache)
+		env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 
 		env.On("TemplateCache").Return(&platform.TemplateCache{
 			Env: map[string]string{"HELLO": "hello"},
@@ -128,6 +128,7 @@ func TestWTGetUrl(t *testing.T) {
 		env := &mock.MockedEnvironment{}
 
 		env.On("Error", mock2.Anything)
+		env.On("DebugF", mock2.Anything, mock2.Anything).Return(nil)
 		env.On("TemplateCache").Return(&platform.TemplateCache{
 			Env: map[string]string{"HELLO": "hello"},
 		})

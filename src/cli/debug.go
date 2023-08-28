@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/LNKLEO/oh-my-posh/ansi"
+	"github.com/LNKLEO/oh-my-posh/build"
 	"github.com/LNKLEO/oh-my-posh/engine"
 	"github.com/LNKLEO/oh-my-posh/platform"
 	"github.com/LNKLEO/oh-my-posh/shell"
@@ -22,11 +23,11 @@ var debugCmd = &cobra.Command{
 		startTime := time.Now()
 		env := &platform.Shell{
 			CmdFlags: &platform.Flags{
-				Config:  config,
-				Debug:   true,
-				PWD:     pwd,
-				Shell:   shellName,
-				Version: cliVersion,
+				Config: config,
+				Debug:  true,
+				PWD:    pwd,
+				Shell:  shellName,
+				Plain:  plain,
 			},
 		}
 		env.Init()
@@ -36,6 +37,8 @@ var debugCmd = &cobra.Command{
 		writer := &ansi.Writer{
 			TerminalBackground: shell.ConsoleBackgroundColor(env, cfg.TerminalBackground),
 			AnsiColors:         writerColors,
+			Plain:              plain,
+			TrueColor:          env.CmdFlags.TrueColor,
 		}
 		writer.Init(shell.GENERIC)
 		eng := &engine.Engine{
@@ -44,12 +47,13 @@ var debugCmd = &cobra.Command{
 			Writer: writer,
 			Plain:  plain,
 		}
-		fmt.Print(eng.PrintDebug(startTime, cliVersion))
+		fmt.Print(eng.PrintDebug(startTime, build.Version))
 	},
 }
 
 func init() { //nolint:gochecknoinits
 	debugCmd.Flags().StringVar(&pwd, "pwd", "", "current working directory")
 	debugCmd.Flags().StringVar(&shellName, "shell", "", "the shell to print for")
+	debugCmd.Flags().BoolVarP(&plain, "plain", "p", false, "plain text output (no ANSI)")
 	RootCmd.AddCommand(debugCmd)
 }
