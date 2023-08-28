@@ -21,7 +21,7 @@ const (
 )
 
 func (s *Shell) Template() string {
-	return NameTemplate
+	return " {{ .Name }} "
 }
 
 func (s *Shell) Enabled() bool {

@@ -20,7 +20,7 @@ func (env *Shell) Root() bool {
 	return os.Geteuid() == 0
 }
 
-func (env *ShellEnvironment) Home() string {
+func (env *Shell) Home() string {
 	return os.Getenv("HOME")
 }
 
@@ -71,7 +71,7 @@ func (env *Shell) TerminalWidth() (int, error) {
 	return env.CmdFlags.TerminalWidth, err
 }
 
-func (env *ShellEnvironment) Platform() string {
+func (env *Shell) Platform() string {
 	const key = "environment_platform"
 	if val, found := env.Cache().Get(key); found {
 		env.Debug(val)
@@ -115,7 +115,7 @@ func (env *Shell) WindowsRegistryKeyValue(_ string) (*WindowsRegistryValue, erro
 	return nil, &NotImplemented{}
 }
 
-func (env *ShellEnvironment) InWSLSharedDrive() bool {
+func (env *Shell) InWSLSharedDrive() bool {
 	if !env.IsWsl() {
 		return false
 	}
@@ -123,7 +123,7 @@ func (env *ShellEnvironment) InWSLSharedDrive() bool {
 	return !strings.HasPrefix(windowsPath, `//wsl.localhost/`) && !strings.HasPrefix(windowsPath, `//wsl$/`)
 }
 
-func (env *ShellEnvironment) ConvertToWindowsPath(path string) string {
+func (env *Shell) ConvertToWindowsPath(path string) string {
 	windowsPath, err := env.RunCommand("wslpath", "-m", path)
 	if err == nil {
 		return windowsPath
@@ -131,7 +131,7 @@ func (env *ShellEnvironment) ConvertToWindowsPath(path string) string {
 	return path
 }
 
-func (env *ShellEnvironment) ConvertToLinuxPath(path string) string {
+func (env *Shell) ConvertToLinuxPath(path string) string {
 	if linuxPath, err := env.RunCommand("wslpath", "-u", path); err == nil {
 		return linuxPath
 	}
@@ -154,11 +154,11 @@ const (
 	NdisPhysicalMedium802_3        NDIS_PHYSICAL_MEDIUM = "802.3"         // 14
 )
 
-func (env *ShellEnvironment) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
+func (env *Shell) GetAllNetworkInterfaces() (*[]NetworkInfo, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (env *ShellEnvironment) Connection(connectionType ConnectionType) (*Connection, error) {
+func (env *Shell) Connection(_ ConnectionType) (*Connection, error) {
 	// added to disable the linting error, we can implement this later
 	if len(env.networks) == 0 {
 		return nil, &NotImplemented{}

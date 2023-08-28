@@ -93,8 +93,6 @@ const (
 	Diamond SegmentStyle = "diamond"
 	// ANGULAR writes which angular cli version us currently active
 	ANGULAR SegmentType = "angular"
-	// ARGOCD writes the current argocd context
-	ARGOCD SegmentType = "argocd"
 	// AWS writes the active aws context
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
@@ -185,8 +183,6 @@ const (
 	PROJECT SegmentType = "project"
 	// PYTHON writes the virtual env name
 	PYTHON SegmentType = "python"
-	// QUASAR writes the QUASAR version and context
-	QUASAR SegmentType = "quasar"
 	// R version
 	R SegmentType = "r"
 	// ROOT writes root symbol
@@ -235,7 +231,6 @@ const (
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
 	ANGULAR:       func() SegmentWriter { return &segments.Angular{} },
-	ARGOCD:        func() SegmentWriter { return &segments.Argocd{} },
 	AWS:           func() SegmentWriter { return &segments.Aws{} },
 	AZ:            func() SegmentWriter { return &segments.Az{} },
 	AZFUNC:        func() SegmentWriter { return &segments.AzFunc{} },
@@ -281,7 +276,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	PLASTIC:       func() SegmentWriter { return &segments.Plastic{} },
 	PROJECT:       func() SegmentWriter { return &segments.Project{} },
 	PYTHON:        func() SegmentWriter { return &segments.Python{} },
-	QUASAR:        func() SegmentWriter { return &segments.Quasar{} },
 	R:             func() SegmentWriter { return &segments.R{} },
 	ROOT:          func() SegmentWriter { return &segments.Root{} },
 	RUBY:          func() SegmentWriter { return &segments.Ruby{} },
