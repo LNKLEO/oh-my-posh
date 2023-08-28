@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/platform"
 
 	color2 "github.com/gookit/color"
 	"github.com/spf13/cobra"

@@ -1,6 +1,6 @@
 package template
 
-import "github.com/LNKLEO/oh-my-posh/regex"
+import "github.com/LNKLEO/OMP/src/regex"
 
 func matchP(pattern, text string) bool {
 	return regex.MatchString(pattern, text)

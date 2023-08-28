@@ -9,9 +9,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/template"
-	"github.com/LNKLEO/oh-my-posh/upgrade"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/template"
+	"github.com/LNKLEO/OMP/src/upgrade"
 )
 
 //go:embed scripts/omp.ps1

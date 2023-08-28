@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/build"
-	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/OMP/src/build"
+	"github.com/LNKLEO/OMP/src/platform"
 )
 
 type release struct {

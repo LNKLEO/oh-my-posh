@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/OMP/src/regex"
 
-	"github.com/LNKLEO/oh-my-posh/platform/battery"
+	"github.com/LNKLEO/OMP/src/platform/battery"
 )
 
 func mapMostLogicalState(state string) battery.State {

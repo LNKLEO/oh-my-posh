@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/log"
-	"github.com/LNKLEO/oh-my-posh/platform/battery"
-	"github.com/LNKLEO/oh-my-posh/platform/cmd"
-	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/OMP/src/log"
+	"github.com/LNKLEO/OMP/src/platform/battery"
+	"github.com/LNKLEO/OMP/src/platform/cmd"
+	"github.com/LNKLEO/OMP/src/regex"
 
 	disk "github.com/shirou/gopsutil/v3/disk"
 	load "github.com/shirou/gopsutil/v3/load"

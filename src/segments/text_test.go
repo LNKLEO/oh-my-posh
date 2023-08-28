@@ -3,8 +3,8 @@ package segments
 import (
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/mock"
-	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/OMP/src/mock"
+	"github.com/LNKLEO/OMP/src/platform"
 
 	"github.com/stretchr/testify/assert"
 )

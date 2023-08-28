@@ -3,7 +3,7 @@ package ansi
 import (
 	"errors"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/OMP/src/platform"
 
 	"github.com/gookit/color"
 )

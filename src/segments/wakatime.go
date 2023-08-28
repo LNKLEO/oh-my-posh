@@ -3,9 +3,9 @@ package segments
 import (
 	"encoding/json"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
-	"github.com/LNKLEO/oh-my-posh/template"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/template"
 )
 
 type Wakatime struct {

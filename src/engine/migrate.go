@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
-	"github.com/LNKLEO/oh-my-posh/segments"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/segments"
 )
 
 const (

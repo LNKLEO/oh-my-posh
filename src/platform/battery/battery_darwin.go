@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LNKLEO/oh-my-posh/platform/cmd"
-	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/OMP/src/platform/cmd"
+	"github.com/LNKLEO/OMP/src/regex"
 )
 
 func mapMostLogicalState(state string) State {

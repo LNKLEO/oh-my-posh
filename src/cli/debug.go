@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	"github.com/LNKLEO/oh-my-posh/build"
-	"github.com/LNKLEO/oh-my-posh/engine"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/shell"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/build"
+	"github.com/LNKLEO/OMP/src/engine"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/shell"
 
 	"github.com/spf13/cobra"
 )

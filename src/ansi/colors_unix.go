@@ -2,7 +2,7 @@
 
 package ansi
 
-import "github.com/LNKLEO/oh-my-posh/platform"
+import "github.com/LNKLEO/OMP/src/platform"
 
 func GetAccentColor(_ platform.Environment) (*RGB, error) {
 	return nil, &platform.NotImplemented{}

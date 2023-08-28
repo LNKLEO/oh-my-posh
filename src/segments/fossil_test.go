@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/mock"
-	"github.com/LNKLEO/oh-my-posh/properties"
+	"github.com/LNKLEO/OMP/src/mock"
+	"github.com/LNKLEO/OMP/src/properties"
 
 	"github.com/stretchr/testify/assert"
 )

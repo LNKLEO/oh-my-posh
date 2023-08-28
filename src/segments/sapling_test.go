@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/LNKLEO/OMP/src/mock"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
 	"github.com/alecthomas/assert"
-	"github.com/LNKLEO/oh-my-posh/mock"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
 )
 
 func TestSetDir(t *testing.T) {

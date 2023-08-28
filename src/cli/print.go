@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/LNKLEO/oh-my-posh/engine"
-	"github.com/LNKLEO/oh-my-posh/platform"
+	"github.com/LNKLEO/OMP/src/engine"
+	"github.com/LNKLEO/OMP/src/platform"
 
 	"github.com/spf13/cobra"
 )

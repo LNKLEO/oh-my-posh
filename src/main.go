@@ -1,6 +1,6 @@
 package main
 
-import "github.com/LNKLEO/oh-my-posh/cli"
+import "github.com/LNKLEO/OMP/src/cli"
 
 func main() {
 	cli.Execute()

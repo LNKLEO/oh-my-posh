@@ -1,4 +1,4 @@
-module github.com/LNKLEO/oh-my-posh
+module github.com/LNKLEO/OMP/src
 
 go 1.20
 

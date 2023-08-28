@@ -5,7 +5,7 @@ package platform
 import (
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/platform/battery"
+	"github.com/LNKLEO/OMP/src/platform/battery"
 )
 
 func (env *Shell) BatteryState() (*battery.Info, error) {

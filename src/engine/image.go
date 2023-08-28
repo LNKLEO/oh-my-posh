@@ -34,10 +34,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	fontCLI "github.com/LNKLEO/oh-my-posh/font"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/OMP/src/ansi"
+	fontCLI "github.com/LNKLEO/OMP/src/font"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/regex"
 
 	"github.com/esimov/stackblur-go"
 	"github.com/fogleman/gg"

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LNKLEO/oh-my-posh/regex"
-	"github.com/LNKLEO/oh-my-posh/shell"
+	"github.com/LNKLEO/OMP/src/regex"
+	"github.com/LNKLEO/OMP/src/shell"
 	"github.com/mattn/go-runewidth"
 )
 

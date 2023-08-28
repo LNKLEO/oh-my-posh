@@ -3,9 +3,9 @@ package segments
 import (
 	"errors"
 
-	"github.com/LNKLEO/oh-my-posh/shell"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/shell"
 )
 
 type ITerm struct {

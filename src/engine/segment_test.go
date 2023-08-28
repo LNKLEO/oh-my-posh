@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/mock"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
-	"github.com/LNKLEO/oh-my-posh/segments"
+	"github.com/LNKLEO/OMP/src/mock"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/segments"
 
 	"github.com/stretchr/testify/assert"
 	mock2 "github.com/stretchr/testify/mock"

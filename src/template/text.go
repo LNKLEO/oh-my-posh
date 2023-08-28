@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/regex"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/regex"
 )
 
 const (

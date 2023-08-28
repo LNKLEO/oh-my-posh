@@ -3,10 +3,10 @@ package engine
 import (
 	"strings"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/shell"
-	"github.com/LNKLEO/oh-my-posh/template"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/shell"
+	"github.com/LNKLEO/OMP/src/template"
 )
 
 var (

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/color"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/shell"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/shell"
+	"github.com/LNKLEO/OMP/src/ansi"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -3,7 +3,7 @@ package engine
 import (
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/mock"
+	"github.com/LNKLEO/OMP/src/mock"
 
 	"github.com/stretchr/testify/assert"
 )

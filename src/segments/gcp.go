@@ -4,8 +4,8 @@ import (
 	"errors"
 	"path"
 
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
 
 	"gopkg.in/ini.v1"
 )

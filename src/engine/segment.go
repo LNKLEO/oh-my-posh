@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/properties"
-	"github.com/LNKLEO/oh-my-posh/segments"
-	"github.com/LNKLEO/oh-my-posh/shell"
-	"github.com/LNKLEO/oh-my-posh/template"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/segments"
+	"github.com/LNKLEO/OMP/src/shell"
+	"github.com/LNKLEO/OMP/src/template"
 
 	c "golang.org/x/text/cases"
 	"golang.org/x/text/language"

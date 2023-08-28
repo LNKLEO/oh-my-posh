@@ -3,10 +3,10 @@ package engine
 import (
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/color"
-	"github.com/LNKLEO/oh-my-posh/mock"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/segments"
+	"github.com/LNKLEO/OMP/src/mock"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/segments"
+	"github.com/LNKLEO/OMP/src/ansi"
 
 	"github.com/gookit/config/v2"
 	"github.com/mitchellh/mapstructure"

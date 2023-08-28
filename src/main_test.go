@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/LNKLEO/oh-my-posh/cli"
+	"github.com/LNKLEO/OMP/src/cli"
 )
 
 func BenchmarkInit(b *testing.B) {

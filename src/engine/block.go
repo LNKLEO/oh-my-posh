@@ -4,10 +4,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/LNKLEO/oh-my-posh/ansi"
-	"github.com/LNKLEO/oh-my-posh/platform"
-	"github.com/LNKLEO/oh-my-posh/regex"
-	"github.com/LNKLEO/oh-my-posh/shell"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/regex"
+	"github.com/LNKLEO/OMP/src/shell"
 )
 
 // BlockType type of block
