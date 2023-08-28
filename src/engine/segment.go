@@ -91,7 +91,6 @@ const (
 	Accordion SegmentStyle = "accordion"
 	// Diamond writes the prompt shaped with a leading and trailing symbol
 	Diamond SegmentStyle = "diamond"
-
 	// ANGULAR writes which angular cli version us currently active
 	ANGULAR SegmentType = "angular"
 	// ARGOCD writes the current argocd context
@@ -110,10 +109,6 @@ const (
 	BUF SegmentType = "buf"
 	// cds (SAP CAP) version
 	CDS SegmentType = "cds"
-	// Cloud Foundry segment
-	CF SegmentType = "cf"
-	// Cloud Foundry logged in target
-	CFTARGET SegmentType = "cftarget"
 	// CMAKE writes the active cmake version
 	CMAKE SegmentType = "cmake"
 	// CMD writes the output of a shell command
@@ -154,12 +149,8 @@ const (
 	IPIFY SegmentType = "ipify"
 	// ITERM inserts the Shell Integration prompt mark on iTerm zsh/bash/fish
 	ITERM SegmentType = "iterm"
-	// JAVA writes the active java version
-	JAVA SegmentType = "java"
 	// JULIA writes which julia version is currently active
 	JULIA SegmentType = "julia"
-	// KOTLIN writes the active kotlin version
-	KOTLIN SegmentType = "kotlin"
 	// KUBECTL writes the Kubernetes context we're currently in
 	KUBECTL SegmentType = "kubectl"
 	// LUA writes the active lua version
@@ -218,10 +209,6 @@ const (
 	STATUS SegmentType = "status"
 	// STRAVA is a sports activity tracker
 	STRAVA SegmentType = "strava"
-	// Subversion segment
-	SVN SegmentType = "svn"
-	// SWIFT writes the active swift version
-	SWIFT SegmentType = "swift"
 	// SYSTEMINFO writes system information (memory, cpu, load)
 	SYSTEMINFO SegmentType = "sysinfo"
 	// TERRAFORM writes the terraform workspace we're currently in
@@ -232,14 +219,8 @@ const (
 	TIME SegmentType = "time"
 	// UI5 Tooling segment
 	UI5TOOLING SegmentType = "ui5tooling"
-	// UNITY writes which Unity version is currently active
-	UNITY SegmentType = "unity"
-	// UPGRADE lets you know if you can upgrade Oh My Posh
-	UPGRADE SegmentType = "upgrade"
 	// VALA writes the active vala version
 	VALA SegmentType = "vala"
-	// WAKATIME writes tracked time spend in dev editors
-	WAKATIME SegmentType = "wakatime"
 	// WINREG queries the Windows registry.
 	WINREG SegmentType = "winreg"
 	// WITHINGS queries the Withings API.
@@ -262,8 +243,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	BREWFATHER:    func() SegmentWriter { return &segments.Brewfather{} },
 	BUF:           func() SegmentWriter { return &segments.Buf{} },
 	CDS:           func() SegmentWriter { return &segments.Cds{} },
-	CF:            func() SegmentWriter { return &segments.Cf{} },
-	CFTARGET:      func() SegmentWriter { return &segments.CfTarget{} },
 	CMD:           func() SegmentWriter { return &segments.Cmd{} },
 	CONNECTION:    func() SegmentWriter { return &segments.Connection{} },
 	CRYSTAL:       func() SegmentWriter { return &segments.Crystal{} },
@@ -284,9 +263,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	HASKELL:       func() SegmentWriter { return &segments.Haskell{} },
 	IPIFY:         func() SegmentWriter { return &segments.IPify{} },
 	ITERM:         func() SegmentWriter { return &segments.ITerm{} },
-	JAVA:          func() SegmentWriter { return &segments.Java{} },
 	JULIA:         func() SegmentWriter { return &segments.Julia{} },
-	KOTLIN:        func() SegmentWriter { return &segments.Kotlin{} },
 	KUBECTL:       func() SegmentWriter { return &segments.Kubectl{} },
 	LUA:           func() SegmentWriter { return &segments.Lua{} },
 	MERCURIAL:     func() SegmentWriter { return &segments.Mercurial{} },
@@ -316,17 +293,12 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	SPOTIFY:       func() SegmentWriter { return &segments.Spotify{} },
 	STATUS:        func() SegmentWriter { return &segments.Status{} },
 	STRAVA:        func() SegmentWriter { return &segments.Strava{} },
-	SVN:           func() SegmentWriter { return &segments.Svn{} },
-	SWIFT:         func() SegmentWriter { return &segments.Swift{} },
 	SYSTEMINFO:    func() SegmentWriter { return &segments.SystemInfo{} },
 	TERRAFORM:     func() SegmentWriter { return &segments.Terraform{} },
 	TEXT:          func() SegmentWriter { return &segments.Text{} },
 	TIME:          func() SegmentWriter { return &segments.Time{} },
 	UI5TOOLING:    func() SegmentWriter { return &segments.UI5Tooling{} },
-	UNITY:         func() SegmentWriter { return &segments.Unity{} },
-	UPGRADE:       func() SegmentWriter { return &segments.Upgrade{} },
 	VALA:          func() SegmentWriter { return &segments.Vala{} },
-	WAKATIME:      func() SegmentWriter { return &segments.Wakatime{} },
 	WINREG:        func() SegmentWriter { return &segments.WindowsRegistry{} },
 	WITHINGS:      func() SegmentWriter { return &segments.Withings{} },
 	XMAKE:         func() SegmentWriter { return &segments.XMake{} },

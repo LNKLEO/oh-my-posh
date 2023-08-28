@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/build"
+	"github.com/LNKLEO/OMP/src/build"
 	"github.com/spf13/cobra"
 )
 

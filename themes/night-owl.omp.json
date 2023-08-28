@@ -152,24 +152,6 @@
           "type": "crystal"
         },
         {
-          "background": "#ffffff",
-          "foreground": "#1d5185",
-          "leading_diamond": "\ue0b2",
-          "style": "diamond",
-          "template": "\uf40a  cf {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} ",
-          "trailing_diamond": "<transparent,#ffffff>\ue0b2</>",
-          "type": "cf"
-        },
-        {
-          "background": "#ffffff",
-          "foreground": "#1d5185",
-          "leading_diamond": "\ue0b2",
-          "style": "diamond",
-          "template": "\uf40a {{if .Org }}{{ .Org }}{{ end }}{{ if .Space }}/{{ .Space }}{{ end }} ",
-          "trailing_diamond": "<transparent,#ffffff>\ue0b2</>",
-          "type": "cftarget"
-        },
-        {
           "background": "#d2d2d2",
           "foreground": "#01a300",
           "leading_diamond": "\ue0b2",
@@ -224,15 +206,6 @@
           "type": "haskell"
         },
         {
-          "background": "#ffffff",
-          "foreground": "#ec2729",
-          "leading_diamond": "\ue0b2",
-          "style": "diamond",
-          "template": "\ue738 {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} ",
-          "trailing_diamond": "<transparent,#ffffff>\ue0b2</>",
-          "type": "java"
-        },
-        {
           "background": "#945bb3",
           "foreground": "#ffffff",
           "leading_diamond": "\ue0b2",
@@ -240,15 +213,6 @@
           "template": "<#ca3c34>\ue624</> {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} ",
           "trailing_diamond": "<transparent,#945bb3>\ue0b2</>",
           "type": "julia"
-        },
-        {
-          "background": "#906cff",
-          "foreground": "#ffffff",
-          "leading_diamond": "\ue0b2",
-          "style": "diamond",
-          "template": "K {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} ",
-          "trailing_diamond": "<transparent,#906cff>\ue0b2</>",
-          "type": "kotlin"
         },
         {
           "background": "#316ce4",
@@ -346,15 +310,6 @@
           "type": "rust"
         },
         {
-          "background": "#fe562e",
-          "foreground": "#ffffff",
-          "leading_diamond": "\ue0b2",
-          "style": "diamond",
-          "template": "\ue755 {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} ",
-          "trailing_diamond": "<transparent,#fe562e>\ue0b2</>",
-          "type": "swift"
-        },
-        {
           "background": "#234d70",
           "foreground": "#d6deeb",
           "leading_diamond": "\ue0b2",
@@ -393,7 +348,9 @@
         },
         {
           "foreground": "#22da6e",
-          "foreground_templates": ["{{ if gt .Code 0 }}#ef5350{{ end }}"],
+          "foreground_templates": [
+            "{{ if gt .Code 0 }}#ef5350{{ end }}"
+          ],
           "properties": {
             "always_enabled": true
           },

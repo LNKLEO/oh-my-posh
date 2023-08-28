@@ -258,8 +258,6 @@
             "connection",
             "crystal",
             "cds",
-            "cf",
-            "cftarget",
             "cmake",
             "docker",
             "dotnet",
@@ -275,8 +273,6 @@
             "ipify",
             "iterm",
             "julia",
-            "java",
-            "kotlin",
             "kubectl",
             "lua",
             "mercurial",
@@ -303,15 +299,10 @@
             "shell",
             "sysinfo",
             "strava",
-            "svn",
-            "swift",
             "time",
             "text",
             "terraform",
             "ui5tooling",
-            "unity",
-            "upgrade",
-            "wakatime",
             "winreg",
             "withings",
             "xmake",
@@ -1261,37 +1252,6 @@
                   },
                   "version_url_template": {
                     "$ref": "#/definitions/version_url_template"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "java"
-              }
-            }
-          },
-          "then": {
-            "title": "Java Segment",
-            "description": "https://ohmyposh.dev/docs/segments/java",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "home_enabled": {
-                    "$ref": "#/definitions/home_enabled"
-                  },
-                  "fetch_version": {
-                    "$ref": "#/definitions/fetch_version"
-                  },
-                  "display_mode": {
-                    "$ref": "#/definitions/display_mode"
-                  },
-                  "missing_command_text": {
-                    "$ref": "#/definitions/missing_command_text"
                   }
                 }
               }
@@ -2417,34 +2377,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "svn"
-              }
-            }
-          },
-          "then": {
-            "title": "SVN Segment",
-            "description": "https://ohmyposh.dev/docs/segments/svn",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "fetch_status": {
-                    "type": "boolean",
-                    "title": "Display Status",
-                    "description": "Display the local changes or not",
-                    "default": true
-                  },
-                  "status_formats": {
-                    "$ref": "#/definitions/status_formats"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "angular"
               }
             }
@@ -2497,37 +2429,6 @@
                   },
                   "version_url_template": {
                     "$ref": "#/definitions/version_url_template"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "wakatime"
-              }
-            }
-          },
-          "then": {
-            "title": "Wakatime",
-            "description": "Displays the tracked time on wakatime.com",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "apikey": {
-                    "type": "string",
-                    "title": "apikey",
-                    "description": "The apikey used for the api call (Required)",
-                    "default": "."
-                  },
-                  "http_timeout": {
-                    "$ref": "#/definitions/http_timeout"
-                  },
-                  "cache_timeout": {
-                    "$ref": "#/definitions/cache_timeout"
                   }
                 }
               }
@@ -2898,50 +2799,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "unity"
-              }
-            }
-          },
-          "then": {
-            "title": "Unity Segment",
-            "description": "https://ohmyposh.dev/docs/segments/unity",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "http_timeout": {
-                    "$ref": "#/definitions/http_timeout"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "upgrade"
-              }
-            }
-          },
-          "then": {
-            "title": "Upgrade Segment",
-            "description": "https://ohmyposh.dev/docs/segments/upgrade",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "cache_timeout": {
-                    "$ref": "#/definitions/cache_timeout"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "vala"
               }
             }
@@ -2963,96 +2820,6 @@
                   },
                   "missing_command_text": {
                     "$ref": "#/definitions/missing_command_text"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "cf"
-              }
-            }
-          },
-          "then": {
-            "title": "Clound Foundry CLI segment",
-            "description": "https://ohmyposh.dev/docs/segments/cf",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "home_enabled": {
-                    "$ref": "#/definitions/home_enabled"
-                  },
-                  "fetch_version": {
-                    "$ref": "#/definitions/fetch_version"
-                  },
-                  "display_mode": {
-                    "$ref": "#/definitions/display_mode"
-                  },
-                  "missing_command_text": {
-                    "$ref": "#/definitions/missing_command_text"
-                  },
-                  "version_url_template": {
-                    "$ref": "#/definitions/version_url_template"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "cftarget"
-              }
-            }
-          },
-          "then": {
-            "title": "Clound Foundry Target segment",
-            "description": "https://ohmyposh.dev/docs/segments/cftarget",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "display_mode": {
-                    "$ref": "#/definitions/display_mode"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "kotlin"
-              }
-            }
-          },
-          "then": {
-            "title": "Kotlin Segment",
-            "description": "https://ohmyposh.dev/docs/segments/kotlin",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "home_enabled": {
-                    "$ref": "#/definitions/home_enabled"
-                  },
-                  "fetch_version": {
-                    "$ref": "#/definitions/fetch_version"
-                  },
-                  "display_mode": {
-                    "$ref": "#/definitions/display_mode"
-                  },
-                  "missing_command_text": {
-                    "$ref": "#/definitions/missing_command_text"
-                  },
-                  "version_url_template": {
-                    "$ref": "#/definitions/version_url_template"
                   }
                 }
               }
@@ -3097,40 +2864,6 @@
                       "luajit"
                     ],
                     "default": "lua"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "swift"
-              }
-            }
-          },
-          "then": {
-            "title": "Swift Segment",
-            "description": "https://ohmyposh.dev/docs/segments/swift",
-            "properties": {
-              "properties": {
-                "properties": {
-                  "home_enabled": {
-                    "$ref": "#/definitions/home_enabled"
-                  },
-                  "fetch_version": {
-                    "$ref": "#/definitions/fetch_version"
-                  },
-                  "display_mode": {
-                    "$ref": "#/definitions/display_mode"
-                  },
-                  "missing_command_text": {
-                    "$ref": "#/definitions/missing_command_text"
-                  },
-                  "version_url_template": {
-                    "$ref": "#/definitions/version_url_template"
                   }
                 }
               }

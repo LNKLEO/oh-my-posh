@@ -6,8 +6,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/platform"
-	"github.com/jandedobbeleer/oh-my-posh/src/properties"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )

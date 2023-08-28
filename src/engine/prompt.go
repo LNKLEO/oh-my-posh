@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/ansi"
-	"github.com/jandedobbeleer/oh-my-posh/src/shell"
-	"github.com/jandedobbeleer/oh-my-posh/src/template"
+	"github.com/LNKLEO/OMP/src/ansi"
+	"github.com/LNKLEO/OMP/src/shell"
+	"github.com/LNKLEO/OMP/src/template"
 )
 
 type ExtraPromptType int

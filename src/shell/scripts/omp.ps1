@@ -467,11 +467,6 @@ Example:
         }
     }
 
-    $notice = @(Start-Utf8Process $script:OMPExecutable @("notice"))
-    if ($notice) {
-        Write-Host $notice -NoNewline
-    }
-
     Export-ModuleMember -Function @(
         "Set-PoshContext"
         "Enable-PoshTooltips"

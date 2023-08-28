@@ -3,7 +3,7 @@ package engine
 import (
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/shell"
+	"github.com/LNKLEO/OMP/src/shell"
 )
 
 func (e *Engine) Tooltip(tip string) string {

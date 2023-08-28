@@ -146,7 +146,3 @@ end
 function enable_poshtransientprompt
   return
 end
-
-if test "::UPGRADE::" = "true"
-  echo "::UPGRADENOTICE::"
-end

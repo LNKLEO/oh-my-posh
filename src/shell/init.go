@@ -11,7 +11,6 @@ import (
 
 	"github.com/LNKLEO/OMP/src/platform"
 	"github.com/LNKLEO/OMP/src/template"
-	"github.com/LNKLEO/OMP/src/upgrade"
 )
 
 //go:embed scripts/omp.ps1
@@ -214,8 +213,7 @@ func PrintInit(env platform.Environment) string {
 	configFile := env.Flags().Config
 
 	var (
-		script, notice string
-		hasNotice      bool
+		script string
 	)
 
 	switch shell {
@@ -256,10 +254,6 @@ func PrintInit(env platform.Environment) string {
 	}
 
 	// only run this for shells that support
-	// injecting the notice directly
-	if shell != PWSH && shell != PWSH5 {
-		notice, hasNotice = upgrade.Notice(env)
-	}
 
 	return strings.NewReplacer(
 		"::OMP::", executable,
@@ -271,8 +265,6 @@ func PrintInit(env platform.Environment) string {
 		"::FTCS_MARKS::", toggleSetting(ShellIntegration),
 		"::RPROMPT::", strconv.FormatBool(RPrompt),
 		"::CURSOR::", strconv.FormatBool(CursorPositioning),
-		"::UPGRADE::", strconv.FormatBool(hasNotice),
-		"::UPGRADENOTICE::", notice,
 	).Replace(script)
 }
 

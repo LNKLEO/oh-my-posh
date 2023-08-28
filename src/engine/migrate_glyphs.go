@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/platform"
+	"github.com/LNKLEO/OMP/src/platform"
 )
 
 type codePoints map[int]int

@@ -160,7 +160,3 @@ fi
 if [[ "::TRANSIENT::" = "true" ]]; then
   enable_poshtransientprompt
 fi
-
-if [[ "::UPGRADE::" = "true" ]]; then
-    echo "::UPGRADENOTICE::"
-fi

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/build"
+	"github.com/LNKLEO/OMP/src/build"
 	"github.com/spf13/cobra"
 )
 

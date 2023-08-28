@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/log"
+	"github.com/LNKLEO/OMP/src/log"
 )
 
 // debug will loop through your config file and output the timings for each segments

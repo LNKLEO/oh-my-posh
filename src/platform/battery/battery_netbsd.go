@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/platform/cmd"
+	"github.com/LNKLEO/OMP/src/platform/cmd"
 )
 
 func Get() (*Info, error) {

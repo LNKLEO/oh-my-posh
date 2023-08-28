@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/platform"
+	"github.com/LNKLEO/OMP/src/platform"
 )
 
 type release struct {

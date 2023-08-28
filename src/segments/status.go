@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/platform"
-	"github.com/jandedobbeleer/oh-my-posh/src/properties"
-	"github.com/jandedobbeleer/oh-my-posh/src/template"
+	"github.com/LNKLEO/OMP/src/platform"
+	"github.com/LNKLEO/OMP/src/properties"
+	"github.com/LNKLEO/OMP/src/template"
 )
 
 const (
