@@ -1,6 +1,6 @@
 module github.com/LNKLEO/OMP/src
 
-go 1.20
+go 1.21
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161

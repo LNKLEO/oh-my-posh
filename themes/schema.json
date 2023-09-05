@@ -270,6 +270,7 @@
             "gitversion",
             "go",
             "haskell",
+            "helm",
             "ipify",
             "iterm",
             "julia",
@@ -972,6 +973,12 @@
                     "title": "Azure DevOps Icon",
                     "description": "Icon/text to display when the upstream is Azure DevOps",
                     "default": "\uEBE8"
+                  },
+                  "codecommit_icon": {
+                    "type": "string",
+                    "title": "CodeCommit Icon",
+                    "description": "Icon/text to display when the upstream is CodeCommit",
+                    "default": "\uF270"
                   },
                   "git_icon": {
                     "type": "string",
@@ -2718,6 +2725,28 @@
                       "never"
                     ],
                     "default": "never"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "helm"
+              }
+            }
+          },
+          "then": {
+            "title": "Helm segment",
+            "description": "https://ohmyposh.dev/docs/segments/helm",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
                   }
                 }
               }
