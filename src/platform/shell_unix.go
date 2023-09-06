@@ -1,18 +1,18 @@
 //go:build !windows
 
-package environment
+package platform
 
 import (
 	"errors"
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/host"
 	mem "github.com/shirou/gopsutil/v3/mem"
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
+	"golang.org/x/sys/unix"
 )
 
 func (env *Shell) Root() bool {
