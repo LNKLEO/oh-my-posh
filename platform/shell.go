@@ -25,6 +25,7 @@ import (
 	"github.com/LNKLEO/OMP/platform/cmd"
 	"github.com/LNKLEO/OMP/regex"
 
+	cpu "github.com/shirou/gopsutil/v3/cpu"
 	disk "github.com/shirou/gopsutil/v3/disk"
 	load "github.com/shirou/gopsutil/v3/load"
 	process "github.com/shirou/gopsutil/v3/process"
@@ -196,6 +197,9 @@ type Memory struct {
 }
 
 type SystemInfo struct {
+	// cpu
+    Times float64
+	CPU []cpu.InfoStat
 	// mem
 	Memory
 	// load
@@ -960,6 +964,16 @@ func (env *Shell) CursorPosition() (row, col int) {
 
 func (env *Shell) SystemInfo() (*SystemInfo, error) {
 	s := &SystemInfo{}
+
+	processorTimes, err := cpu.Percent(0, false)
+	if err == nil && len(processorTimes) > 0 {
+		s.Times = processorTimes[0]
+	}
+	// cpu
+	processors, err := cpu.Info()
+	if err == nil {
+		s.CPU = processors
+	}
 
 	mem, err := env.Memory()
 	if err != nil {
