@@ -1,6 +1,6 @@
 import uuid
 
-$POWERLINE_COMMAND = "oh-my-posh"
+$POWERLINE_COMMAND = "OMP"
 $POSH_THEME = r"::CONFIG::"
 $POSH_PID = uuid.uuid4().hex
 $POSH_SHELL_VERSION = $XONSH_VERSION

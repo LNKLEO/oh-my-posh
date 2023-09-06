@@ -1,4 +1,4 @@
-setenv POWERLINE_COMMAND "oh-my-posh";
+setenv POWERLINE_COMMAND "OMP";
 setenv POSH_THEME "::CONFIG::";
 setenv POSH_SHELL_VERSION "";
 

@@ -1056,7 +1056,7 @@ func returnOrBuildCachePath(path string) string {
 		return ""
 	}
 	// validate oh-my-posh folder, if non existent, create it
-	cachePath := filepath.Join(path, "oh-my-posh")
+	cachePath := filepath.Join(path, "OMP")
 	if _, err := os.Stat(cachePath); err == nil {
 		return cachePath
 	}

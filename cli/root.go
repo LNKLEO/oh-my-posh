@@ -15,7 +15,7 @@ var (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "oh-my-posh",
+	Use:   "OMP",
 	Short: "oh-my-posh is a tool to render your prompt",
 	Long: `oh-my-posh is a cross platform tool to render your prompt.
 It can use the same configuration everywhere to offer a consistent

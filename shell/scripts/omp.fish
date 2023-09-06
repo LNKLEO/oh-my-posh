@@ -1,6 +1,6 @@
 set --export POSH_THEME ::CONFIG::
 set --export POSH_SHELL_VERSION $FISH_VERSION
-set --global POWERLINE_COMMAND "oh-my-posh"
+set --global POWERLINE_COMMAND "OMP"
 set --global POSH_PID $fish_pid
 set --global CONDA_PROMPT_MODIFIER false
 set --global omp_tooltip_prompt ""

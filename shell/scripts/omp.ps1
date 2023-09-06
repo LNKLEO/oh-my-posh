@@ -1,6 +1,6 @@
 # remove any existing dynamic module of OMP
-if ($null -ne (Get-Module -Name "oh-my-posh-core")) {
-    Remove-Module -Name "oh-my-posh-core" -Force
+if ($null -ne (Get-Module -Name "OMP-core")) {
+    Remove-Module -Name "OMP-core" -Force
 }
 
 # Helper functions which need to be defined before the module is loaded
@@ -13,7 +13,7 @@ function global:Get-PoshStackCount {
     return 0
 }
 
-New-Module -Name "oh-my-posh-core" -ScriptBlock {
+New-Module -Name "OMP-core" -ScriptBlock {
     $script:ErrorCode = 0
     $script:ExecutionTime = 0
     $script:OMPExecutable = ::OMP::
@@ -21,7 +21,7 @@ New-Module -Name "oh-my-posh-core" -ScriptBlock {
     $script:PSVersion = $PSVersionTable.PSVersion.ToString()
     $script:TransientPrompt = $false
     $script:ToolTipCommand = ""
-    $env:POWERLINE_COMMAND = "oh-my-posh"
+    $env:POWERLINE_COMMAND = "OMP"
     $env:POSH_SHELL_VERSION = $script:PSVersion
     $env:POSH_PID = $PID
     $env:CONDA_PROMPT_MODIFIER = $false

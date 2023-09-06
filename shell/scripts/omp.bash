@@ -1,6 +1,6 @@
 export POSH_THEME=::CONFIG::
 export POSH_SHELL_VERSION=$BASH_VERSION
-export POWERLINE_COMMAND="oh-my-posh"
+export POWERLINE_COMMAND="OMP"
 export POSH_PID=$$
 export CONDA_PROMPT_MODIFIER=false
 omp_start_time=""
