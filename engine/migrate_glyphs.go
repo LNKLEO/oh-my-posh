@@ -10,7 +10,7 @@ import (
 	"github.com/LNKLEO/OMP/platform"
 )
 
-type codePoints map[int]int
+type codePoints map[uint64]uint64
 
 func getGlyphCodePoints() (codePoints, error) {
 	var codePoints = make(codePoints)
@@ -47,7 +47,8 @@ func getGlyphCodePoints() (codePoints, error) {
 		if err != nil {
 			continue
 		}
-		codePoints[int(oldGlyph)] = int(newGlyph)
+		codePoints[oldGlyph] = newGlyph
 	}
+
 	return codePoints, nil
 }

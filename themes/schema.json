@@ -3,7 +3,7 @@
   "$id": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
   "type": "object",
   "title": "The Oh My Posh theme definition",
-  "description": "https://ohmyposh.dev/docs/configuration/overview",
+  "description": "https://ohmyposh.dev/docs/configuration/general",
   "definitions": {
     "color": {
       "anyOf": [
@@ -254,6 +254,7 @@
             "azfunc",
             "angular",
             "battery",
+            "carbonintensity",
             "command",
             "connection",
             "crystal",
@@ -275,6 +276,7 @@
             "iterm",
             "julia",
             "kubectl",
+            "lastfm",
             "lua",
             "mercurial",
             "node",
@@ -304,6 +306,7 @@
             "text",
             "terraform",
             "ui5tooling",
+            "umbraco",
             "winreg",
             "withings",
             "xmake",
@@ -592,6 +595,71 @@
                     "title": "Not Charging Icon",
                     "description": "Text/icon to display when on AC power",
                     "default": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bazel"
+              }
+            }
+          },
+          "then": {
+            "title": "Bazel Segment",
+            "description": "https://ohmyposh.dev/docs/segments/bazel",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "home_enabled": {
+                    "$ref": "#/definitions/home_enabled"
+                  },
+                  "fetch_version": {
+                    "$ref": "#/definitions/fetch_version"
+                  },
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
+                  },
+                  "missing_command_text": {
+                    "$ref": "#/definitions/missing_command_text"
+                  },
+                  "version_url_template": {
+                    "$ref": "#/definitions/version_url_template"
+                  },
+                  "icon": {
+                    "type": "string",
+                    "title": "Icon",
+                    "description": "The icon representing Bazel's logo",
+                    "default": "\ue63a"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "carbonintensity"
+              }
+            }
+          },
+          "then": {
+            "title": "Carbon Intensity Segment",
+            "description": "Displays the actual and forecast carbon intensity in gCO2/kWh using the Carbon Intensity API",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "http_timeout": {
+                    "$ref": "#/definitions/http_timeout"
+                  },
+                  "cache_timeout": {
+                    "$ref": "#/definitions/cache_timeout"
                   }
                 }
               }
@@ -1459,7 +1527,7 @@
                     "type": "string",
                     "title": "Yarn Icon",
                     "description": "Icon/text to use for Yarn",
-                    "default": " \uF61A"
+                    "default": " \udb80\udd1b"
                   },
                   "npm_icon": {
                     "type": "string",
@@ -2135,16 +2203,16 @@
             "properties": {
               "properties": {
                 "properties": {
-                  "apikey": {
+                  "api_key": {
                     "type": "string",
-                    "title": "apikey",
-                    "description": "The apikey used for the api call (Required)",
+                    "title": "API key",
+                    "description": "The API key used for the api call (Required)",
                     "default": "."
                   },
                   "location": {
                     "type": "string",
                     "title": "location",
-                    "description": "Location to use for the api call. Formatted as <City>,<STATE>,<COUNTRY_CODE>. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes.",
+                    "description": "Location to use for the API call. Formatted as <City>,<STATE>,<COUNTRY_CODE>. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes.",
                     "default": "De Bilt,NL"
                   },
                   "units": {
@@ -2844,6 +2912,111 @@
           "if": {
             "properties": {
               "type": {
+                "const": "cf"
+              }
+            }
+          },
+          "then": {
+            "title": "Clound Foundry CLI segment",
+            "description": "https://ohmyposh.dev/docs/segments/cf",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "home_enabled": {
+                    "$ref": "#/definitions/home_enabled"
+                  },
+                  "fetch_version": {
+                    "$ref": "#/definitions/fetch_version"
+                  },
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
+                  },
+                  "missing_command_text": {
+                    "$ref": "#/definitions/missing_command_text"
+                  },
+                  "version_url_template": {
+                    "$ref": "#/definitions/version_url_template"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cftarget"
+              }
+            }
+          },
+          "then": {
+            "title": "Clound Foundry Target segment",
+            "description": "https://ohmyposh.dev/docs/segments/cftarget",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "display_mode": {
+                    "$ref": "#/definitions/display_mode"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "lastfm"
+              }
+            }
+          },
+          "then": {
+            "title": "LastFM Segment",
+            "description": "https://ohmyposh.dev/docs/segments/lastfm",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "playing_icon": {
+                    "type": "string",
+                    "title": "User Info Separator",
+                    "description": "Text/icon to show when playing",
+                    "default": "\uE602"
+                  },
+                  "stopped_icon": {
+                    "type": "string",
+                    "title": "SSH Icon",
+                    "description": "Text/icon to show when stopped",
+                    "default": "\uF04D"
+                  },
+                  "api_key": {
+                    "type": "string",
+                    "title": "API key",
+                    "description": "The API key used for the API call (Required)",
+                    "default": "."
+                  },
+                  "username": {
+                    "type": "string",
+                    "title": "username",
+                    "description": "The username used for the API call (Required)",
+                    "default": "."
+                  },
+                  "http_timeout": {
+                    "$ref": "#/definitions/http_timeout"
+                  },
+                  "cache_timeout": {
+                    "$ref": "#/definitions/cache_timeout"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "lua"
               }
             }
@@ -3002,6 +3175,29 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "umbraco" }
+            }
+          },
+          "then": {
+            "title": "Display something umbraco",
+            "description": "https://ohmyposh.dev/docs/segments/umbraco",
+            "properties": {
+              "properties": {
+                "properties": {
+                  "newprop": {
+                    "type": "string",
+                    "title": "New Property",
+                    "description": "the default text to display",
+                    "default": "Hello"
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     }
@@ -3013,13 +3209,13 @@
     "final_space": {
       "type": "boolean",
       "title": "Final Space",
-      "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
+      "description": "https://ohmyposh.dev/docs/configuration/general#general-settings",
       "default": true
     },
     "disable_cursor_positioning": {
       "type": "boolean",
       "title": "Disable Cursor Positioning",
-      "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
+      "description": "https://ohmyposh.dev/docs/configuration/general#general-settings",
       "default": false
     },
     "shell_integration": {
@@ -3030,7 +3226,7 @@
     "pwd": {
       "type": "string",
       "title": "Enable OSC99/7/51",
-      "description": "https://ohmyposh.dev/docs/configuration/overview#general-settings",
+      "description": "https://ohmyposh.dev/docs/configuration/general#general-settings",
       "default": ""
     },
     "console_title_template": {
@@ -3046,7 +3242,7 @@
       "type": "array",
       "title": "Block array",
       "default": [],
-      "description": "https://ohmyposh.dev/docs/configuration/overview#blocks",
+      "description": "https://ohmyposh.dev/docs/configuration/general#blocks",
       "items": {
         "$ref": "#/definitions/block"
       }

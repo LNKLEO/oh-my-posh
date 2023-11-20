@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/LNKLEO/OMP/platform"
@@ -31,7 +32,7 @@ func (p *Python) Init(props properties.Properties, env platform.Environment) {
 		env:         env,
 		props:       props,
 		extensions:  []string{"*.py", "*.ipynb", "pyproject.toml", "venv.bak"},
-		folders:     []string{".venv", "venv", "virtualenv", "env", "venv-win", "pyenv-win"},
+		folders:     []string{".venv", "venv", "virtualenv", "venv-win", "pyenv-win"},
 		loadContext: p.loadContext,
 		inContext:   p.inContext,
 		commands: []*cmd{
@@ -72,13 +73,26 @@ func (p *Python) loadContext() {
 		"CONDA_ENV_PATH",
 		"CONDA_DEFAULT_ENV",
 	}
+
+	defaultVenvNames := []string{
+		".venv",
+		"venv",
+	}
+
 	var venv string
 	for _, venvVar := range venvVars {
 		venv = p.language.env.Getenv(venvVar)
 		if len(venv) == 0 {
 			continue
 		}
+
 		name := platform.Base(p.language.env, venv)
+
+		if slices.Contains(defaultVenvNames, name) {
+			venv = strings.TrimSuffix(venv, name)
+			name = platform.Base(p.language.env, venv)
+		}
+
 		if p.canUseVenvName(name) {
 			p.Venv = name
 			break
