@@ -26,13 +26,13 @@ func (g *Golang) Init(props properties.Properties, env platform.Environment) {
 		extensions: []string{"*.go", "go.mod"},
 		commands: []*cmd{
 			{
-				regex:      `(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+)(.(?P<patch>[0-9]+))?))`,
+				regex:      `(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+)(.(?P<patch>[0-9]+))?((?P<prerelease>rc[0-9]+))?))`,
 				getVersion: g.getVersion,
 			},
 			{
 				executable: "go",
 				args:       []string{"version"},
-				regex:      `(?:go(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+)(.(?P<patch>[0-9]+))?)))`,
+				regex:      `(?:go(?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+)(.(?P<patch>[0-9]+))?((?P<prerelease>rc[0-9]+))?)))`,
 			},
 		},
 		versionURLTemplate: "https://golang.org/doc/go{{ .Major }}.{{ .Minor }}",
