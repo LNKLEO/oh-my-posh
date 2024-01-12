@@ -348,5 +348,7 @@ func (env *Shell) Memory() (*Memory, error) {
 		PhysicalFreeMemory:      memStat.AvailPhys,
 		PhysicalAvailableMemory: memStat.AvailPhys,
 		PhysicalPercentUsed:     float64(memStat.MemoryLoad),
+		SwapTotalMemory:         memStat.TotalPageFile - memStat.TotalPhys,
+		SwapFreeMemory:          memStat.AvailPageFile - memStat.AvailPhys,
 	}, nil
 }
