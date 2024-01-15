@@ -7,12 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LNKLEO/OMP/ansi"
-	"github.com/LNKLEO/OMP/platform"
-	"github.com/LNKLEO/OMP/properties"
-	"github.com/LNKLEO/OMP/segments"
-	"github.com/LNKLEO/OMP/shell"
-	"github.com/LNKLEO/OMP/template"
 
 	c "golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -91,8 +85,11 @@ const (
 	Accordion SegmentStyle = "accordion"
 	// Diamond writes the prompt shaped with a leading and trailing symbol
 	Diamond SegmentStyle = "diamond"
+
 	// ANGULAR writes which angular cli version us currently active
 	ANGULAR SegmentType = "angular"
+	// ARGOCD writes the current argocd context
+	ARGOCD SegmentType = "argocd"
 	// AWS writes the active aws context
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
@@ -111,6 +108,10 @@ const (
 	CARBONINTENSITY SegmentType = "carbonintensity"
 	// cds (SAP CAP) version
 	CDS SegmentType = "cds"
+	// Cloud Foundry segment
+	CF SegmentType = "cf"
+	// Cloud Foundry logged in target
+	CFTARGET SegmentType = "cftarget"
 	// CMAKE writes the active cmake version
 	CMAKE SegmentType = "cmake"
 	// CMD writes the output of a shell command
@@ -167,8 +168,6 @@ const (
 	NBA SegmentType = "nba"
 	// NBGV writes the nbgv version information
 	NBGV SegmentType = "nbgv"
-	// NETWORKS get all current active network connections
-	NETWORKS SegmentType = "networks"
 	// NIGHTSCOUT is an open source diabetes system
 	NIGHTSCOUT SegmentType = "nightscout"
 	// NODE writes which node version is currently active
@@ -193,6 +192,8 @@ const (
 	PROJECT SegmentType = "project"
 	// PYTHON writes the virtual env name
 	PYTHON SegmentType = "python"
+	// QUASAR writes the QUASAR version and context
+	QUASAR SegmentType = "quasar"
 	// R version
 	R SegmentType = "r"
 	// ROOT writes root symbol
@@ -215,6 +216,8 @@ const (
 	STATUS SegmentType = "status"
 	// STRAVA is a sports activity tracker
 	STRAVA SegmentType = "strava"
+	// Subversion segment
+	SVN SegmentType = "svn"
 	// SYSTEMINFO writes system information (memory, cpu, load)
 	SYSTEMINFO SegmentType = "sysinfo"
 	// TERRAFORM writes the terraform workspace we're currently in
@@ -227,8 +230,14 @@ const (
 	UI5TOOLING SegmentType = "ui5tooling"
 	// UMBRACO writes the Umbraco version if Umbraco is present
 	UMBRACO SegmentType = "umbraco"
+	// UNITY writes which Unity version is currently active
+	UNITY SegmentType = "unity"
+	// UPGRADE lets you know if you can upgrade Oh My Posh
+	UPGRADE SegmentType = "upgrade"
 	// VALA writes the active vala version
 	VALA SegmentType = "vala"
+	// WAKATIME writes tracked time spend in dev editors
+	WAKATIME SegmentType = "wakatime"
 	// WINREG queries the Windows registry.
 	WINREG SegmentType = "winreg"
 	// WITHINGS queries the Withings API.
@@ -241,13 +250,18 @@ const (
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
 	ANGULAR:         func() SegmentWriter { return &segments.Angular{} },
+	ARGOCD:          func() SegmentWriter { return &segments.Argocd{} },
 	AWS:             func() SegmentWriter { return &segments.Aws{} },
 	AZ:              func() SegmentWriter { return &segments.Az{} },
 	AZFUNC:          func() SegmentWriter { return &segments.AzFunc{} },
 	BATTERY:         func() SegmentWriter { return &segments.Battery{} },
+	BAZEL:           func() SegmentWriter { return &segments.Bazel{} },
 	BREWFATHER:      func() SegmentWriter { return &segments.Brewfather{} },
 	BUF:             func() SegmentWriter { return &segments.Buf{} },
+	CARBONINTENSITY: func() SegmentWriter { return &segments.CarbonIntensity{} },
 	CDS:             func() SegmentWriter { return &segments.Cds{} },
+	CF:              func() SegmentWriter { return &segments.Cf{} },
+	CFTARGET:        func() SegmentWriter { return &segments.CfTarget{} },
 	CMD:             func() SegmentWriter { return &segments.Cmd{} },
 	CONNECTION:      func() SegmentWriter { return &segments.Connection{} },
 	CRYSTAL:         func() SegmentWriter { return &segments.Crystal{} },
@@ -271,10 +285,11 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	ITERM:           func() SegmentWriter { return &segments.ITerm{} },
 	JULIA:           func() SegmentWriter { return &segments.Julia{} },
 	KUBECTL:         func() SegmentWriter { return &segments.Kubectl{} },
+	LASTFM:          func() SegmentWriter { return &segments.LastFM{} },
 	LUA:             func() SegmentWriter { return &segments.Lua{} },
 	MERCURIAL:       func() SegmentWriter { return &segments.Mercurial{} },
+	NBA:             func() SegmentWriter { return &segments.Nba{} },
 	NBGV:            func() SegmentWriter { return &segments.Nbgv{} },
-	NETWORKS:        func() SegmentWriter { return &segments.Networks{} },
 	NIGHTSCOUT:      func() SegmentWriter { return &segments.Nightscout{} },
 	NODE:            func() SegmentWriter { return &segments.Node{} },
 	NPM:             func() SegmentWriter { return &segments.Npm{} },
@@ -287,6 +302,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	PLASTIC:         func() SegmentWriter { return &segments.Plastic{} },
 	PROJECT:         func() SegmentWriter { return &segments.Project{} },
 	PYTHON:          func() SegmentWriter { return &segments.Python{} },
+	QUASAR:          func() SegmentWriter { return &segments.Quasar{} },
 	R:               func() SegmentWriter { return &segments.R{} },
 	ROOT:            func() SegmentWriter { return &segments.Root{} },
 	RUBY:            func() SegmentWriter { return &segments.Ruby{} },
@@ -298,13 +314,17 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	SPOTIFY:         func() SegmentWriter { return &segments.Spotify{} },
 	STATUS:          func() SegmentWriter { return &segments.Status{} },
 	STRAVA:          func() SegmentWriter { return &segments.Strava{} },
+	SVN:             func() SegmentWriter { return &segments.Svn{} },
 	SYSTEMINFO:      func() SegmentWriter { return &segments.SystemInfo{} },
 	TERRAFORM:       func() SegmentWriter { return &segments.Terraform{} },
 	TEXT:            func() SegmentWriter { return &segments.Text{} },
 	TIME:            func() SegmentWriter { return &segments.Time{} },
 	UI5TOOLING:      func() SegmentWriter { return &segments.UI5Tooling{} },
 	UMBRACO:         func() SegmentWriter { return &segments.Umbraco{} },
+	UNITY:           func() SegmentWriter { return &segments.Unity{} },
+	UPGRADE:         func() SegmentWriter { return &segments.Upgrade{} },
 	VALA:            func() SegmentWriter { return &segments.Vala{} },
+	WAKATIME:        func() SegmentWriter { return &segments.Wakatime{} },
 	WINREG:          func() SegmentWriter { return &segments.WindowsRegistry{} },
 	WITHINGS:        func() SegmentWriter { return &segments.Withings{} },
 	XMAKE:           func() SegmentWriter { return &segments.XMake{} },
