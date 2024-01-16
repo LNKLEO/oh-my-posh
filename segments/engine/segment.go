@@ -88,8 +88,6 @@ const (
 
 	// ANGULAR writes which angular cli version us currently active
 	ANGULAR SegmentType = "angular"
-	// ARGOCD writes the current argocd context
-	ARGOCD SegmentType = "argocd"
 	// AWS writes the active aws context
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
@@ -238,8 +236,6 @@ const (
 	UPGRADE SegmentType = "upgrade"
 	// VALA writes the active vala version
 	VALA SegmentType = "vala"
-	// WAKATIME writes tracked time spend in dev editors
-	WAKATIME SegmentType = "wakatime"
 	// WINREG queries the Windows registry.
 	WINREG SegmentType = "winreg"
 	// WITHINGS queries the Withings API.
@@ -252,7 +248,6 @@ const (
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
 	ANGULAR:         func() SegmentWriter { return &segments.Angular{} },
-	ARGOCD:          func() SegmentWriter { return &segments.Argocd{} },
 	AWS:             func() SegmentWriter { return &segments.Aws{} },
 	AZ:              func() SegmentWriter { return &segments.Az{} },
 	AZFUNC:          func() SegmentWriter { return &segments.AzFunc{} },
@@ -327,7 +322,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	UNITY:           func() SegmentWriter { return &segments.Unity{} },
 	UPGRADE:         func() SegmentWriter { return &segments.Upgrade{} },
 	VALA:            func() SegmentWriter { return &segments.Vala{} },
-	WAKATIME:        func() SegmentWriter { return &segments.Wakatime{} },
 	WINREG:          func() SegmentWriter { return &segments.WindowsRegistry{} },
 	WITHINGS:        func() SegmentWriter { return &segments.Withings{} },
 	XMAKE:           func() SegmentWriter { return &segments.XMake{} },
