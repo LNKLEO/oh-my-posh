@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/jandedobbeleer/oh-my-posh/src/platform"
-	"github.com/jandedobbeleer/oh-my-posh/src/properties"
+	"github.com/LNKLEO/OMP/platform"
+	"github.com/LNKLEO/OMP/properties"
 )
 
 type React struct {
