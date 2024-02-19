@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -260,6 +259,7 @@ type Environment interface {
 	HasFileInParentDirs(pattern string, depth uint) bool
 	ResolveSymlink(path string) (string, error)
 	DirMatchesOneOf(dir string, regexes []string) bool
+	LookPath(command string) (string, error)
 	DirIsWritable(path string) bool
 	CommandPath(command string) string
 	HasCommand(command string) bool
@@ -652,12 +652,14 @@ func (env *Shell) CommandPath(command string) string {
 		env.Debug(path)
 		return path
 	}
-	path, err := exec.LookPath(command)
+
+	path, err := env.LookPath(command)
 	if err == nil {
 		env.cmdCache.set(command, path)
 		env.Debug(path)
 		return path
 	}
+
 	env.Error(err)
 	return ""
 }

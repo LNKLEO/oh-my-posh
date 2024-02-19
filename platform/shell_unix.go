@@ -5,6 +5,7 @@ package platform
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -146,8 +147,8 @@ func (env *Shell) ConvertToLinuxPath(path string) string {
 	return path
 }
 
-func (env *Shell) LookWinAppPath(_ string) (string, error) {
-	return "", errors.New("not relevant")
+func (env *Shell) LookPath(command string) (string, error) {
+	return exec.LookPath(command)
 }
 
 func (env *Shell) DirIsWritable(path string) bool {

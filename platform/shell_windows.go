@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -628,6 +630,20 @@ func (env *Shell) parseWlanInterface(network *WLAN_INTERFACE_INFO, clientHandle 
 	}
 
 	return &info, nil
+}
+
+func (env *Shell) LookPath(command string) (string, error) {
+	winAppPath := filepath.Join(env.Getenv("LOCALAPPDATA"), `\Microsoft\WindowsApps\`, command)
+	if !strings.HasSuffix(winAppPath, ".exe") {
+		winAppPath += ".exe"
+	}
+
+	path, err := exec.LookPath(command)
+	if err == nil && path != winAppPath {
+		return path, nil
+	}
+
+	return readWinAppLink(winAppPath)
 }
 
 func (env *Shell) DirIsWritable(path string) bool {
