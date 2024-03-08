@@ -13,6 +13,7 @@ src/test/umbraco/obj/
 *.dll
 *.so
 *.dylib
+OMP
 
 # Windows asset files
 /src/rsrc_windows_*.syso
