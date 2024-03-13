@@ -143,12 +143,10 @@ func loadConfig(env platform.Environment) *Config {
 		cfg.Format = YAML
 		err = yaml.Unmarshal(data, &cfg)
 	case "jsonc", "json":
-		if cfg.Format == "jsonc" {
-			str := jsonutil.StripComments(string(data))
-			data = []byte(str)
-		}
-
 		cfg.Format = JSON
+
+		str := jsonutil.StripComments(string(data))
+		data = []byte(str)
 
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		err = decoder.Decode(&cfg)
@@ -184,7 +182,7 @@ func (cfg *Config) Export(format string) string {
 			return ""
 		}
 
-		return prefix + escapeGlyphs(result.String(), cfg.MigrateGlyphs)
+		return prefix + result.String()
 	case JSON:
 		jsonEncoder := json.NewEncoder(&result)
 		jsonEncoder.SetEscapeHTML(false)
@@ -196,13 +194,14 @@ func (cfg *Config) Export(format string) string {
 	case TOML:
 		prefix := "#:schema https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json\n\n"
 		tomlEncoder := toml.NewEncoder(&result)
+		tomlEncoder.SetIndentTables(true)
 
 		err := tomlEncoder.Encode(cfg)
 		if err != nil {
 			return ""
 		}
 
-		return prefix + escapeGlyphs(result.String(), cfg.MigrateGlyphs)
+		return prefix + result.String()
 	}
 
 	// unsupported format

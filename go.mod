@@ -1,6 +1,6 @@
 module github.com/LNKLEO/OMP
 
-go 1.21
+go 1.22.0
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161
@@ -46,7 +46,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.3.2
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -65,6 +64,7 @@ require (
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	dmitri.shuralyov.com/font/woff2 v0.0.0-20180220214647-957792cbbdab // indirect
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -101,4 +101,4 @@ replace github.com/atotto/clipboard v0.1.4 => github.com/jandedobbeleer/clipboar
 
 replace github.com/shirou/gopsutil/v3 v3.23.9 => github.com/jandedobbeleer/gopsutil/v3 v3.23.9-1
 
-replace github.com/goccy/go-yaml v1.10.0 => github.com/jandedobbeleer/go-yaml v1.10.0-4
+replace github.com/goccy/go-yaml v1.11.3 => github.com/jandedobbeleer/go-yaml v1.11.3-2
