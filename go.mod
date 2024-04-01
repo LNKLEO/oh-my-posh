@@ -35,9 +35,9 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/goccy/go-yaml v1.11.3
 	github.com/gookit/goutil v0.6.15
-	github.com/hashicorp/hcl/v2 v2.20.0
+	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/mattn/go-runewidth v0.0.15
-	github.com/pelletier/go-toml/v2 v2.1.1
+	github.com/pelletier/go-toml/v2 v2.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
