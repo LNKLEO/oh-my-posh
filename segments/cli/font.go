@@ -63,7 +63,7 @@ This command is used to install fonts and configure the font in your terminal.
 	}
 )
 
-func init() { //nolint:gochecknoinits
+func init() {
 	RootCmd.AddCommand(fontCmd)
 	fontCmd.Flags().BoolVar(&user, "user", false, "install font as user")
 }
