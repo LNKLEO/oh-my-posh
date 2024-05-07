@@ -9,5 +9,3 @@ set POSH_POSTCMD = 'set POSH_START_TIME = `::OMP:: get millis`';
 alias precmd "$POSH_PRECMD;$USER_PRECMD";
 alias postcmd "$POSH_POSTCMD;$USER_POSTCMD";
 set POSH_START_TIME = `::OMP:: get millis`;
-
-if ("::UPGRADE::" == "true") echo "::UPGRADENOTICE::"

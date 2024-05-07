@@ -63,11 +63,14 @@ func runInit(shellName string) {
 	}
 	env.Init()
 	defer env.Close()
+
 	cfg := engine.LoadConfig(env)
+
 	shell.Transient = cfg.TransientPrompt != nil
 	shell.ErrorLine = cfg.ErrorLine != nil || cfg.ValidLine != nil
 	shell.Tooltips = len(cfg.Tooltips) > 0
 	shell.ShellIntegration = cfg.ShellIntegration
+
 	for i, block := range cfg.Blocks {
 		// only fetch cursor position when relevant
 		if !cfg.DisableCursorPositioning && (i == 0 && block.Newline) {
@@ -77,11 +80,13 @@ func runInit(shellName string) {
 			shell.RPrompt = true
 		}
 	}
+
 	if printOutput {
 		init := shell.PrintInit(env)
 		fmt.Print(init)
 		return
 	}
+
 	init := shell.Init(env)
 	fmt.Print(init)
 }

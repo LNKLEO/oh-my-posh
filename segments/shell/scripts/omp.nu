@@ -40,7 +40,3 @@ if "::TRANSIENT::" == "true" {
         ^::OMP:: print transient $"--config=($env.POSH_THEME)" --shell=nu $"--shell-version=($env.POSH_SHELL_VERSION)" $"--execution-time=(posh_cmd_duration)" $"--status=($env.LAST_EXIT_CODE)" $"--terminal-width=(posh_width)"
     }
 }
-
-if "::UPGRADE::" == "true" {
-    echo "::UPGRADENOTICE::"
-}

@@ -72,7 +72,3 @@ function _omp_hook() {
 if [ "$TERM" != "linux" ] && [ -x "$(command -v ::OMP::)" ] && ! [[ "$PROMPT_COMMAND" =~ "_omp_hook" ]]; then
     PROMPT_COMMAND="_omp_hook; $PROMPT_COMMAND"
 fi
-
-if [ "::UPGRADE::" == "true" ]; then
-    echo "::UPGRADENOTICE::"
-fi

@@ -236,8 +236,6 @@ const (
 	UMBRACO SegmentType = "umbraco"
 	// UNITY writes which Unity version is currently active
 	UNITY SegmentType = "unity"
-	// UPGRADE lets you know if you can upgrade Oh My Posh
-	UPGRADE SegmentType = "upgrade"
 	// VALA writes the active vala version
 	VALA SegmentType = "vala"
 	// WINREG queries the Windows registry.
@@ -326,7 +324,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	UI5TOOLING:      func() SegmentWriter { return &segments.UI5Tooling{} },
 	UMBRACO:         func() SegmentWriter { return &segments.Umbraco{} },
 	UNITY:           func() SegmentWriter { return &segments.Unity{} },
-	UPGRADE:         func() SegmentWriter { return &segments.Upgrade{} },
 	VALA:            func() SegmentWriter { return &segments.Vala{} },
 	WINREG:          func() SegmentWriter { return &segments.WindowsRegistry{} },
 	WITHINGS:        func() SegmentWriter { return &segments.Withings{} },

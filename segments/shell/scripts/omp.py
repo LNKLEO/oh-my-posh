@@ -22,8 +22,3 @@ def posh_right():
 
 $PROMPT = posh_primary
 $RIGHT_PROMPT = posh_right
-
-notice = """::UPGRADENOTICE::"""
-
-if "::UPGRADE::" == "true":
-  print(notice)
