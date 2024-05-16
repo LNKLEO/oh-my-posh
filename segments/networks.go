@@ -80,11 +80,11 @@ func (n *Networks) Init(props properties.Properties, env platform.Environment) {
 
 func (n *Networks) ConstructNetworkInfo(network platform.NetworkInfo) string {
 	str := ""
-	IconEthernet := n.props.GetString("IconEthernet", "")
-	IconWiFi := n.props.GetString("IconWiFi", "")
-	IconBluetooth := n.props.GetString("IconBluetooth", "")
-	IconCellular := n.props.GetString("IconCellular", "")
-	IconOther := n.props.GetString("IconOther", "")
+	IconEthernet := n.props.GetString("IconEthernet", "󰛳")
+	IconWiFi := n.props.GetString("IconWiFi", "󰖩")
+	IconBluetooth := n.props.GetString("IconBluetooth", "󰂴")
+	IconCellular := n.props.GetString("IconCellular", "󱄙")
+	IconOther := n.props.GetString("IconOther", "󰇩")
 	NDISPhysicalMeidaTypeMap := make(map[platform.NDIS_PHYSICAL_MEDIUM]string)
 	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMedium802_3] = IconEthernet
 	NDISPhysicalMeidaTypeMap[platform.NdisPhysicalMediumNative802_11] = IconWiFi
