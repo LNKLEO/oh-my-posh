@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	author string
 	// cursorPadding int
 	// rPromptOffset int
+	author      string
 	bgColor     string
 	outputImage string
 )

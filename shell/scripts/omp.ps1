@@ -4,7 +4,7 @@ if ($null -ne (Get-Module -Name "OMP-core")) {
 }
 
 # Helper functions which need to be defined before the module is loaded
-# See https://github.com/JanDeDobbeleer/oh-my-OMP/discussions/2300
+# See https://github.com/JanDeDobbeleer/oh-my-posh/discussions/2300
 function global:Get-OMPStackCount {
     $locations = Get-Location -Stack
     if ($locations) {
