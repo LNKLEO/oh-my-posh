@@ -206,6 +206,7 @@ func PrintInit(env platform.Environment) string {
 		if env.Flags().Manual {
 			return "false"
 		}
+
 		return strconv.FormatBool(setting)
 	}
 

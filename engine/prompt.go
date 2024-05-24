@@ -79,13 +79,6 @@ func (e *Engine) Primary() string {
 		if !e.Env.Flags().Eval {
 			break
 		}
-		// Warp doesn't support RPROMPT so we need to write it manually
-		if e.isWarp() {
-			e.writeRPrompt()
-			// escape double quotes contained in the prompt
-			prompt := fmt.Sprintf("PS1=\"%s\"", strings.ReplaceAll(e.string(), `"`, `\"`))
-			return prompt
-		}
 		// escape double quotes contained in the prompt
 		prompt := fmt.Sprintf("PS1=\"%s\"", strings.ReplaceAll(e.string(), `"`, `\"`))
 		prompt += fmt.Sprintf("\nRPROMPT=\"%s\"", e.rprompt)

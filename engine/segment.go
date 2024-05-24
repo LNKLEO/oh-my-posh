@@ -20,26 +20,27 @@ import (
 
 // Segment represent a single segment and it's configuration
 type Segment struct {
-	Type                SegmentType    `json:"type,omitempty" toml:"type,omitempty"`
-	Tips                []string       `json:"tips,omitempty" toml:"tips,omitempty"`
-	Style               SegmentStyle   `json:"style,omitempty" toml:"style,omitempty"`
-	PowerlineSymbol     string         `json:"powerline_symbol,omitempty" toml:"powerline_symbol,omitempty"`
-	InvertPowerline     bool           `json:"invert_powerline,omitempty" toml:"invert_powerline,omitempty"`
-	Foreground          string         `json:"foreground,omitempty" toml:"foreground,omitempty"`
-	ForegroundTemplates template.List  `json:"foreground_templates,omitempty" toml:"foreground_templates,omitempty"`
-	Background          string         `json:"background,omitempty" toml:"background,omitempty"`
-	BackgroundTemplates template.List  `json:"background_templates,omitempty" toml:"background_templates,omitempty"`
-	LeadingDiamond      string         `json:"leading_diamond,omitempty" toml:"leading_diamond,omitempty"`
-	TrailingDiamond     string         `json:"trailing_diamond,omitempty" toml:"trailing_diamond,omitempty"`
-	Template            string         `json:"template,omitempty" toml:"template,omitempty"`
-	Templates           template.List  `json:"templates,omitempty" toml:"templates,omitempty"`
-	TemplatesLogic      template.Logic `json:"templates_logic,omitempty" toml:"templates_logic,omitempty"`
-	Properties          properties.Map `json:"properties,omitempty" toml:"properties,omitempty"`
-	Interactive         bool           `json:"interactive,omitempty" toml:"interactive,omitempty"`
-	Alias               string         `json:"alias,omitempty" toml:"alias,omitempty"`
-	MaxWidth            int            `json:"max_width,omitempty" toml:"max_width,omitempty"`
-	MinWidth            int            `json:"min_width,omitempty" toml:"min_width,omitempty"`
-	Filler              string         `json:"filler,omitempty" toml:"filler,omitempty"`
+	Type                   SegmentType    `json:"type,omitempty" toml:"type,omitempty"`
+	Tips                   []string       `json:"tips,omitempty" toml:"tips,omitempty"`
+	Style                  SegmentStyle   `json:"style,omitempty" toml:"style,omitempty"`
+	PowerlineSymbol        string         `json:"powerline_symbol,omitempty" toml:"powerline_symbol,omitempty"`
+	LeadingPowerlineSymbol string         `json:"leading_powerline_symbol,omitempty" toml:"leading_powerline_symbol,omitempty"`
+	InvertPowerline        bool           `json:"invert_powerline,omitempty" toml:"invert_powerline,omitempty"`
+	Foreground             string         `json:"foreground,omitempty" toml:"foreground,omitempty"`
+	ForegroundTemplates    template.List  `json:"foreground_templates,omitempty" toml:"foreground_templates,omitempty"`
+	Background             string         `json:"background,omitempty" toml:"background,omitempty"`
+	BackgroundTemplates    template.List  `json:"background_templates,omitempty" toml:"background_templates,omitempty"`
+	LeadingDiamond         string         `json:"leading_diamond,omitempty" toml:"leading_diamond,omitempty"`
+	TrailingDiamond        string         `json:"trailing_diamond,omitempty" toml:"trailing_diamond,omitempty"`
+	Template               string         `json:"template,omitempty" toml:"template,omitempty"`
+	Templates              template.List  `json:"templates,omitempty" toml:"templates,omitempty"`
+	TemplatesLogic         template.Logic `json:"templates_logic,omitempty" toml:"templates_logic,omitempty"`
+	Properties             properties.Map `json:"properties,omitempty" toml:"properties,omitempty"`
+	Interactive            bool           `json:"interactive,omitempty" toml:"interactive,omitempty"`
+	Alias                  string         `json:"alias,omitempty" toml:"alias,omitempty"`
+	MaxWidth               int            `json:"max_width,omitempty" toml:"max_width,omitempty"`
+	MinWidth               int            `json:"min_width,omitempty" toml:"min_width,omitempty"`
+	Filler                 string         `json:"filler,omitempty" toml:"filler,omitempty"`
 
 	Enabled bool `json:"-" toml:"-"`
 
@@ -151,8 +152,6 @@ const (
 	HELM SegmentType = "helm"
 	// IPIFY segment
 	IPIFY SegmentType = "ipify"
-	// ITERM inserts the Shell Integration prompt mark on iTerm zsh/bash/fish
-	ITERM SegmentType = "iterm"
 	// JULIA writes which julia version is currently active
 	JULIA SegmentType = "julia"
 	// KUBECTL writes the Kubernetes context we're currently in
@@ -270,7 +269,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	HASKELL:         func() SegmentWriter { return &segments.Haskell{} },
 	HELM:            func() SegmentWriter { return &segments.Helm{} },
 	IPIFY:           func() SegmentWriter { return &segments.IPify{} },
-	ITERM:           func() SegmentWriter { return &segments.ITerm{} },
 	JULIA:           func() SegmentWriter { return &segments.Julia{} },
 	KUBECTL:         func() SegmentWriter { return &segments.Kubectl{} },
 	LASTFM:          func() SegmentWriter { return &segments.LastFM{} },
