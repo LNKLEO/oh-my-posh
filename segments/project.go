@@ -101,11 +101,6 @@ func (n *Project) Init(props properties.Properties, env platform.Environment) {
 			Fetcher: n.getPythonPackage,
 		},
 		{
-			Name:    "php",
-			Files:   []string{"composer.json"},
-			Fetcher: n.getNodePackage,
-		},
-		{
 			Name:    "nuspec",
 			Files:   []string{"*.nuspec"},
 			Fetcher: n.getNuSpecPackage,
@@ -114,11 +109,6 @@ func (n *Project) Init(props properties.Properties, env platform.Environment) {
 			Name:    "dotnet",
 			Files:   []string{"*.sln", "*.slnf", "*.vbproj", "*.fsproj", "*.csproj"},
 			Fetcher: n.getDotnetProject,
-		},
-		{
-			Name:    "julia",
-			Files:   []string{"JuliaProject.toml", "Project.toml"},
-			Fetcher: n.getProjectData,
 		},
 		{
 			Name:    "powershell",

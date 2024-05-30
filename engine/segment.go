@@ -92,8 +92,6 @@ const (
 	Accordion SegmentStyle = "accordion"
 	// Diamond writes the prompt shaped with a leading and trailing symbol
 	Diamond SegmentStyle = "diamond"
-	// ANGULAR writes which angular cli version us currently active
-	ANGULAR SegmentType = "angular"
 	// AWS writes the active aws context
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
@@ -104,8 +102,6 @@ const (
 	BATTERY SegmentType = "battery"
 	// BAZEL writes the bazel version
 	BAZEL SegmentType = "bazel"
-	// Brewfather segment
-	BREWFATHER SegmentType = "brewfather"
 	// Buf segment writes the active buf version
 	BUF SegmentType = "buf"
 	// CARBONINTENSITY writes the actual and forecast carbon intensity in gCO2/kWh
@@ -152,10 +148,6 @@ const (
 	HELM SegmentType = "helm"
 	// IPIFY segment
 	IPIFY SegmentType = "ipify"
-	// JULIA writes which julia version is currently active
-	JULIA SegmentType = "julia"
-	// KUBECTL writes the Kubernetes context we're currently in
-	KUBECTL SegmentType = "kubectl"
 	// LASTFM writes the lastfm status
 	LASTFM SegmentType = "lastfm"
 	// LUA writes the active lua version
@@ -184,8 +176,6 @@ const (
 	PATH SegmentType = "path"
 	// PERL writes which perl version is currently active
 	PERL SegmentType = "perl"
-	// PHP writes which php version is currently active
-	PHP SegmentType = "php"
 	// PLASTIC represents the plastic scm status and information
 	PLASTIC SegmentType = "plastic"
 	// Project version
@@ -222,16 +212,10 @@ const (
 	TEXT SegmentType = "text"
 	// TIME writes the current timestamp
 	TIME SegmentType = "time"
-	// UI5 Tooling segment
-	UI5TOOLING SegmentType = "ui5tooling"
 	// UMBRACO writes the Umbraco version if Umbraco is present
 	UMBRACO SegmentType = "umbraco"
-	// VALA writes the active vala version
-	VALA SegmentType = "vala"
 	// WINREG queries the Windows registry.
 	WINREG SegmentType = "winreg"
-	// WITHINGS queries the Withings API.
-	WITHINGS SegmentType = "withings"
 	// XMAKE write the xmake version if xmake.lua is present
 	XMAKE SegmentType = "xmake"
 )
@@ -239,13 +223,11 @@ const (
 // Segments contains all available prompt segment writers.
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
-	ANGULAR:         func() SegmentWriter { return &segments.Angular{} },
 	AWS:             func() SegmentWriter { return &segments.Aws{} },
 	AZ:              func() SegmentWriter { return &segments.Az{} },
 	AZFUNC:          func() SegmentWriter { return &segments.AzFunc{} },
 	BATTERY:         func() SegmentWriter { return &segments.Battery{} },
 	BAZEL:           func() SegmentWriter { return &segments.Bazel{} },
-	BREWFATHER:      func() SegmentWriter { return &segments.Brewfather{} },
 	BUF:             func() SegmentWriter { return &segments.Buf{} },
 	CARBONINTENSITY: func() SegmentWriter { return &segments.CarbonIntensity{} },
 	CDS:             func() SegmentWriter { return &segments.Cds{} },
@@ -269,8 +251,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	HASKELL:         func() SegmentWriter { return &segments.Haskell{} },
 	HELM:            func() SegmentWriter { return &segments.Helm{} },
 	IPIFY:           func() SegmentWriter { return &segments.IPify{} },
-	JULIA:           func() SegmentWriter { return &segments.Julia{} },
-	KUBECTL:         func() SegmentWriter { return &segments.Kubectl{} },
 	LASTFM:          func() SegmentWriter { return &segments.LastFM{} },
 	LUA:             func() SegmentWriter { return &segments.Lua{} },
 	MERCURIAL:       func() SegmentWriter { return &segments.Mercurial{} },
@@ -285,7 +265,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	OWM:             func() SegmentWriter { return &segments.Owm{} },
 	PATH:            func() SegmentWriter { return &segments.Path{} },
 	PERL:            func() SegmentWriter { return &segments.Perl{} },
-	PHP:             func() SegmentWriter { return &segments.Php{} },
 	PLASTIC:         func() SegmentWriter { return &segments.Plastic{} },
 	PROJECT:         func() SegmentWriter { return &segments.Project{} },
 	PYTHON:          func() SegmentWriter { return &segments.Python{} },
@@ -304,11 +283,8 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	TERRAFORM:       func() SegmentWriter { return &segments.Terraform{} },
 	TEXT:            func() SegmentWriter { return &segments.Text{} },
 	TIME:            func() SegmentWriter { return &segments.Time{} },
-	UI5TOOLING:      func() SegmentWriter { return &segments.UI5Tooling{} },
 	UMBRACO:         func() SegmentWriter { return &segments.Umbraco{} },
-	VALA:            func() SegmentWriter { return &segments.Vala{} },
 	WINREG:          func() SegmentWriter { return &segments.WindowsRegistry{} },
-	WITHINGS:        func() SegmentWriter { return &segments.Withings{} },
 	XMAKE:           func() SegmentWriter { return &segments.XMake{} },
 }
 
