@@ -1,3 +1,15 @@
+-- Cache PID
+
+function generateCustomUUID()
+    local template = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[x]', function(c)
+        local v = math.random(0, 0xf)
+        return string.format('%x', v)
+    end)
+end
+
+os.setenv("POSH_PID", generateCustomUUID())
+
 -- Helper functions
 
 local function get_priority_number(name, default)
@@ -17,11 +29,11 @@ local function get_priority_number(name, default)
         return default
 	end
 end
-
+os.setenv("POSH_CURSOR_LINE", console.getnumlines())
 -- Environment variables
 
 local function environment_onbeginedit()
-    os.setenv("POSH_CURSOR_LINE", console.getnumlines())
+
 end
 
 -- Local state
