@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"math"
 
+	"golang.org/x/text/cases"
+	lang "golang.org/x/text/language"
+
 	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
 )
@@ -14,7 +17,8 @@ type Owm struct {
 	props properties.Properties
 	env   platform.Environment
 
-	Temperature int
+	Temperature float64
+	WeatherIcon string
 	Weather     string
 	URL         string
 	units       string
@@ -127,60 +131,61 @@ func (d *Owm) setStatus() error {
 		return errors.New("No data found")
 	}
 
-	id := q.Data[0].TypeID
+	d.Temperature = math.Round(q.temperature.Value * 2) / 2
 
-	d.Temperature = int(math.Round(q.temperature.Value))
+	id := q.Data[0].TypeID
 	icon := ""
 	switch id {
 	case "01n":
-		icon = "\ue32b"
-	case "01d":
-		icon = "\ue30d"
-	case "02n":
-		icon = "\ue37e"
-	case "02d":
-		icon = "\ue302"
-	case "03n":
-		fallthrough
-	case "03d":
-		icon = "\ue33d"
-	case "04n":
-		fallthrough
-	case "04d":
-		icon = "\ue312"
-	case "09n":
-		fallthrough
-	case "09d":
-		icon = "\ue319"
-	case "10n":
-		icon = "\ue325"
-	case "10d":
-		icon = "\ue308"
-	case "11n":
-		icon = "\ue32a"
-	case "11d":
-		icon = "\ue30f"
-	case "13n":
-		fallthrough
-	case "13d":
-		icon = "\ue31a"
-	case "50n":
-		fallthrough
-	case "50d":
-		icon = "\ue313"
-	}
-	d.Weather = icon
+		icon = "󰖔"
+    case "01d":
+        icon = "󰖙"
+    case "02n":
+        icon = "󰼱"
+    case "02d":
+        icon = "󰖕"
+    case "03n":
+        icon = "󰖐"
+    case "03d":
+        icon = "󰖐"
+    case "04n":
+        icon = "󰼯"
+    case "04d":
+        icon = "󰼯"
+    case "09n":
+        icon = "󰖒"
+    case "09d":
+        icon = "󰖒"
+    case "10n":
+		icon = "󰖗"
+    case "10d":
+        icon = "󰼳"
+    case "11n":
+        icon = "󰖓"
+    case "11d":
+        icon = "󰼲"
+    case "13n":
+        icon = "󰖘"
+    case "13d":
+        icon = "󰼴"
+    case "50n":
+        icon = "󰖑"
+    case "50d":
+        icon = "󰖑"
+    }
+	d.Weather = cases.Title(lang.Und).String(q.Data[0].Description)
+	d.WeatherIcon = icon
 	d.units = units
-	d.UnitIcon = "\ue33e"
+	d.UnitIcon = "°"
 	switch d.units {
 	case "imperial":
-		d.UnitIcon = "°F" // \ue341"
+		d.UnitIcon = "󰔅"
 	case "metric":
-		d.UnitIcon = "°C" // \ue339"
-	case "":
-		fallthrough
+		d.UnitIcon = "󰔄"
 	case "standard":
-		d.UnitIcon = "°K" // <b>K</b>"
+		d.UnitIcon = "󰔆"
+	case "":
+		d.UnitIcon = "󰔆"
 	}
 	return nil
 }
