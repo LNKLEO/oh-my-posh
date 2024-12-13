@@ -32,7 +32,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gookit/goutil v0.6.16
 	github.com/hashicorp/hcl/v2 v2.21.0
-	github.com/mattn/go-runewidth v0.0.15
+	github.com/mattn/go-runewidth v0.0.16
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8

@@ -3,6 +3,8 @@ package config
 import (
 	"github.com/LNKLEO/OMP/color"
 	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/segments"
+	"github.com/LNKLEO/OMP/shell"
 	"github.com/LNKLEO/OMP/template"
 )
 
@@ -69,4 +71,45 @@ func (cfg *Config) getPalette() color.Palette {
 		}
 	}
 	return cfg.Palette
+}
+
+func (cfg *Config) Features() shell.Features {
+	var feats shell.Features
+
+	if cfg.TransientPrompt != nil {
+		feats = append(feats, shell.Transient)
+	}
+
+	if cfg.ShellIntegration {
+		feats = append(feats, shell.FTCSMarks)
+	}
+
+	if cfg.ErrorLine != nil || cfg.ValidLine != nil {
+		feats = append(feats, shell.LineError)
+	}
+
+	if len(cfg.Tooltips) > 0 {
+		feats = append(feats, shell.Tooltips)
+	}
+
+	for i, block := range cfg.Blocks {
+		if (i == 0 && block.Newline) && cfg.EnableCursorPositioning {
+			feats = append(feats, shell.CursorPositioning)
+		}
+
+		if block.Type == RPrompt {
+			feats = append(feats, shell.RPrompt)
+		}
+
+		for _, segment := range block.Segments {
+			if segment.Type == AZ {
+				source := segment.Properties.GetString(segments.Source, segments.FirstMatch)
+				if source == segments.Pwsh || source == segments.FirstMatch {
+					feats = append(feats, shell.Azure)
+				}
+			}
+		}
+	}
+
+	return feats
 }
