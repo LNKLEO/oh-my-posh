@@ -96,6 +96,8 @@ const (
 	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
 	AZ SegmentType = "az"
+	// AZD writes the Azure Developer CLI environment info we're current in
+	AZD SegmentType = "azd"
 	// AZFUNC writes current AZ func version
 	AZFUNC SegmentType = "azfunc"
 	// BATTERY writes the battery percentage
@@ -104,6 +106,8 @@ const (
 	BAZEL SegmentType = "bazel"
 	// Buf segment writes the active buf version
 	BUF SegmentType = "buf"
+	// BUN writes the active bun version
+	BUN SegmentType = "bun"
 	// CARBONINTENSITY writes the actual and forecast carbon intensity in gCO2/kWh
 	CARBONINTENSITY SegmentType = "carbonintensity"
 	// cds (SAP CAP) version
@@ -225,10 +229,12 @@ const (
 var Segments = map[SegmentType]func() SegmentWriter{
 	AWS:             func() SegmentWriter { return &segments.Aws{} },
 	AZ:              func() SegmentWriter { return &segments.Az{} },
+	AZD:             func() SegmentWriter { return &segments.Azd{} },
 	AZFUNC:          func() SegmentWriter { return &segments.AzFunc{} },
 	BATTERY:         func() SegmentWriter { return &segments.Battery{} },
 	BAZEL:           func() SegmentWriter { return &segments.Bazel{} },
 	BUF:             func() SegmentWriter { return &segments.Buf{} },
+	BUN:             func() SegmentWriter { return &segments.Bun{} },
 	CARBONINTENSITY: func() SegmentWriter { return &segments.CarbonIntensity{} },
 	CDS:             func() SegmentWriter { return &segments.Cds{} },
 	CMD:             func() SegmentWriter { return &segments.Cmd{} },

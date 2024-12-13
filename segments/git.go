@@ -749,6 +749,7 @@ func (g *Git) setPrettyHEADName() {
 		HEADRef := g.FileContents(g.workingDir, "HEAD")
 		if strings.HasPrefix(HEADRef, BRANCHPREFIX) {
 			branchName := strings.TrimPrefix(HEADRef, BRANCHPREFIX)
+			g.Ref = branchName
 			g.HEAD = fmt.Sprintf("%s%s", g.props.GetString(BranchIcon, "\uE0A0"), g.formatHEAD(branchName))
 			return
 		}
@@ -756,11 +757,13 @@ func (g *Git) setPrettyHEADName() {
 		if len(HEADRef) >= 7 {
 			g.ShortHash = HEADRef[0:7]
 			g.Hash = HEADRef[0:]
+			g.Ref = g.ShortHash
 		}
 	}
 	// check for tag
 	tagName := g.getGitCommandOutput("describe", "--tags", "--exact-match")
 	if len(tagName) > 0 {
+		g.Ref = tagName
 		g.HEAD = fmt.Sprintf("%s%s", g.props.GetString(TagIcon, "\uF412"), tagName)
 		return
 	}
