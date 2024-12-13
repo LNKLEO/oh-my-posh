@@ -11,7 +11,6 @@ import (
 	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/segments"
-	"github.com/LNKLEO/OMP/shell"
 	"github.com/LNKLEO/OMP/template"
 
 	c "golang.org/x/text/cases"
@@ -182,6 +181,8 @@ const (
 	PERL SegmentType = "perl"
 	// PLASTIC represents the plastic scm status and information
 	PLASTIC SegmentType = "plastic"
+	// pnpm version
+	PNPM SegmentType = "pnpm"
 	// Project version
 	PROJECT SegmentType = "project"
 	// PYTHON writes the virtual env name
@@ -272,6 +273,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	PATH:            func() SegmentWriter { return &segments.Path{} },
 	PERL:            func() SegmentWriter { return &segments.Perl{} },
 	PLASTIC:         func() SegmentWriter { return &segments.Plastic{} },
+	PNPM:            func() SegmentWriter { return &segments.Pnpm{} },
 	PROJECT:         func() SegmentWriter { return &segments.Project{} },
 	PYTHON:          func() SegmentWriter { return &segments.Python{} },
 	R:               func() SegmentWriter { return &segments.R{} },
@@ -298,7 +300,9 @@ func (segment *Segment) style() SegmentStyle {
 	if len(segment.styleCache) != 0 {
 		return segment.styleCache
 	}
+
 	segment.styleCache = segment.Style.Resolve(segment.env, segment.writer)
+
 	return segment.styleCache
 }
 
@@ -306,8 +310,10 @@ func (segment *Segment) shouldIncludeFolder() bool {
 	if segment.env == nil {
 		return true
 	}
+
 	cwdIncluded := segment.cwdIncluded()
 	cwdExcluded := segment.cwdExcluded()
+
 	return cwdIncluded && !cwdExcluded
 }
 
@@ -346,6 +352,7 @@ func (segment *Segment) cwdExcluded() bool {
 	if !ok {
 		value = segment.Properties[properties.IgnoreFolders]
 	}
+
 	list := properties.ParseStringArray(value)
 	return segment.env.DirMatchesOneOf(segment.env.Pwd(), list)
 }
@@ -356,6 +363,7 @@ func (segment *Segment) shouldInvokeWithTip(tip string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -363,9 +371,11 @@ func (segment *Segment) foreground() string {
 	if segment.colors == nil {
 		segment.colors = &ansi.Colors{}
 	}
+
 	if len(segment.colors.Foreground) == 0 {
 		segment.colors.Foreground = segment.ForegroundTemplates.FirstMatch(segment.writer, segment.env, segment.Foreground)
 	}
+
 	return segment.colors.Foreground
 }
 
@@ -373,9 +383,11 @@ func (segment *Segment) background() string {
 	if segment.colors == nil {
 		segment.colors = &ansi.Colors{}
 	}
+
 	if len(segment.colors.Background) == 0 {
 		segment.colors.Background = segment.BackgroundTemplates.FirstMatch(segment.writer, segment.env, segment.Background)
 	}
+
 	return segment.colors.Background
 }
 
@@ -408,19 +420,23 @@ func (segment *Segment) string() string {
 			return templatesResult
 		}
 	}
+
 	if len(segment.Template) == 0 {
 		segment.Template = segment.writer.Template()
 	}
+
 	tmpl := &template.Text{
 		Template:        segment.Template,
 		Context:         segment.writer,
 		Env:             segment.env,
 		TemplatesResult: templatesResult,
 	}
+
 	text, err := tmpl.Render()
 	if err != nil {
 		return err.Error()
 	}
+
 	return text
 }
 
@@ -428,10 +444,12 @@ func (segment *Segment) Name() string {
 	if len(segment.name) != 0 {
 		return segment.name
 	}
+
 	name := segment.Alias
 	if len(name) == 0 {
 		name = c.Title(language.English).String(string(segment.Type))
 	}
+
 	segment.name = name
 	return name
 }
@@ -489,20 +507,11 @@ func (segment *Segment) SetText() {
 	if !segment.Enabled {
 		return
 	}
+
 	segment.text = segment.string()
 	segment.Enabled = len(strings.ReplaceAll(segment.text, " ", "")) > 0
+
 	if !segment.Enabled {
 		segment.env.TemplateCache().RemoveSegmentData(segment.Name())
-	}
-
-	if segment.Interactive {
-		return
-	}
-	// we have to do this to prevent bash/zsh from misidentifying escape sequences
-	switch segment.env.Shell() {
-	case shell.BASH:
-		segment.text = strings.NewReplacer("`", "\\`", `\`, `\\`).Replace(segment.text)
-	case shell.ZSH:
-		segment.text = strings.NewReplacer("`", "\\`", `%`, `%%`).Replace(segment.text)
 	}
 }

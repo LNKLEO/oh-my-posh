@@ -54,7 +54,6 @@ type Config struct {
 	Var                      map[string]any     `json:"var,omitempty" toml:"var,omitempty"`
 	DisableCursorPositioning bool               `json:"disable_cursor_positioning,omitempty" toml:"disable_cursor_positioning,omitempty"`
 	PatchPwshBleed           bool               `json:"patch_pwsh_bleed,omitempty" toml:"patch_pwsh_bleed,omitempty"`
-	DisableNotice            bool               `json:"disable_notice,omitempty" toml:"disable_notice,omitempty"`
 
 	// Deprecated
 	OSC99 bool `json:"osc99,omitempty"`

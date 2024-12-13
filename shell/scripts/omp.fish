@@ -59,8 +59,6 @@ function fish_prompt
       set omp_cleared true
     end
 
-    ::PROMPT_MARK::
-
     ::OMP:: print primary --config $POSH_THEME --shell fish --status $omp_status_cache --pipestatus="$omp_pipestatus_cache" --execution-time $omp_duration --stack-count $omp_stack_count --shell-version $FISH_VERSION --cleared=$omp_cleared --no-status=$omp_no_exit_code
 end
 

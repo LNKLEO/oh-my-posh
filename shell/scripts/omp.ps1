@@ -468,12 +468,13 @@ Example:
     }
 
     Export-ModuleMember -Function @(
-        "Set-OMPContext"
-        "Enable-OMPTooltips"
-        "Enable-OMPTransientPrompt"
-        "Enable-OMPLineError"
-        "Export-OMPTheme"
-        "Get-OMPThemes"
+        "Set-PoshContext"
+        "Enable-PoshTooltips"
+        "Enable-PoshTransientPrompt"
+        "Enable-PoshLineError"
+        "Export-PoshTheme"
+        "Get-PoshThemes"
+        "Start-Utf8Process"
         "prompt"
     )
 } | Import-Module -Global

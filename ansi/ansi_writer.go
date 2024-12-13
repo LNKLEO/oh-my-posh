@@ -82,8 +82,10 @@ type Writer struct {
 	Colors             *Colors
 	ParentColors       []*Colors
 	AnsiColors         ColorString
-	Plain              bool
-	TrueColor          bool
+
+	Plain       bool
+	TrueColor   bool
+	Interactive bool
 
 	builder strings.Builder
 	length  int
@@ -111,6 +113,9 @@ type Writer struct {
 	osc7                  string
 	osc51                 string
 
+	lastRune        rune
+	escapeSequences map[rune]rune
+
 	hyperlinkStart  string
 	hyperlinkCenter string
 	hyperlinkEnd    string
@@ -137,6 +142,10 @@ func (w *Writer) Init(shellName string) {
 		w.osc99 = "\\[\x1b]9;9;%s\x1b\\\\\\]"
 		w.osc7 = "\\[\x1b]7;file://%s/%s\x1b\\\\\\]"
 		w.osc51 = "\\[\x1b]51;A;%s@%s:%s\x1b\\\\\\]"
+		w.escapeSequences = map[rune]rune{
+			96: 92, // backtick
+			92: 92, // backslash
+		}
 	case shell.ZSH, shell.TCSH:
 		w.format = "%%{%s%%}"
 		w.linechange = "%%{\x1b[%d%s%%}"
@@ -172,6 +181,13 @@ func (w *Writer) Init(shellName string) {
 		w.osc7 = "\x1b]7;file://%s/%s\x1b\\"
 		w.osc51 = "\x1b]51;A%s@%s:%s\x1b\\"
 	}
+
+	if shellName == shell.ZSH {
+		w.escapeSequences = map[rune]rune{
+			96: 92, // backtick
+			37: 37, // %
+		}
+	}
 }
 
 func (w *Writer) SetColors(background, foreground string) {
@@ -195,11 +211,14 @@ func (w *Writer) ChangeLine(numberOfLines int) string {
 	if w.Plain {
 		return ""
 	}
+
 	position := "B"
+
 	if numberOfLines < 0 {
 		position = "F"
 		numberOfLines = -numberOfLines
 	}
+
 	return fmt.Sprintf(w.linechange, numberOfLines, position)
 }
 
@@ -207,9 +226,11 @@ func (w *Writer) ConsolePwd(pwdType, userName, hostName, pwd string) string {
 	if w.Plain {
 		return ""
 	}
+
 	if strings.HasSuffix(pwd, ":") {
 		pwd += "\\"
 	}
+
 	switch pwdType {
 	case OSC7:
 		return fmt.Sprintf(w.osc7, hostName, pwd)
@@ -226,6 +247,7 @@ func (w *Writer) ClearAfter() string {
 	if w.Plain {
 		return ""
 	}
+
 	return w.clearLine + w.clearBelow
 }
 
@@ -234,6 +256,7 @@ func (w *Writer) FormatTitle(title string) string {
 	if w.Plain {
 		return title
 	}
+
 	// we have to do this to prevent bash/zsh from misidentifying escape sequences
 	switch w.shell {
 	case shell.BASH:
@@ -244,6 +267,7 @@ func (w *Writer) FormatTitle(title string) string {
 		// these shells don't support setting the title
 		return ""
 	}
+
 	return fmt.Sprintf(w.title, title)
 }
 
@@ -404,10 +428,21 @@ func (w *Writer) write(s rune) {
 		return
 	}
 
-	if !w.hyperlink {
-		w.length += runewidth.RuneWidth(s)
+	if w.hyperlink {
+		w.builder.WriteRune(s)
+		return
 	}
 
+	if !w.Interactive {
+		for special, escape := range w.escapeSequences {
+			if s == special && w.lastRune != escape {
+				w.builder.WriteRune(escape)
+			}
+		}
+	}
+
+	w.length += runewidth.RuneWidth(s)
+	w.lastRune = s
 	w.builder.WriteRune(s)
 }
 
