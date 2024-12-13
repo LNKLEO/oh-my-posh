@@ -86,6 +86,8 @@ const (
 	hyperLinkText    = "<TEXT>"
 	hyperLinkTextEnd = "</TEXT>"
 
+	empty = "<>"
+
 	startProgress = "\x1b]9;4;3;0\x07"
 	endProgress   = "\x1b]9;4;0;0\x07"
 
@@ -159,10 +161,6 @@ func Pwd(pwdType, userName, hostName, pwd string) string {
 		return ""
 	}
 
-	if strings.HasSuffix(pwd, ":") {
-		pwd += `/`
-	}
-
 	switch pwdType {
 	case OSC7:
 		return fmt.Sprintf(formats.Osc7, hostName, pwd)
@@ -184,34 +182,29 @@ func ClearAfter() string {
 }
 
 func FormatTitle(title string) string {
+	switch Shell {
 	// These shells don't support setting the console title.
-	if Shell == shell.ELVISH || Shell == shell.XONSH {
+	case shell.ELVISH, shell.XONSH, shell.TCSH:
 		return ""
-	}
+	case shell.BASH, shell.ZSH:
+		title = trimAnsi(title)
+		s := new(strings.Builder)
 
-	title = trimAnsi(title)
+		// We have to do this to prevent the shell from misidentifying escape sequences.
+		for _, char := range title {
+			escaped, shouldEscape := formats.EscapeSequences[char]
+			if shouldEscape {
+				s.WriteString(escaped)
+				continue
+			}
 
-	if Plain {
-		return title
-	}
-
-	if Shell != shell.BASH && Shell != shell.ZSH {
-		return fmt.Sprintf(formats.Title, title)
-	}
-
-	// We have to do this to prevent Bash/Zsh from misidentifying escape sequences.
-	s := new(strings.Builder)
-	for _, char := range title {
-		escaped, shouldEscape := formats.EscapeSequences[char]
-		if shouldEscape {
-			s.WriteString(escaped)
-			continue
+			s.WriteRune(char)
 		}
 
-		s.WriteRune(char)
+		return fmt.Sprintf(formats.Title, s.String())
+	default:
+		return fmt.Sprintf(formats.Title, trimAnsi(title))
 	}
-
-	return fmt.Sprintf(formats.Title, s.String())
 }
 
 func EscapeText(text string) string {
@@ -344,6 +337,9 @@ func Write(background, foreground color.Ansi, text string) {
 			case hyperLinkEnd:
 				i += len([]rune(match[ANCHOR])) - 1
 				builder.WriteString(formats.HyperlinkEnd)
+				continue
+			case empty:
+				i += len([]rune(match[ANCHOR])) - 1
 				continue
 			}
 

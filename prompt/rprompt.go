@@ -2,6 +2,8 @@ package prompt
 
 import (
 	"github.com/LNKLEO/OMP/config"
+	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/shell"
 )
 
 func (e *Engine) RPrompt() string {
@@ -28,6 +30,11 @@ func (e *Engine) RPrompt() string {
 
 	text, length := e.renderBlockSegments(rprompt)
 	e.rpromptLength = length
+
+	if e.Env.Shell() == shell.ELVISH && e.Env.GOOS() != runtime.WINDOWS {
+		// Workaround to align with a right-aligned block on non-Windows systems.
+		text += " "
+	}
 
 	return text
 }

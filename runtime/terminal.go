@@ -67,12 +67,13 @@ func (term *Terminal) Init() {
 
 	initCache := func(fileName string) *cache.File {
 		cache := &cache.File{}
-		cache.Init(filepath.Join(term.CachePath(), fileName))
+		cache.Init(filepath.Join(term.CachePath(), fileName), term.CmdFlags.SaveCache)
 		return cache
 	}
 
 	term.deviceCache = initCache(cache.FileName)
 	term.sessionCache = initCache(cache.SessionFileName)
+	term.setPromptCount()
 
 	term.ResolveConfigPath()
 
@@ -81,8 +82,6 @@ func (term *Terminal) Init() {
 	}
 
 	term.tmplCache = &cache.Template{}
-
-	term.SetPromptCount()
 }
 
 func (term *Terminal) ResolveConfigPath() {
@@ -173,25 +172,20 @@ func (term *Terminal) Pwd() string {
 	if term.cwd != "" {
 		return term.cwd
 	}
-	correctPath := func(pwd string) string {
-		if term.GOOS() != WINDOWS {
-			return pwd
-		}
-		// on Windows, and being case sensitive and not consistent and all, this gives silly issues
-		driveLetter := regex.GetCompiledRegex(`^[a-z]:`)
-		return driveLetter.ReplaceAllStringFunc(pwd, strings.ToUpper)
-	}
+
 	if term.CmdFlags != nil && term.CmdFlags.PWD != "" {
-		term.cwd = correctPath(term.CmdFlags.PWD)
+		term.cwd = CleanPath(term, term.CmdFlags.PWD)
 		term.Debug(term.cwd)
 		return term.cwd
 	}
+
 	dir, err := os.Getwd()
 	if err != nil {
 		term.Error(err)
 		return ""
 	}
-	term.cwd = correctPath(dir)
+
+	term.cwd = CleanPath(term, dir)
 	term.Debug(term.cwd)
 	return term.cwd
 }
@@ -321,7 +315,10 @@ func (term *Terminal) LsDir(path string) []fs.DirEntry {
 
 func (term *Terminal) PathSeparator() string {
 	defer term.Trace(time.Now())
-	return string(os.PathSeparator)
+	if term.GOOS() == WINDOWS {
+		return `\`
+	}
+	return "/"
 }
 
 func (term *Terminal) User() string {
@@ -360,22 +357,27 @@ func (term *Terminal) GOOS() string {
 
 func (term *Terminal) RunCommand(command string, args ...string) (string, error) {
 	defer term.Trace(time.Now(), append([]string{command}, args...)...)
+
 	if cacheCommand, ok := term.cmdCache.Get(command); ok {
 		command = cacheCommand
 	}
+
 	output, err := cmd.Run(command, args...)
 	if err != nil {
 		term.Error(err)
 	}
+
 	term.Debug(output)
 	return output, err
 }
 
 func (term *Terminal) RunShellCommand(shell, command string) string {
 	defer term.Trace(time.Now())
+
 	if out, err := term.RunCommand(shell, "-c", command); err == nil {
 		return out
 	}
+
 	return ""
 }
 
@@ -594,8 +596,25 @@ func (term *Terminal) saveTemplateCache() {
 func (term *Terminal) Close() {
 	defer term.Trace(time.Now())
 	term.saveTemplateCache()
+	term.clearCacheFiles()
 	term.deviceCache.Close()
 	term.sessionCache.Close()
+}
+
+func (term *Terminal) clearCacheFiles() {
+	if !term.CmdFlags.Init {
+		return
+	}
+
+	deletedFiles, err := cache.Clear(term.CachePath(), false)
+	if err != nil {
+		term.Error(err)
+		return
+	}
+
+	for _, file := range deletedFiles {
+		term.DebugF("removed cache file: %s", file)
+	}
 }
 
 func (term *Terminal) LoadTemplateCache() {
@@ -739,27 +758,20 @@ func dirMatchesOneOf(dir, home, goos string, regexes []string) bool {
 	return false
 }
 
-func (term *Terminal) SetPromptCount() {
+func (term *Terminal) setPromptCount() {
 	defer term.Trace(time.Now())
 
-	countStr := os.Getenv("POSH_PROMPT_COUNT")
-	if len(countStr) > 0 {
-		// this counter is incremented by the shell
-		count, err := strconv.Atoi(countStr)
-		if err == nil {
-			term.CmdFlags.PromptCount = count
-			return
-		}
-	}
 	var count int
 	if val, found := term.Session().Get(cache.PROMPTCOUNTCACHE); found {
 		count, _ = strconv.Atoi(val)
 	}
-	// only write to cache if we're the primary prompt
+
+	// Only update the count if we're generating a primary prompt.
 	if term.CmdFlags.Primary {
 		count++
 		term.Session().Set(cache.PROMPTCOUNTCACHE, strconv.Itoa(count), 1440)
 	}
+
 	term.CmdFlags.PromptCount = count
 }
 
@@ -796,6 +808,48 @@ func (term *Terminal) SystemInfo() (*SystemInfo, error) {
 		s.Disks = diskIO
 	}
 	return s, nil
+}
+
+func (term *Terminal) CachePath() string {
+	defer term.Trace(time.Now())
+
+	returnOrBuildCachePath := func(path string) string {
+		// validate root path
+		if _, err := os.Stat(path); err != nil {
+			return ""
+		}
+		// validate oh-my-posh folder, if non existent, create it
+		cachePath := filepath.Join(path, "oh-my-posh")
+		if _, err := os.Stat(cachePath); err == nil {
+			return cachePath
+		}
+		if err := os.Mkdir(cachePath, 0o755); err != nil {
+			return ""
+		}
+		return cachePath
+	}
+
+	// WINDOWS cache folder, should not exist elsewhere
+	if cachePath := returnOrBuildCachePath(term.Getenv("LOCALAPPDATA")); len(cachePath) != 0 {
+		return cachePath
+	}
+
+	// allow the user to set the cache path using OMP_CACHE_DIR
+	if cachePath := returnOrBuildCachePath(term.Getenv("OMP_CACHE_DIR")); len(cachePath) != 0 {
+		return cachePath
+	}
+
+	// get XDG_CACHE_HOME if present
+	if cachePath := returnOrBuildCachePath(term.Getenv("XDG_CACHE_HOME")); len(cachePath) != 0 {
+		return cachePath
+	}
+
+	// HOME cache folder
+	if cachePath := returnOrBuildCachePath(term.Home() + "/.cache"); len(cachePath) != 0 {
+		return cachePath
+	}
+
+	return term.Home()
 }
 
 func IsPathSeparator(env Environment, c uint8) bool {
@@ -840,6 +894,54 @@ func Base(env Environment, path string) string {
 	return path
 }
 
+func CleanPath(env Environment, path string) string {
+	if len(path) == 0 {
+		return path
+	}
+
+	cleaned := path
+	separator := env.PathSeparator()
+
+	// The prefix can be empty for a relative path.
+	var prefix string
+	if IsPathSeparator(env, cleaned[0]) {
+		prefix = separator
+	}
+
+	if env.GOOS() == WINDOWS {
+		// Normalize (forward) slashes to backslashes on Windows.
+		cleaned = strings.ReplaceAll(cleaned, "/", `\`)
+
+		// Clean the prefix for a UNC path, if any.
+		if regex.MatchString(`^\\{2}[^\\]+`, cleaned) {
+			cleaned = strings.TrimPrefix(cleaned, `\\.\UNC\`)
+			if len(cleaned) == 0 {
+				return cleaned
+			}
+			prefix = `\\`
+		}
+
+		// Always use an uppercase drive letter on Windows.
+		driveLetter := regex.GetCompiledRegex(`^[a-z]:`)
+		cleaned = driveLetter.ReplaceAllStringFunc(cleaned, strings.ToUpper)
+	}
+
+	sb := new(strings.Builder)
+	sb.WriteString(prefix)
+
+	// Clean slashes.
+	matches := regex.FindAllNamedRegexMatch(fmt.Sprintf(`(?P<element>[^\%s]+)`, separator), cleaned)
+	n := len(matches) - 1
+	for i, m := range matches {
+		sb.WriteString(m["element"])
+		if i != n {
+			sb.WriteString(separator)
+		}
+	}
+
+	return sb.String()
+}
+
 func ReplaceTildePrefixWithHomeDir(env Environment, path string) string {
 	if !strings.HasPrefix(path, "~") {
 		return path
@@ -875,20 +977,4 @@ func cleanHostName(hostName string) string {
 		}
 	}
 	return hostName
-}
-
-func returnOrBuildCachePath(path string) string {
-	// validate root path
-	if _, err := os.Stat(path); err != nil {
-		return ""
-	}
-	// validate oh-my-posh folder, if non existent, create it
-	cachePath := filepath.Join(path, "OMP")
-	if _, err := os.Stat(cachePath); err == nil {
-		return cachePath
-	}
-	if err := os.Mkdir(cachePath, 0o755); err != nil {
-		return ""
-	}
-	return cachePath
 }

@@ -121,17 +121,6 @@ func (term *Terminal) Platform() string {
 	return WINDOWS
 }
 
-func (term *Terminal) CachePath() string {
-	defer term.Trace(time.Now())
-
-	// get LOCALAPPDATA if present
-	if cachePath := returnOrBuildCachePath(term.Getenv("LOCALAPPDATA")); len(cachePath) != 0 {
-		return cachePath
-	}
-
-	return term.Home()
-}
-
 // Takes a registry path to a key like
 //
 //	"HKLM\Software\Microsoft\Windows NT\CurrentVersion\EditionID"
@@ -252,11 +241,13 @@ func (term *Terminal) Connection(connectionType ConnectionType) (*Connection, er
 		}
 		term.networks = networks
 	}
+
 	for _, network := range term.networks {
 		if network.Type == connectionType {
 			return network, nil
 		}
 	}
+
 	term.Error(fmt.Errorf("Network type '%s' not found", connectionType))
 	return nil, &NotImplemented{}
 }

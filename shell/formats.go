@@ -63,6 +63,9 @@ func GetFormats(shell string) *Formats {
 			Osc99:                 "%%{\x1b]9;9;%s\x1b\\%%}",
 			Osc7:                  "%%{\x1b]7;file://%s/%s\x1b\\%%}",
 			Osc51:                 "%%{\x1b]51;A%s@%s:%s\x1b\\%%}",
+			EscapeSequences: map[rune]string{
+				'%': "%%",
+			},
 		}
 	default:
 		formats = &Formats{
@@ -86,10 +89,9 @@ func GetFormats(shell string) *Formats {
 		}
 	}
 
-	if shell == ZSH {
-		formats.EscapeSequences = map[rune]string{
-			'%': "%%",
-		}
+	if shell == TCSH {
+		formats.EscapeSequences['\\'] = `\\`
+		formats.EscapeSequences['!'] = `\!`
 	}
 
 	return formats
