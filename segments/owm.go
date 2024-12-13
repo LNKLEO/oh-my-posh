@@ -131,7 +131,7 @@ func (d *Owm) setStatus() error {
 		return errors.New("No data found")
 	}
 
-	d.Temperature = math.Round(q.temperature.Value * 2) / 2
+	d.Temperature = math.Round(q.temperature.Value * 2) / 2.0
 
 	id := q.Data[0].TypeID
 	icon := ""
