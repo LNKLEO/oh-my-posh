@@ -16,7 +16,7 @@ type Formats struct {
 	Osc7  string
 	Osc51 string
 
-	EscapeSequences map[rune]rune
+	EscapeSequences map[rune]string
 
 	HyperlinkStart  string
 	HyperlinkCenter string
@@ -43,9 +43,8 @@ func GetFormats(shell string) *Formats {
 			Osc99:                 "\\[\x1b]9;9;%s\x1b\\\\\\]",
 			Osc7:                  "\\[\x1b]7;file://%s/%s\x1b\\\\\\]",
 			Osc51:                 "\\[\x1b]51;A;%s@%s:%s\x1b\\\\\\]",
-			EscapeSequences: map[rune]rune{
-				96: 92, // backtick
-				92: 92, // backslash
+			EscapeSequences: map[rune]string{
+				'\\': `\\`,
 			},
 		}
 	case ZSH, TCSH:
@@ -88,9 +87,8 @@ func GetFormats(shell string) *Formats {
 	}
 
 	if shell == ZSH {
-		formats.EscapeSequences = map[rune]rune{
-			96: 92, // backtick
-			37: 37, // %
+		formats.EscapeSequences = map[rune]string{
+			'%': "%%",
 		}
 	}
 

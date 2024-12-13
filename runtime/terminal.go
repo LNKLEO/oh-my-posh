@@ -21,226 +21,14 @@ import (
 	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/maps"
 	"github.com/LNKLEO/OMP/regex"
-	"github.com/LNKLEO/OMP/runtime/battery"
 	"github.com/LNKLEO/OMP/runtime/cmd"
 	"github.com/LNKLEO/OMP/runtime/config"
 	"github.com/LNKLEO/OMP/runtime/http"
 
-	cpu "github.com/shirou/gopsutil/v3/cpu"
 	disk "github.com/shirou/gopsutil/v3/disk"
 	load "github.com/shirou/gopsutil/v3/load"
 	process "github.com/shirou/gopsutil/v3/process"
 )
-
-const (
-	UNKNOWN = "unknown"
-	WINDOWS = "windows"
-	DARWIN  = "darwin"
-	LINUX   = "linux"
-	CMD     = "cmd"
-)
-
-type Flags struct {
-	ErrorCode     int
-	PipeStatus    string
-	Config        string
-	Shell         string
-	ShellVersion  string
-	PWD           string
-	PSWD          string
-	ExecutionTime float64
-	Eval          bool
-	StackCount    int
-	Migrate       bool
-	TerminalWidth int
-	Strict        bool
-	Debug         bool
-	Manual        bool
-	Plain         bool
-	Primary       bool
-	HasTransient  bool
-	PromptCount   int
-	Cleared       bool
-	Cached        bool
-	NoExitCode    bool
-	Column        int
-	JobCount      int
-}
-
-type CommandError struct {
-	Err      string
-	ExitCode int
-}
-
-func (e *CommandError) Error() string {
-	return e.Err
-}
-
-type FileInfo struct {
-	ParentFolder string
-	Path         string
-	IsDir        bool
-}
-
-type WindowsRegistryValueType string
-
-const (
-	DWORD  = "DWORD"
-	QWORD  = "QWORD"
-	BINARY = "BINARY"
-	STRING = "STRING"
-)
-
-type WindowsRegistryValue struct {
-	ValueType WindowsRegistryValueType
-	DWord     uint64
-	QWord     uint64
-	String    string
-}
-
-type IFTYPE string
-type NDIS_MEDIUM string
-type NDIS_PHYSICAL_MEDIUM string
-type IF_OPER_STATUS string
-type NET_IF_ADMIN_STATUS string
-type NET_IF_MEDIA_CONNECT_STATE string
-
-type ConnectedNetworks struct {
-	Networks []NetworkInfo
-}
-
-type NetworkInfo struct {
-	Alias                 string
-	Interface             string
-	InterfaceType         IFTYPE
-	NDISMediaType         NDIS_MEDIUM
-	NDISPhysicalMeidaType NDIS_PHYSICAL_MEDIUM
-	TransmitLinkSpeed     uint64
-	ReceiveLinkSpeed      uint64
-	SSID                  string // Wi-Fi only
-}
-
-type WifiType string
-
-type WifiInfo struct {
-	SSID           string
-	Interface      string
-	RadioType      WifiType
-	PhysType       WifiType
-	Authentication WifiType
-	Cipher         WifiType
-	Channel        int
-	ReceiveRate    int
-	TransmitRate   int
-	Signal         int
-	Error          string
-}
-
-type NotImplemented struct{}
-
-func (n *NotImplemented) Error() string {
-	return "not implemented"
-}
-
-type ConnectionType string
-
-const (
-	ETHERNET  ConnectionType = "ethernet"
-	WIFI      ConnectionType = "wifi"
-	CELLULAR  ConnectionType = "cellular"
-	BLUETOOTH ConnectionType = "bluetooth"
-)
-
-type Connection struct {
-	Name         string
-	Type         ConnectionType
-	TransmitRate uint64
-	ReceiveRate  uint64
-	SSID         string // Wi-Fi only
-}
-
-type Memory struct {
-	PhysicalTotalMemory     uint64
-	PhysicalAvailableMemory uint64
-	PhysicalFreeMemory      uint64
-	PhysicalPercentUsed     float64
-	SwapTotalMemory         uint64
-	SwapFreeMemory          uint64
-	SwapPercentUsed         float64
-}
-
-type SystemInfo struct {
-	// cpu
-    Times float64
-	CPU []cpu.InfoStat
-	// mem
-	Memory
-	// load
-	Load1  float64
-	Load5  float64
-	Load15 float64
-	// disk
-	Disks map[string]disk.IOCountersStat
-}
-
-type Environment interface {
-	Getenv(key string) string
-	Pwd() string
-	Home() string
-	User() string
-	Root() bool
-	Host() (string, error)
-	GOOS() string
-	Shell() string
-	Platform() string
-	StatusCodes() (int, string)
-	PathSeparator() string
-	HasFiles(pattern string) bool
-	HasFilesInDir(dir, pattern string) bool
-	HasFolder(folder string) bool
-	HasParentFilePath(path string, followSymlinks bool) (fileInfo *FileInfo, err error)
-	HasFileInParentDirs(pattern string, depth uint) bool
-	ResolveSymlink(path string) (string, error)
-	DirMatchesOneOf(dir string, regexes []string) bool
-	LookPath(command string) (string, error)
-	DirIsWritable(path string) bool
-	CommandPath(command string) string
-	HasCommand(command string) bool
-	FileContent(file string) string
-	LsDir(path string) []fs.DirEntry
-	RunCommand(command string, args ...string) (string, error)
-	RunShellCommand(shell, command string) string
-	ExecutionTime() float64
-	Flags() *Flags
-	BatteryState() (*battery.Info, error)
-	QueryWindowTitles(processName, windowTitleRegex string) (string, error)
-	WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error)
-	HTTPRequest(url string, body io.Reader, timeout int, requestModifiers ...http.RequestModifier) ([]byte, error)
-	IsWsl() bool
-	IsWsl2() bool
-	IsCygwin() bool
-	StackCount() int
-	TerminalWidth() (int, error)
-	CachePath() string
-	Cache() cache.Cache
-	Session() cache.Cache
-	Close()
-	Logs() string
-	InWSLSharedDrive() bool
-	ConvertToLinuxPath(path string) string
-	ConvertToWindowsPath(path string) string
-	GetAllNetworkInterfaces() (*[]NetworkInfo, error)
-	Connection(connectionType ConnectionType) (*Connection, error)
-	TemplateCache() *cache.Template
-	LoadTemplateCache()
-	SetPromptCount()
-	CursorPosition() (row, col int)
-	SystemInfo() (*SystemInfo, error)
-	Debug(message string)
-	DebugF(format string, a ...any)
-	Error(err error)
-	Trace(start time.Time, args ...string)
-}
 
 type Terminal struct {
 	CmdFlags *Flags
@@ -274,7 +62,7 @@ func (term *Terminal) Init() {
 
 	if term.CmdFlags.Plain {
 		log.Plain()
-		log.Debug("dlain mode enabled")
+		log.Debug("plain mode enabled")
 	}
 
 	initCache := func(fileName string) *cache.File {
@@ -286,22 +74,26 @@ func (term *Terminal) Init() {
 	term.deviceCache = initCache(cache.FileName)
 	term.sessionCache = initCache(cache.SessionFileName)
 
-	term.resolveConfigPath()
+	term.ResolveConfigPath()
+
 	term.cmdCache = &cache.Command{
 		Commands: maps.NewConcurrent(),
 	}
 
 	term.tmplCache = &cache.Template{}
 
-	if !term.CmdFlags.Cached {
-		term.SetPromptCount()
-	}
+	term.SetPromptCount()
 }
 
-func (term *Terminal) resolveConfigPath() {
+func (term *Terminal) ResolveConfigPath() {
 	defer term.Trace(time.Now())
 
-	if poshTheme := term.Getenv("POSH_THEME"); len(poshTheme) > 0 {
+	// if the config flag is set, we'll use that over POSH_THEME
+	// in our internal shell logic, we'll always use the POSH_THEME
+	// due to not using --config to set the configuration
+	hasConfigFlag := len(term.CmdFlags.Config) > 0
+
+	if poshTheme := term.Getenv("POSH_THEME"); len(poshTheme) > 0 && !hasConfigFlag {
 		term.DebugF("config set using POSH_THEME: %s", poshTheme)
 		term.CmdFlags.Config = poshTheme
 		return
@@ -335,11 +127,7 @@ func (term *Terminal) resolveConfigPath() {
 		return
 	}
 
-	configFile := term.CmdFlags.Config
-	if strings.HasPrefix(configFile, "~") {
-		configFile = strings.TrimPrefix(configFile, "~")
-		configFile = filepath.Join(term.Home(), configFile)
-	}
+	configFile := ReplaceTildePrefixWithHomeDir(term, term.CmdFlags.Config)
 
 	abs, err := filepath.Abs(configFile)
 	if err != nil {
@@ -880,6 +668,8 @@ func (term *Terminal) TemplateCache() *cache.Template {
 		tmplCache.AbsolutePWD, _ = term.RunCommand("wslpath", "-m", pwd)
 	}
 
+	tmplCache.PSWD = term.CmdFlags.PSWD
+
 	tmplCache.Folder = Base(term, pwd)
 	if term.GOOS() == WINDOWS && strings.HasSuffix(tmplCache.Folder, ":") {
 		tmplCache.Folder += `\`
@@ -930,11 +720,14 @@ func dirMatchesOneOf(dir, home, goos string, regexes []string) bool {
 	}
 
 	for _, element := range regexes {
-		normalizedElement := strings.ReplaceAll(element, "\\\\", "/")
-		if strings.HasPrefix(normalizedElement, "~") {
-			normalizedElement = strings.Replace(normalizedElement, "~", home, 1)
+		normalized := strings.ReplaceAll(element, "\\\\", "/")
+		if strings.HasPrefix(normalized, "~") {
+			rem := normalized[1:]
+			if len(rem) == 0 || rem[0] == '/' {
+				normalized = home + rem
+			}
 		}
-		pattern := fmt.Sprintf("^%s$", normalizedElement)
+		pattern := fmt.Sprintf("^%s$", normalized)
 		if goos == WINDOWS || goos == DARWIN {
 			pattern = "(?i)" + pattern
 		}
@@ -1047,9 +840,19 @@ func Base(env Environment, path string) string {
 	return path
 }
 
+func ReplaceTildePrefixWithHomeDir(env Environment, path string) string {
+	if !strings.HasPrefix(path, "~") {
+		return path
+	}
+	rem := path[1:]
+	if len(rem) == 0 || IsPathSeparator(env, rem[0]) {
+		return env.Home() + rem
+	}
+	return path
+}
+
 func ReplaceHomeDirPrefixWithTilde(env Environment, path string) string {
 	home := env.Home()
-	// match Home directory exactly
 	if !strings.HasPrefix(path, home) {
 		return path
 	}

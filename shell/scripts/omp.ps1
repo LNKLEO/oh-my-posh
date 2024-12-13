@@ -4,7 +4,7 @@ if ($null -ne (Get-Module -Name "OMP-core")) {
 }
 
 # Helper functions which need to be defined before the module is loaded
-# See https://github.com/JanDeDobbeleer/oh-my-posh/discussions/2300
+# See https://github.com/JanDeDobbeleer/oh-my-OMP/discussions/2300
 function global:Get-OMPStackCount {
     $locations = Get-Location -Stack
     if ($locations) {
@@ -112,14 +112,13 @@ New-Module -Name "OMP-core" -ScriptBlock {
         $stdoutTask.Result
     }
 
-    function Set-OMPContext {}
+    function Set-OMPContext([bool]$originalStatus) {}
 
-    function Get-CleanPSWD {
-        $pswd = $PWD.ToString()
-        if ($pswd -ne '/') {
-            return $pswd.TrimEnd('\') -replace '^Microsoft\.PowerShell\.Core\\FileSystem::', ''
+    function Get-NonFSWD {
+        # We only need to return a non-filesystem working directory.
+        if ($PWD.Provider.Name -ne 'FileSystem') {
+            return $PWD.ToString()
         }
-        return $pswd
     }
 
     function Get-TerminalWidth {
@@ -131,12 +130,12 @@ New-Module -Name "OMP-core" -ScriptBlock {
         $terminalWidth
     }
 
-    function Enable-PoshTooltips {
+    function Enable-OMPTooltips {
         if ($script:ConstrainedLanguageMode) {
             return
         }
 
-        Set-PSReadLineKeyHandler -Key Spacebar -BriefDescription 'OhMyPoshSpaceKeyHandler' -ScriptBlock {
+        Set-PSReadLineKeyHandler -Key Spacebar -BriefDescription 'OMPSpaceKeyHandler' -ScriptBlock {
             param([ConsoleKeyInfo]$key)
             [Microsoft.PowerShell.PSConsoleReadLine]::SelfInsert($key)
             try {
@@ -153,10 +152,10 @@ New-Module -Name "OMP-core" -ScriptBlock {
                 $script:TooltipCommand = $command
                 $column = $Host.UI.RawUI.CursorPosition.X
                 $terminalWidth = Get-TerminalWidth
-                $cleanPSWD = Get-CleanPSWD
-                $stackCount = global:Get-PoshStackCount
+                $nonFSWD = Get-NonFSWD
+                $stackCount = global:Get-OMPStackCount
 
-                $standardOut = (Start-Utf8Process $global:_ompExecutable @("print", "tooltip", "--status=$script:ErrorCode", "--shell=$script:ShellName", "--pswd=$cleanPSWD", "--execution-time=$script:ExecutionTime", "--stack-count=$stackCount", "--command=$command", "--shell-version=$script:PSVersion", "--column=$column", "--terminal-width=$terminalWidth", "--no-status=$script:NoExitCode", "--job-count=$script:JobCount")) -join ''
+                $standardOut = (Start-Utf8Process $global:_ompExecutable @("print", "tooltip", "--status=$script:ErrorCode", "--shell=$script:ShellName", "--pswd=$nonFSWD", "--execution-time=$script:ExecutionTime", "--stack-count=$stackCount", "--command=$command", "--shell-version=$script:PSVersion", "--column=$column", "--terminal-width=$terminalWidth", "--no-status=$script:NoExitCode", "--job-count=$script:JobCount")) -join ''
                 if (!$standardOut) {
                     return
                 }
@@ -183,7 +182,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
         }
     }
 
-    function Enable-PoshTransientPrompt {
+    function Enable-OMPTransientPrompt {
         if ($script:ConstrainedLanguageMode) {
             return
         }
@@ -194,7 +193,6 @@ New-Module -Name "OMP-core" -ScriptBlock {
                 [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$null, [ref]$null, [ref]$parseErrors, [ref]$null)
                 $executingCommand = $parseErrors.Count -eq 0
                 if ($executingCommand) {
-                    $script:newPrompt = $true
                     $script:TooltipCommand = ''
                     Set-TransientPrompt
                 }
@@ -213,7 +211,6 @@ New-Module -Name "OMP-core" -ScriptBlock {
                 [Microsoft.PowerShell.PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$null)
                 # only render a transient prompt when no text is selected
                 if ($start -eq -1) {
-                    $script:newPrompt = $true
                     $script:TooltipCommand = ''
                     Set-TransientPrompt
                 }
@@ -224,7 +221,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
         }
     }
 
-    function Enable-PoshLineError {
+    function Enable-OMPLineError {
         $validLine = (Start-Utf8Process $global:_ompExecutable @("print", "valid", "--shell=$script:ShellName")) -join "`n"
         $errorLine = (Start-Utf8Process $global:_ompExecutable @("print", "error", "--shell=$script:ShellName")) -join "`n"
         Set-PSReadLineOption -PromptText $validLine, $errorLine
@@ -335,10 +332,10 @@ New-Module -Name "OMP-core" -ScriptBlock {
             $themes | Select-Object @{ Name = 'hyperlink'; Expression = { Get-FileHyperlink -uri $_.FullName } } | Format-Table -HideTableHeaders
         }
         else {
-            $cleanPSWD = Get-CleanPSWD
+            $nonFSWD = Get-NonFSWD
             $themes | ForEach-Object -Process {
                 Write-Host "Theme: $(Get-FileHyperlink -uri $_.FullName -Name ($_.BaseName -replace '\.omp$', ''))`n"
-                Start-Utf8Process $global:_ompExecutable @("print", "primary", "--config=$($_.FullName)", "--pswd=$cleanPSWD", "--shell=$script:ShellName")
+                Start-Utf8Process $global:_ompExecutable @("print", "primary", "--config=$($_.FullName)", "--pswd=$nonFSWD", "--shell=$script:ShellName")
                 Write-Host "`n"
             }
         }
@@ -361,9 +358,9 @@ Example:
         }
 
         # for details about the trick to detect a debugging context, see these comments:
-        # 1) https://github.com/JanDeDobbeleer/oh-my-posh/issues/2483#issuecomment-1175761456
-        # 2) https://github.com/JanDeDobbeleer/oh-my-posh/issues/2502#issuecomment-1179968052
-        # 3) https://github.com/JanDeDobbeleer/oh-my-posh/issues/5153
+        # 1) https://github.com/JanDeDobbeleer/oh-my-OMP/issues/2483#issuecomment-1175761456
+        # 2) https://github.com/JanDeDobbeleer/oh-my-OMP/issues/2502#issuecomment-1179968052
+        # 3) https://github.com/JanDeDobbeleer/oh-my-OMP/issues/5153
         if ($Host.Runspace.Debugger.InBreakpoint) {
             $script:PromptType = "debug"
             return
@@ -376,15 +373,19 @@ Example:
         }
 
         if ($global:_ompAzure) {
-            $env:POSH_AZURE_SUBSCRIPTION = Get-AzContext | ConvertTo-Json
+            try {
+                $env:POSH_AZURE_SUBSCRIPTION = Get-AzContext | ConvertTo-Json
+            }
+            catch {}
         }
 
         if ($global:_ompPoshGit) {
-            $global:GitStatus = Get-GitStatus
-            $env:POSH_GIT_STATUS = $global:GitStatus | ConvertTo-Json
+            try {
+                $global:GitStatus = Get-GitStatus
+                $env:POSH_GIT_STATUS = $global:GitStatus | ConvertTo-Json
+            }
+            catch {}
         }
-
-        Set-PoshContext
     }
 
     function Update-OMPErrorCode {
@@ -436,21 +437,23 @@ Example:
         # store the orignal last exit code
         $script:OriginalLastExitCode = $global:LASTEXITCODE
 
-        Set-PoshPromptType
+        Set-OMPPromptType
 
         if ($script:PromptType -ne 'transient') {
-            Update-PoshErrorCode
+            Update-OMPErrorCode
         }
 
-        $cleanPSWD = Get-CleanPSWD
-        $stackCount = global:Get-PoshStackCount
+        Set-OMPContext $script:ErrorCode
+
+        $nonFSWD = Get-NonFSWD
+        $stackCount = global:Get-OMPStackCount
         $terminalWidth = Get-TerminalWidth
 
         # set the cursor positions, they are zero based so align with other platforms
         $env:POSH_CURSOR_LINE = $Host.UI.RawUI.CursorPosition.Y + 1
         $env:POSH_CURSOR_COLUMN = $Host.UI.RawUI.CursorPosition.X + 1
 
-        $standardOut = Start-Utf8Process $global:_ompExecutable @("print", $script:PromptType, "--status=$script:ErrorCode", "--pswd=$cleanPSWD", "--execution-time=$script:ExecutionTime", "--stack-count=$stackCount", "--shell-version=$script:PSVersion", "--terminal-width=$terminalWidth", "--shell=$script:ShellName", "--no-status=$script:NoExitCode", "--job-count=$script:JobCount")
+        $standardOut = Start-Utf8Process $global:_ompExecutable @("print", $script:PromptType, "--status=$script:ErrorCode", "--pswd=$nonFSWD", "--execution-time=$script:ExecutionTime", "--stack-count=$stackCount", "--shell-version=$script:PSVersion", "--terminal-width=$terminalWidth", "--shell=$script:ShellName", "--no-status=$script:NoExitCode", "--job-count=$script:JobCount")
         # make sure PSReadLine knows if we have a multiline prompt
         Set-PSReadLineOption -ExtraPromptLineCount (($standardOut | Measure-Object -Line).Lines - 1)
 
@@ -472,7 +475,7 @@ Example:
     # perform cleanup on removal so a new initialization in current session works
     if (!$script:ConstrainedLanguageMode) {
         $ExecutionContext.SessionState.Module.OnRemove += {
-            Remove-Item Function:Get-PoshStackCount
+            Remove-Item Function:Get-OMPStackCount
             $Function:prompt = $script:OriginalPromptFunction
 
             (Get-PSReadLineOption).ContinuationPrompt = $script:OriginalContinuationPrompt
@@ -495,12 +498,12 @@ Example:
     }
 
     Export-ModuleMember -Function @(
-        "Set-PoshContext"
-        "Enable-PoshTooltips"
-        "Enable-PoshTransientPrompt"
-        "Enable-PoshLineError"
-        "Export-PoshTheme"
-        "Get-PoshThemes"
+        "Set-OMPContext"
+        "Enable-OMPTooltips"
+        "Enable-OMPTransientPrompt"
+        "Enable-OMPLineError"
+        "Export-OMPTheme"
+        "Get-OMPThemes"
         "Start-Utf8Process"
         "prompt"
     )

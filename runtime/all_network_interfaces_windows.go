@@ -7,6 +7,37 @@ import (
 	"unsafe"
 )
 
+type IFTYPE string
+type NDIS_MEDIUM string
+type NDIS_PHYSICAL_MEDIUM string
+
+type WifiType string
+
+type NetworkInfo struct {
+	Alias                 string
+	Interface             string
+	InterfaceType         IFTYPE
+	NDISMediaType         NDIS_MEDIUM
+	NDISPhysicalMeidaType NDIS_PHYSICAL_MEDIUM
+	TransmitLinkSpeed     uint64
+	ReceiveLinkSpeed      uint64
+	SSID                  string // Wi-Fi only
+}
+
+type WifiInfo struct {
+	SSID           string
+	Interface      string
+	RadioType      WifiType
+	PhysType       WifiType
+	Authentication WifiType
+	Cipher         WifiType
+	Channel        int
+	ReceiveRate    int
+	TransmitRate   int
+	Signal         int
+	Error          string
+}
+
 const (
 	// see https://docs.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_if_row2
 
