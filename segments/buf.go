@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Buf struct {
@@ -13,7 +13,7 @@ func (b *Buf) Template() string {
 	return languageTemplate
 }
 
-func (b *Buf) Init(props properties.Properties, env platform.Environment) {
+func (b *Buf) Init(props properties.Properties, env runtime.Environment) {
 	b.language = language{
 		env:        env,
 		props:      props,

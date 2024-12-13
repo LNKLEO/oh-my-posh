@@ -1,14 +1,14 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/regex"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Session struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 	// text  string
 
 	SSHSession bool
@@ -26,7 +26,7 @@ func (s *Session) Template() string {
 	return " {{ if .SSHSession }}\ueba9 {{ end }}{{ .UserName }}@{{ .HostName }} "
 }
 
-func (s *Session) Init(props properties.Properties, env platform.Environment) {
+func (s *Session) Init(props properties.Properties, env runtime.Environment) {
 	s.props = props
 	s.env = env
 }
@@ -44,7 +44,7 @@ func (s *Session) activeSSHSession() bool {
 		}
 	}
 
-	if s.env.Platform() == platform.WINDOWS {
+	if s.env.Platform() == runtime.WINDOWS {
 		return false
 	}
 

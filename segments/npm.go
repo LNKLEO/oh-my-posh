@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Npm struct {
@@ -17,7 +17,7 @@ func (n *Npm) Template() string {
 	return " \ue71e {{.Full}} "
 }
 
-func (n *Npm) Init(props properties.Properties, env platform.Environment) {
+func (n *Npm) Init(props properties.Properties, env runtime.Environment) {
 	n.language = language{
 		env:        env,
 		props:      props,

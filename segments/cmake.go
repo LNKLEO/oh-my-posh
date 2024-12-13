@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Cmake struct {
@@ -13,7 +13,7 @@ func (c *Cmake) Template() string {
 	return languageTemplate
 }
 
-func (c *Cmake) Init(props properties.Properties, env platform.Environment) {
+func (c *Cmake) Init(props properties.Properties, env runtime.Environment) {
 	c.language = language{
 		env:        env,
 		props:      props,

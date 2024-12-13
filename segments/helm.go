@@ -1,13 +1,13 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Helm struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	Version string
 }
@@ -34,7 +34,7 @@ func (h *Helm) Template() string {
 	return " Helm {{.Version}}"
 }
 
-func (h *Helm) Init(props properties.Properties, env platform.Environment) {
+func (h *Helm) Init(props properties.Properties, env runtime.Environment) {
 	h.props = props
 	h.env = env
 }

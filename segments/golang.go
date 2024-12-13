@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 
 	"golang.org/x/mod/modfile"
 )
@@ -19,7 +19,7 @@ func (g *Golang) Template() string {
 	return languageTemplate
 }
 
-func (g *Golang) Init(props properties.Properties, env platform.Environment) {
+func (g *Golang) Init(props properties.Properties, env runtime.Environment) {
 	g.language = language{
 		env:        env,
 		props:      props,

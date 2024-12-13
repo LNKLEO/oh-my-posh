@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 var (
@@ -18,7 +18,7 @@ func (d *Dart) Template() string {
 	return languageTemplate
 }
 
-func (d *Dart) Init(props properties.Properties, env platform.Environment) {
+func (d *Dart) Init(props properties.Properties, env runtime.Environment) {
 	d.language = language{
 		env:        env,
 		props:      props,

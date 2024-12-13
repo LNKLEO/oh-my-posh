@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type R struct {
@@ -13,7 +13,7 @@ func (r *R) Template() string {
 	return languageTemplate
 }
 
-func (r *R) Init(props properties.Properties, env platform.Environment) {
+func (r *R) Init(props properties.Properties, env runtime.Environment) {
 	rRegex := `version (?P<version>((?P<major>[0-9]+).(?P<minor>[0-9]+).(?P<patch>[0-9]+)))`
 	r.language = language{
 		env:        env,

@@ -2,8 +2,8 @@ package segments
 
 import (
 	"github.com/LNKLEO/OMP/constants"
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Dotnet struct {
@@ -16,7 +16,7 @@ func (d *Dotnet) Template() string {
 	return " {{ if .Unsupported }}\uf071{{ else }}{{ .Full }}{{ end }} "
 }
 
-func (d *Dotnet) Init(props properties.Properties, env platform.Environment) {
+func (d *Dotnet) Init(props properties.Properties, env runtime.Environment) {
 	d.language = language{
 		env:        env,
 		props:      props,

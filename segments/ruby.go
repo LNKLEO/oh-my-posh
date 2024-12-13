@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Ruby struct {
@@ -13,7 +13,7 @@ func (r *Ruby) Template() string {
 	return languageTemplate
 }
 
-func (r *Ruby) Init(props properties.Properties, env platform.Environment) {
+func (r *Ruby) Init(props properties.Properties, env runtime.Environment) {
 	r.language = language{
 		env:        env,
 		props:      props,

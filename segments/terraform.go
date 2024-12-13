@@ -5,8 +5,8 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -14,7 +14,7 @@ import (
 
 type Terraform struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	WorkspaceName string
 	TerraformBlock
@@ -24,7 +24,7 @@ func (tf *Terraform) Template() string {
 	return " {{ .WorkspaceName }}{{ if .Version }} {{ .Version }}{{ end }} "
 }
 
-func (tf *Terraform) Init(props properties.Properties, env platform.Environment) {
+func (tf *Terraform) Init(props properties.Properties, env runtime.Environment) {
 	tf.props = props
 	tf.env = env
 }

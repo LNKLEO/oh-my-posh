@@ -10,13 +10,13 @@ import (
 	"golang.org/x/text/cases"
 	lang "golang.org/x/text/language"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Owm struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	Temperature float64
 	WeatherIcon string
@@ -193,7 +193,7 @@ func (d *Owm) setStatus() error {
 	return nil
 }
 
-func (d *Owm) Init(props properties.Properties, env platform.Environment) {
+func (d *Owm) Init(props properties.Properties, env runtime.Environment) {
 	d.props = props
 	d.env = env
 }

@@ -3,8 +3,8 @@ package segments
 import (
 	"encoding/json"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Cds struct {
@@ -16,7 +16,7 @@ func (c *Cds) Template() string {
 	return languageTemplate
 }
 
-func (c *Cds) Init(props properties.Properties, env platform.Environment) {
+func (c *Cds) Init(props properties.Properties, env runtime.Environment) {
 	c.language = language{
 		env:        env,
 		props:      props,

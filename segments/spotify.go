@@ -1,13 +1,13 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Spotify struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	MusicPlayer
 }
@@ -48,7 +48,7 @@ func (s *Spotify) resolveIcon() {
 	}
 }
 
-func (s *Spotify) Init(props properties.Properties, env platform.Environment) {
+func (s *Spotify) Init(props properties.Properties, env runtime.Environment) {
 	s.props = props
 	s.env = env
 }

@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type CarbonIntensity struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	TrendIcon string
 
@@ -149,7 +149,7 @@ func (d *CarbonIntensity) setStatus() error {
 	return nil
 }
 
-func (d *CarbonIntensity) Init(props properties.Properties, env platform.Environment) {
+func (d *CarbonIntensity) Init(props properties.Properties, env runtime.Environment) {
 	d.props = props
 	d.env = env
 }

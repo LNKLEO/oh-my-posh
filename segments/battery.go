@@ -1,14 +1,14 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
-	"github.com/LNKLEO/OMP/platform/battery"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/runtime/battery"
 )
 
 type Battery struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	*battery.Info
 	Error string
@@ -84,7 +84,7 @@ func (b *Battery) enabledWhileError(err error) bool {
 	return true
 }
 
-func (b *Battery) Init(props properties.Properties, env platform.Environment) {
+func (b *Battery) Init(props properties.Properties, env runtime.Environment) {
 	b.props = props
 	b.env = env
 }

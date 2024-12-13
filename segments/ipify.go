@@ -3,9 +3,9 @@ package segments
 import (
 	"net"
 
-	"github.com/LNKLEO/OMP/http"
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/runtime/http"
 )
 
 type ipData struct {
@@ -62,9 +62,12 @@ func (i *IPify) getResult() (string, error) {
 	return data.IP, err
 }
 
-func (i *IPify) Init(props properties.Properties, env platform.Environment) {
-	request := &http.Request{}
-	request.Init(env, props)
+func (i *IPify) Init(props properties.Properties, env runtime.Environment) {
+	request := &http.Request{
+		Env:          env,
+		CacheTimeout: props.GetInt(properties.CacheTimeout, 30),
+		HTTPTimeout:  props.GetInt(properties.HTTPTimeout, properties.DefaultHTTPTimeout),
+	}
 
 	i.api = &ipAPI{
 		Request: *request,

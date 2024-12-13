@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Elixir struct {
@@ -13,7 +13,7 @@ func (e *Elixir) Template() string {
 	return languageTemplate
 }
 
-func (e *Elixir) Init(props properties.Properties, env platform.Environment) {
+func (e *Elixir) Init(props properties.Properties, env runtime.Environment) {
 	e.language = language{
 		env:        env,
 		props:      props,

@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type LastFM struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	Artist string
 	Track  string
@@ -136,7 +136,7 @@ func (d *LastFM) setStatus() error {
 	return nil
 }
 
-func (d *LastFM) Init(props properties.Properties, env platform.Environment) {
+func (d *LastFM) Init(props properties.Properties, env runtime.Environment) {
 	d.props = props
 	d.env = env
 }

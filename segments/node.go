@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/regex"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Node struct {
@@ -30,7 +30,7 @@ func (n *Node) Template() string {
 	return " {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} "
 }
 
-func (n *Node) Init(props properties.Properties, env platform.Environment) {
+func (n *Node) Init(props properties.Properties, env runtime.Environment) {
 	n.language = language{
 		env:        env,
 		props:      props,

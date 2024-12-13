@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/regex"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type PlasticStatus struct {
@@ -38,7 +38,7 @@ type Plastic struct {
 	plasticWorkspaceFolder string // root folder of workspace
 }
 
-func (p *Plastic) Init(props properties.Properties, env platform.Environment) {
+func (p *Plastic) Init(props properties.Properties, env runtime.Environment) {
 	p.props = props
 	p.env = env
 }

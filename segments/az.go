@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Az struct {
 	props properties.Properties
-	env   platform.Environment
+	env   runtime.Environment
 
 	AzureSubscription
 	Origin string
@@ -74,7 +74,7 @@ func (a *Az) Template() string {
 	return " {{ .Name }} "
 }
 
-func (a *Az) Init(props properties.Properties, env platform.Environment) {
+func (a *Az) Init(props properties.Properties, env runtime.Environment) {
 	a.props = props
 	a.env = env
 }

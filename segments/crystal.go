@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Crystal struct {
@@ -13,7 +13,7 @@ func (c *Crystal) Template() string {
 	return languageTemplate
 }
 
-func (c *Crystal) Init(props properties.Properties, env platform.Environment) {
+func (c *Crystal) Init(props properties.Properties, env runtime.Environment) {
 	c.language = language{
 		env:        env,
 		props:      props,

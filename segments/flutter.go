@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Flutter struct {
@@ -13,7 +13,7 @@ func (f *Flutter) Template() string {
 	return languageTemplate
 }
 
-func (f *Flutter) Init(props properties.Properties, env platform.Environment) {
+func (f *Flutter) Init(props properties.Properties, env runtime.Environment) {
 	f.language = language{
 		env:        env,
 		props:      props,

@@ -1,8 +1,8 @@
 package segments
 
 import (
-	"github.com/LNKLEO/OMP/platform"
 	"github.com/LNKLEO/OMP/properties"
+	"github.com/LNKLEO/OMP/runtime"
 )
 
 type AzFunc struct {
@@ -13,7 +13,7 @@ func (az *AzFunc) Template() string {
 	return languageTemplate
 }
 
-func (az *AzFunc) Init(props properties.Properties, env platform.Environment) {
+func (az *AzFunc) Init(props properties.Properties, env runtime.Environment) {
 	az.language = language{
 		env:        env,
 		props:      props,

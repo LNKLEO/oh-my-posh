@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/LNKLEO/OMP/engine"
-	"github.com/LNKLEO/OMP/platform"
+	"github.com/LNKLEO/OMP/config"
+	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/shell"
 
 	"github.com/spf13/cobra"
@@ -53,10 +53,10 @@ func init() {
 }
 
 func runInit(shellName string) {
-	env := &platform.Shell{
-		CmdFlags: &platform.Flags{
+	env := &runtime.Terminal{
+		CmdFlags: &runtime.Flags{
 			Shell:  shellName,
-			Config: config,
+			Config: configFlag,
 			Strict: strict,
 			Manual: manual,
 		},
@@ -64,7 +64,7 @@ func runInit(shellName string) {
 	env.Init()
 	defer env.Close()
 
-	cfg := engine.LoadConfig(env)
+	cfg := config.Load(env)
 
 	shell.Transient = cfg.TransientPrompt != nil
 	shell.ErrorLine = cfg.ErrorLine != nil || cfg.ValidLine != nil
@@ -76,7 +76,8 @@ func runInit(shellName string) {
 		if !cfg.DisableCursorPositioning && (i == 0 && block.Newline) {
 			shell.CursorPositioning = true
 		}
-		if block.Type == engine.RPrompt {
+
+		if block.Type == config.RPrompt {
 			shell.RPrompt = true
 		}
 	}
