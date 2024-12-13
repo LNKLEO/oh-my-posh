@@ -29,12 +29,11 @@ require (
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gookit/config/v2 v2.2.5
-	github.com/hashicorp/hcl/v2 v2.20.1
+	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/mod v0.18.0
 )
@@ -70,8 +69,8 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fatih/color v1.17.0 // indirect
-	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/goccy/go-yaml v1.11.2 // indirect
+	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/goccy/go-yaml v1.11.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gookit/goutil v0.6.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -88,6 +87,7 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	golang.org/x/sync v0.7.0 // indirect
@@ -102,4 +102,4 @@ replace github.com/atotto/clipboard v0.1.4 => github.com/jandedobbeleer/clipboar
 
 replace github.com/shirou/gopsutil/v3 v3.23.9 => github.com/jandedobbeleer/gopsutil/v3 v3.23.9-1
 
-replace github.com/goccy/go-yaml v1.11.3 => github.com/jandedobbeleer/go-yaml v1.11.3-2
+replace github.com/goccy/go-yaml v1.11.3 => github.com/jandedobbeleer/go-yaml v1.11.3-4

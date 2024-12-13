@@ -223,6 +223,8 @@ const (
 	WINREG SegmentType = "winreg"
 	// XMAKE write the xmake version if xmake.lua is present
 	XMAKE SegmentType = "xmake"
+	// yarn version
+	YARN SegmentType = "yarn"
 )
 
 // Segments contains all available prompt segment writers.
@@ -294,6 +296,7 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	UMBRACO:         func() SegmentWriter { return &segments.Umbraco{} },
 	WINREG:          func() SegmentWriter { return &segments.WindowsRegistry{} },
 	XMAKE:           func() SegmentWriter { return &segments.XMake{} },
+	YARN:            func() SegmentWriter { return &segments.Yarn{} },
 }
 
 func (segment *Segment) style() SegmentStyle {
