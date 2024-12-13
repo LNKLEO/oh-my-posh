@@ -14,6 +14,18 @@ function global:Get-OMPStackCount {
 }
 
 New-Module -Name "OMP-core" -ScriptBlock {
+    # Check `ConstrainedLanguage` mode.
+    $script:ConstrainedLanguageMode = $ExecutionContext.SessionState.LanguageMode -eq "ConstrainedLanguage"
+
+    # This indicates whether a new prompt should be rendered instead of using the cached one.
+    $script:NewPrompt = $true
+
+    # Prompt related backup.
+    $script:OriginalPromptFunction = $Function:prompt
+    $script:OriginalContinuationPrompt = (Get-PSReadLineOption).ContinuationPrompt
+    $script:OriginalPromptText = (Get-PSReadLineOption).PromptText
+
+    $script:NoExitCode = $true
     $script:ErrorCode = 0
     $script:ExecutionTime = 0
     $script:OMPExecutable = ::OMP::
@@ -27,7 +39,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
     $env:CONDA_PROMPT_MODIFIER = $false
 
     # set the default theme
-    if ((::CONFIG:: -ne '') -and (Test-Path -LiteralPath ::CONFIG::)) {
+    if (::CONFIG:: -and (Test-Path -LiteralPath ::CONFIG::)) {
         $env:OMPTHEME = (Resolve-Path -Path ::CONFIG::).ProviderPath
     }
 
@@ -56,7 +68,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
             [string[]]$Arguments = @()
         )
 
-        if ($ExecutionContext.SessionState.LanguageMode -eq "ConstrainedLanguage") {
+        if ($script:ConstrainedLanguageMode) {
             $standardOut = Invoke-Expression "& `$FileName `$Arguments 2>&1"
             $standardOut -join "`n"
             return
@@ -99,12 +111,14 @@ New-Module -Name "OMP-core" -ScriptBlock {
         }
         $StartInfo.CreateNoWindow = $true
         [void]$Process.Start()
-        # we do this to remove a deadlock potential on Windows
+
+        # Remove deadlock potential on Windows.
         $stdoutTask = $Process.StandardOutput.ReadToEndAsync()
         $stderrTask = $Process.StandardError.ReadToEndAsync()
+
         $Process.WaitForExit()
         $stderr = $stderrTask.Result.Trim()
-        if ($stderr -ne '') {
+        if ($stderr) {
             $Host.UI.WriteErrorLine($stderr)
         }
         $stdoutTask.Result
@@ -120,106 +134,118 @@ New-Module -Name "OMP-core" -ScriptBlock {
         return $pswd
     }
 
-    if (("::TOOLTIPS::" -eq "true") -and ($ExecutionContext.SessionState.LanguageMode -ne "ConstrainedLanguage")) {
-        Set-PSReadLineKeyHandler -Key Spacebar -BriefDescription 'OMPSpaceKeyHandler' -ScriptBlock {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert(' ')
-            $command = $null
-            [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$command, [ref]$null)
-            $command = $command.TrimStart().Split(" ", 2) | Select-Object -First 1
-            # ignore an empty/repeated tip
-            if ($command -eq '' -or $command -eq $script:ToolTipCommand) {
-                return
-            }
-            $position = $host.UI.RawUI.CursorPosition
-            $terminalWidth = $Host.UI.RawUI.WindowSize.Width
-            $cleanPSWD = Get-CleanPSWD
-            $standardOut = @(Start-Utf8Process $script:OMPExecutable @("print", "tooltip", "--status=$script:ErrorCode", "--shell=$script:ShellName", "--pswd=$cleanPSWD", "--config=$env:OMPTHEME", "--command=$command", "--shell-version=$script:PSVersion", "--column=$($position.X)", "--terminal-width=$terminalWidth"))
-            # ignore an empty tooltip
-            if ($standardOut -eq '') {
-                return
-            }
-            Write-Host $standardOut -NoNewline
-            $host.UI.RawUI.CursorPosition = $position
-            # cache the tip command
-            $script:ToolTipCommand = $command
-            # we need this workaround to prevent the text after cursor from disappearing when the tooltip is rendered
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert(' ')
-            [Microsoft.PowerShell.PSConsoleReadLine]::Undo()
+    function Get-TerminalWidth {
+        $terminalWidth = $Host.UI.RawUI.WindowSize.Width
+        # Set a sane default when the value can't be retrieved.
+        if (-not $terminalWidth) {
+            return 0
         }
+        $terminalWidth
     }
 
-    function Set-TransientPrompt {
-        $previousOutputEncoding = [Console]::OutputEncoding
-        $executingCommand = $false
+    if (!$script:ConstrainedLanguageMode) {
+        if ('::TOOLTIPS::' -eq 'true') {
+            Set-PSReadLineKeyHandler -Key Spacebar -BriefDescription 'OMPSpaceKeyHandler' -ScriptBlock {
+                param([ConsoleKeyInfo]$key)
+                [Microsoft.PowerShell.PSConsoleReadLine]::SelfInsert($key)
+                try {
+                    $command = ''
+                    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$command, [ref]$null)
+                    # Get the first word of command line as tip.
+                    $command = $command.TrimStart().Split(' ', 2) | Select-Object -First 1
+                    # Ignore an empty/repeated tooltip command.
+                    if (!$command -or ($command -eq $script:TooltipCommand)) {
+                        return
+                    }
+                    $script:TooltipCommand = $command
+                    $column = $Host.UI.RawUI.CursorPosition.X
+                    $terminalWidth = Get-TerminalWidth
+                    $cleanPSWD = Get-CleanPSWD
+                    $stackCount = global:Get-PoshStackCount
+                    $arguments = @(
+                        "print"
+                        "tooltip"
+                        "--status=$script:ErrorCode"
+                        "--shell=$script:ShellName"
+                        "--pswd=$cleanPSWD"
+                        "--execution-time=$script:ExecutionTime"
+                        "--stack-count=$stackCount"
+                        "--config=$env:OMPTHEME"
+                        "--command=$command"
+                        "--shell-version=$script:PSVersion"
+                        "--column=$column"
+                        "--terminal-width=$terminalWidth"
+                        "--no-status=$script:NoExitCode"
+                    )
+                    $standardOut = (Start-Utf8Process $script:OMPExecutable $arguments) -join ''
+                    if (!$standardOut) {
+                        return
+                    }
+                    Write-Host $standardOut -NoNewline
 
-        try {
-            $parseErrors = $null
-            [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$null, [ref]$null, [ref]$parseErrors, [ref]$null)
-            if ($parseErrors.Count -eq 0) {
-                $executingCommand = $true
+                    # Workaround to prevent the text after cursor from disappearing when the tooltip is printed.
+                    [Microsoft.PowerShell.PSConsoleReadLine]::Insert(' ')
+                    [Microsoft.PowerShell.PSConsoleReadLine]::Undo()
+                }
+                finally {}
+            }
+        }
+
+        function Set-TransientPrompt {
+            $previousOutputEncoding = [Console]::OutputEncoding
+            try {
                 $script:TransientPrompt = $true
                 [Console]::OutputEncoding = [Text.Encoding]::UTF8
                 [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
             }
-        }
-        finally {
-            # If PSReadline is set to display suggestion list, this workaround is needed to clear the buffer below
-            # before accepting the current commandline. The max amount of items in the list is 10, so 12 lines
-            # are cleared (10 + 1 more for the prompt + 1 more for current commandline).
-            if ((Get-PSReadLineOption).PredictionViewStyle -eq 'ListView') {
-                $terminalHeight = $Host.UI.RawUI.WindowSize.Height
-                # only do this on an valid value
-                if ([int]$terminalHeight -gt 0) {
-                    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("`n" * [System.Math]::Min($terminalHeight - $Host.UI.RawUI.CursorPosition.Y - 1, 12))
-                    [Microsoft.PowerShell.PSConsoleReadLine]::Undo()
-                }
+            finally {
+                [Console]::OutputEncoding = $previousOutputEncoding
             }
-            [Console]::OutputEncoding = $previousOutputEncoding
         }
 
-        return $executingCommand
-    }
-
-    if (("::TRANSIENT::" -eq "true") -and ($ExecutionContext.SessionState.LanguageMode -ne "ConstrainedLanguage")) {
         Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'OMPEnterKeyHandler' -ScriptBlock {
-            $executingCommand = Set-TransientPrompt
-            [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-            # Write FTCS_COMMAND_EXECUTED after accepting the input - it should still happen before execution
-            if (("::FTCS_MARKS::" -eq "true") -and $executingCommand) {
-                Write-Host "$([char]0x1b)]133;C`a" -NoNewline
-            }
-        }
-        Set-PSReadLineKeyHandler -Key Ctrl+c -BriefDescription 'OMPCtrlCKeyHandler' -ScriptBlock {
-            $start = $null
-            [Microsoft.PowerShell.PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$null)
-            # only render a transient prompt when no text is selected
-            if ($start -eq -1) {
-                Set-TransientPrompt
-            }
-            [Microsoft.PowerShell.PSConsoleReadLine]::CopyOrCancelLine()
-        }
-    }
-
-    if (("::FTCS_MARKS::" -eq "true") -and ("::TRANSIENT::" -ne "true") -and ($ExecutionContext.SessionState.LanguageMode -ne "ConstrainedLanguage")) {
-        Set-PSReadLineKeyHandler -Key Enter  -BriefDescription 'OMPEnterKeyHandler' -ScriptBlock {
-            $executingCommand = $false
             try {
                 $parseErrors = $null
                 [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$null, [ref]$null, [ref]$parseErrors, [ref]$null)
                 $executingCommand = $parseErrors.Count -eq 0
+                if ($executingCommand) {
+                    $script:NewPrompt = $true
+                    $script:TooltipCommand = ''
+                    if ('::TRANSIENT::' -eq 'true') {
+                        Set-TransientPrompt
+                    }
+                }
             }
-            finally {}
-            [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-            # Write FTCS_COMMAND_EXECUTED after accepting the input - it should still happen before execution
-            if ($executingCommand) {
-                Write-Host "$([char]0x1b)]133;C`a" -NoNewline
+            finally {
+                [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+                if (('::FTCS_MARKS::' -eq 'true') -and $executingCommand) {
+                    # Write FTCS_COMMAND_EXECUTED after accepting the input - it should still happen before execution
+                    Write-Host "$([char]0x1b)]133;C`a" -NoNewline
+                }
+            }
+        }
+        Set-PSReadLineKeyHandler -Key Ctrl+c -BriefDescription 'OMPCtrlCKeyHandler' -ScriptBlock {
+            try {
+                $start = $null
+                [Microsoft.PowerShell.PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$null)
+                # only render a transient prompt when no text is selected
+                if ($start -eq -1) {
+                    $script:NewPrompt = $true
+                    $script:TooltipCommand = ''
+                    if ('::TRANSIENT::' -eq 'true') {
+                        Set-TransientPrompt
+                    }
+                }
+            }
+            finally {
+                [Microsoft.PowerShell.PSConsoleReadLine]::CopyOrCancelLine()
             }
         }
     }
 
     if ("::ERROR_LINE::" -eq "true") {
-        $validLine = @(Start-Utf8Process $script:OMPExecutable @("print", "valid", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n"
-        $errorLine = @(Start-Utf8Process $script:OMPExecutable @("print", "error", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n"
+        $validLine = (Start-Utf8Process $script:OMPExecutable @("print", "valid", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n"
+        $errorLine = (Start-Utf8Process $script:OMPExecutable @("print", "error", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n"
         Set-PSReadLineOption -PromptText $validLine, $errorLine
     }
 
@@ -258,9 +284,9 @@ New-Module -Name "OMP-core" -ScriptBlock {
             $Format = 'json'
         )
 
-        $configString = @(Start-Utf8Process $script:OMPExecutable @("config", "export", "--config=$env:OMPTHEME", "--format=$Format"))
+        $configString = Start-Utf8Process $script:OMPExecutable @("config", "export", "--config=$env:OMPTHEME", "--format=$Format")
         # if no path, copy to clipboard by default
-        if ('' -ne $FilePath) {
+        if ($FilePath) {
             # https://stackoverflow.com/questions/3038337/powershell-resolve-path-that-might-not-exist
             $FilePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             [IO.File]::WriteAllLines($FilePath, $configString)
@@ -279,7 +305,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
             [string]$name
         )
         $esc = [char]27
-        if ("" -eq $name) {
+        if (!$name) {
             # if name not set, uri is used as the name of the hyperlink
             $name = $uri
         }
@@ -328,7 +354,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
             $cleanPSWD = Get-CleanPSWD
             $themes | ForEach-Object -Process {
                 Write-Host "Theme: $(Get-FileHyperlink -uri $_.FullName -Name ($_.BaseName -replace '\.omp$', ''))`n"
-                @(Start-Utf8Process $script:OMPExecutable @("print", "primary", "--config=$($_.FullName)", "--pswd=$cleanPSWD", "--shell=$script:ShellName"))
+                Start-Utf8Process $script:OMPExecutable @("print", "primary", "--config=$($_.FullName)", "--pswd=$cleanPSWD", "--shell=$script:ShellName")
                 Write-Host "`n"
             }
         }
@@ -393,7 +419,7 @@ Example:
         }
     }
 
-    function prompt {
+    $promptFunction = {
         # store the orignal last command execution status
         if ($global:NVS_ORIGINAL_LASTEXECUTIONSTATUS -is [bool]) {
             # make it compatible with NVS auto-switching, if enabled
@@ -405,48 +431,58 @@ Example:
         # store the orignal last exit code
         $script:OriginalLastExitCode = $global:LASTEXITCODE
 
-        Set-OMPPromptType
+        Set-PoshPromptType
+
+        # Whether we should use a cached prompt.
+        $useCache = !$script:NewPrompt
+
         if ($script:PromptType -ne 'transient') {
-            Update-OMPErrorCode
+            if ($script:NewPrompt) {
+                $script:NewPrompt = $false
+            }
+            Update-PoshErrorCode
         }
         $cleanPSWD = Get-CleanPSWD
-        $stackCount = global:Get-OMPStackCount
-        Set-OMPContext
-        $terminalWidth = $Host.UI.RawUI.WindowSize.Width
-        # set a sane default when the value can't be retrieved
-        if (-not $terminalWidth) {
-            $terminalWidth = 0
-        }
-
-        # in some cases we have an empty $script:NoExitCode
-        # this is a workaround to make sure we always have a value
-        # see https://github.com/JanDeDobbeleer/oh-my-posh/issues/4128
-        if ($null -eq $script:NoExitCode) {
-            $script:NoExitCode = $true
-        }
+        $stackCount = global:Get-PoshStackCount
+        Set-PoshContext
+        $terminalWidth = Get-TerminalWidth
 
         # set the cursor positions, they are zero based so align with other platforms
         $env:POSH_CURSOR_LINE = $Host.UI.RawUI.CursorPosition.Y + 1
         $env:POSH_CURSOR_COLUMN = $Host.UI.RawUI.CursorPosition.X + 1
 
-        $standardOut = @(Start-Utf8Process $script:OMPExecutable @("print", $script:PromptType, "--status=$script:ErrorCode", "--pswd=$cleanPSWD", "--execution-time=$script:ExecutionTime", "--stack-count=$stackCount", "--config=$env:OMPTHEME", "--shell-version=$script:PSVersion", "--terminal-width=$terminalWidth", "--shell=$script:ShellName", "--no-status=$script:NoExitCode"))
+        $arguments = @(
+            "print"
+            $script:PromptType
+            "--status=$script:ErrorCode"
+            "--pswd=$cleanPSWD"
+            "--execution-time=$script:ExecutionTime"
+            "--stack-count=$stackCount"
+            "--config=$env:OMPTHEME"
+            "--shell-version=$script:PSVersion"
+            "--terminal-width=$terminalWidth"
+            "--shell=$script:ShellName"
+            "--no-status=$script:NoExitCode"
+            "--cached=$useCache"
+        )
+        $standardOut = Start-Utf8Process $script:OMPExecutable $arguments
         # make sure PSReadLine knows if we have a multiline prompt
         Set-PSReadLineOption -ExtraPromptLineCount (($standardOut | Measure-Object -Line).Lines - 1)
-        # the output can be multiline, joining these ensures proper rendering by adding line breaks with `n
+
+        # The output can be multi-line, joining them ensures proper rendering.
         $standardOut -join "`n"
 
         # remove any posh-git status
         $env:POSH_GIT_STATUS = $null
 
-        # remove cached tip command
-        $script:ToolTipCommand = ""
-
         # restore the orignal last exit code
         $global:LASTEXITCODE = $script:OriginalLastExitCode
     }
 
+    $Function:prompt = $promptFunction
+
     # set secondary prompt
-    Set-PSReadLineOption -ContinuationPrompt (@(Start-Utf8Process $script:OMPExecutable @("print", "secondary", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n")
+    Set-PSReadLineOption -ContinuationPrompt ((Start-Utf8Process $script:OMPExecutable @("print", "secondary", "--config=$env:OMPTHEME", "--shell=$script:ShellName")) -join "`n")
 
     # legacy functions
     function Enable-OMPTooltips {}
@@ -454,18 +490,27 @@ Example:
     function Enable-OMPLineError {}
 
     # perform cleanup on removal so a new initialization in current session works
-    if ($ExecutionContext.SessionState.LanguageMode -ne "ConstrainedLanguage") {
+    if (!$script:ConstrainedLanguageMode) {
         $ExecutionContext.SessionState.Module.OnRemove += {
-            if ((Get-PSReadLineKeyHandler -Key Spacebar).Function -eq 'OMPSpaceKeyHandler') {
-                Remove-PSReadLineKeyHandler -Key Spacebar
+            Remove-Item Function:Get-PoshStackCount
+            $Function:prompt = $script:OriginalPromptFunction
+            (Get-PSReadLineOption).ContinuationPrompt = $script:OriginalContinuationPrompt
+            (Get-PSReadLineOption).PromptText = $script:OriginalPromptText
+            if ((Get-PSReadLineKeyHandler Spacebar).Function -eq 'OMPSpaceKeyHandler') {
+                Remove-PSReadLineKeyHandler Spacebar
             }
-            if ((Get-PSReadLineKeyHandler -Key Enter).Function -eq 'OMPEnterKeyHandler') {
-                Set-PSReadLineKeyHandler -Key Enter -Function AcceptLine
+            if ((Get-PSReadLineKeyHandler Enter).Function -eq 'OMPEnterKeyHandler') {
+                Set-PSReadLineKeyHandler Enter -Function AcceptLine
             }
-            if ((Get-PSReadLineKeyHandler -Key Ctrl+c).Function -eq 'OMPCtrlCKeyHandler') {
-                Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
+            if ((Get-PSReadLineKeyHandler Ctrl+c).Function -eq 'OMPCtrlCKeyHandler') {
+                Set-PSReadLineKeyHandler Ctrl+c -Function CopyOrCancelLine
             }
         }
+    }
+
+    $notice = Start-Utf8Process $script:OMPExecutable @("notice")
+    if ($notice) {
+        Write-Host $notice -NoNewline
     }
 
     Export-ModuleMember -Function @(

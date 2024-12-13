@@ -1,8 +1,10 @@
 package prompt
 
 import (
+	"encoding/json"
 	"strings"
 
+	"github.com/LNKLEO/OMP/cache"
 	"github.com/LNKLEO/OMP/color"
 	"github.com/LNKLEO/OMP/config"
 	"github.com/LNKLEO/OMP/regex"
@@ -12,35 +14,42 @@ import (
 	"github.com/LNKLEO/OMP/terminal"
 )
 
-var (
-	cycle *color.Cycle = &color.Cycle{}
-)
+var cycle *color.Cycle = &color.Cycle{}
+
+type promptCache struct {
+	Prompt            string
+	CurrentLineLength int
+	RPrompt           string
+	RPromptLength     int
+}
 
 type Engine struct {
 	Config *config.Config
 	Env    runtime.Environment
 	Plain  bool
 
-	console           strings.Builder
+	prompt            strings.Builder
 	currentLineLength int
 	rprompt           string
 	rpromptLength     int
 
 	activeSegment         *config.Segment
 	previousActiveSegment *config.Segment
+
+	promptCache *promptCache
 }
 
 func (e *Engine) write(text string) {
-	e.console.WriteString(text)
+	e.prompt.WriteString(text)
 }
 
 func (e *Engine) string() string {
-	text := e.console.String()
-	e.console.Reset()
+	text := e.prompt.String()
+	e.prompt.Reset()
 	return text
 }
 
-func (e *Engine) canWriteRightBlock(rprompt bool) (int, bool) {
+func (e *Engine) canWriteRightBlock(length int, rprompt bool) (int, bool) {
 	if rprompt && (len(e.rprompt) == 0) {
 		return 0, false
 	}
@@ -50,18 +59,15 @@ func (e *Engine) canWriteRightBlock(rprompt bool) (int, bool) {
 		return 0, false
 	}
 
-	promptWidth := e.currentLineLength
-	availableSpace := consoleWidth - promptWidth
+	availableSpace := consoleWidth - e.currentLineLength
 
 	// spanning multiple lines
 	if availableSpace < 0 {
-		overflow := promptWidth % consoleWidth
+		overflow := e.currentLineLength % consoleWidth
 		availableSpace = consoleWidth - overflow
 	}
 
-	if rprompt {
-		availableSpace -= e.rpromptLength
-	}
+	availableSpace -= length
 
 	promptBreathingRoom := 5
 	if rprompt {
@@ -71,17 +77,6 @@ func (e *Engine) canWriteRightBlock(rprompt bool) (int, bool) {
 	canWrite := availableSpace >= promptBreathingRoom
 
 	return availableSpace, canWrite
-}
-
-func (e *Engine) writeRPrompt() {
-	space, OK := e.canWriteRightBlock(true)
-	if !OK {
-		return
-	}
-	e.write(terminal.SaveCursorPosition())
-	e.write(strings.Repeat(" ", space))
-	e.write(e.rprompt)
-	e.write(terminal.RestoreCursorPosition())
 }
 
 func (e *Engine) pwd() {
@@ -119,38 +114,39 @@ func (e *Engine) pwd() {
 	e.write(terminal.Pwd(pwdType, user, host, cwd))
 }
 
-func (e *Engine) newline() {
-	defer func() {
-		e.currentLineLength = 0
-	}()
-
+func (e *Engine) getNewline() string {
 	// WARP terminal will remove \n from the prompt, so we hack a newline in
 	if e.isWarp() {
-		e.write(terminal.LineBreak())
-		return
+		return terminal.LineBreak()
 	}
 
 	// TCSH needs a space before the LITERAL newline character or it will not render correctly
 	// don't ask why, it be like that sometimes.
 	// https://unix.stackexchange.com/questions/99101/properly-defining-a-multi-line-prompt-in-tcsh#comment1342462_322189
 	if e.Env.Shell() == shell.TCSH {
-		e.write(` \n`)
-		return
+		return ` \n`
 	}
 
-	e.write("\n")
+	return "\n"
+}
+
+func (e *Engine) writeNewline() {
+	defer func() {
+		e.currentLineLength = 0
+	}()
+
+	e.write(e.getNewline())
 }
 
 func (e *Engine) isWarp() bool {
 	return terminal.Program == terminal.Warp
 }
 
-func (e *Engine) shouldFill(filler string, remaining, blockLength int) (string, bool) {
+func (e *Engine) shouldFill(filler string, padLength int) (string, bool) {
 	if len(filler) == 0 {
 		return "", false
 	}
 
-	padLength := remaining - blockLength
 	if padLength <= 0 {
 		return "", false
 	}
@@ -181,35 +177,29 @@ func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 	defer e.patchPowerShellBleed()
 
 	// This is deprecated but we leave it in to not break configs
-	// It is encouraged to used "newline": true on block level
-	// rather than the standalone the linebreak block
+	// It is encouraged to use "newline": true on block level
+	// rather than the standalone linebreak block
 	if block.Type == config.LineBreak {
 		// do not print a newline to avoid a leading space
-		// when we're printin the first primary prompt in
+		// when we're printing the first primary prompt in
 		// the shell
 		if !cancelNewline {
-			e.newline()
+			e.writeNewline()
 		}
 		return false
 	}
 
-	// when in bash, for rprompt blocks we need to write plain
-	// and wrap in escaped mode or the prompt will not render correctly
-	if e.Env.Shell() == shell.BASH && block.Type == config.RPrompt {
-		block.InitPlain(e.Env, e.Config)
-	} else {
-		block.Init(e.Env)
-	}
+	block.Init(e.Env)
 
 	if !block.Enabled() {
 		return false
 	}
 
 	// do not print a newline to avoid a leading space
-	// when we're printin the first primary prompt in
+	// when we're printing the first primary prompt in
 	// the shell
 	if block.Newline && !cancelNewline {
-		e.newline()
+		e.writeNewline()
 	}
 
 	text, length := e.renderBlockSegments(block)
@@ -235,17 +225,19 @@ func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 			return false
 		}
 
-		space, OK := e.canWriteRightBlock(false)
+		space, OK := e.canWriteRightBlock(length, false)
+
 		// we can't print the right block as there's not enough room available
 		if !OK {
 			switch block.Overflow {
 			case config.Break:
-				e.newline()
+				e.writeNewline()
 			case config.Hide:
 				// make sure to fill if needed
-				if padText, OK := e.shouldFill(block.Filler, space, 0); OK {
+				if padText, OK := e.shouldFill(block.Filler, space+length); OK {
 					e.write(padText)
 				}
+
 				e.currentLineLength = 0
 				return true
 			}
@@ -256,14 +248,13 @@ func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 		}()
 
 		// validate if we have a filler and fill if needed
-		if padText, OK := e.shouldFill(block.Filler, space, length); OK {
+		if padText, OK := e.shouldFill(block.Filler, space); OK {
 			e.write(padText)
 			e.write(text)
 			return true
 		}
 
 		var prompt string
-		space -= length
 
 		if space > 0 {
 			prompt += strings.Repeat(" ", space)
@@ -302,7 +293,8 @@ func (e *Engine) renderBlockSegments(block *config.Block) (string, int) {
 	for i, segment := range block.Segments {
 		if colors, newCycle := cycle.Loop(); colors != nil {
 			cycle = &newCycle
-			segment.Set = *colors
+			segment.Foreground = colors.Foreground
+			segment.Background = colors.Background
 		}
 
 		if i == 0 && len(block.LeadingDiamond) > 0 {
@@ -318,6 +310,9 @@ func (e *Engine) renderBlockSegments(block *config.Block) (string, int) {
 	}
 
 	e.writeSeparator(true)
+
+	e.activeSegment = nil
+	e.previousActiveSegment = nil
 
 	return terminal.String()
 }
@@ -344,6 +339,7 @@ func (e *Engine) setActiveSegment(segment *config.Segment) {
 
 func (e *Engine) renderActiveSegment() {
 	e.writeSeparator(false)
+
 	switch e.activeSegment.ResolveStyle() {
 	case config.Plain, config.Powerline:
 		terminal.Write(color.Background, color.Foreground, e.activeSegment.Text)
@@ -361,6 +357,7 @@ func (e *Engine) renderActiveSegment() {
 			terminal.Write(color.Background, color.Foreground, e.activeSegment.Text)
 		}
 	}
+
 	e.previousActiveSegment = e.activeSegment
 
 	terminal.SetParentColors(e.previousActiveSegment.ResolveBackground(), e.previousActiveSegment.ResolveForeground())
@@ -507,4 +504,81 @@ func (e *Engine) adjustTrailingDiamondColorOverrides() {
 	if len(match[terminal.FG]) > 0 {
 		adjustOverride(match[terminal.ANCHOR], color.Ansi(match[terminal.FG]))
 	}
+}
+
+func (e *Engine) checkPromptCache() bool {
+	data, ok := e.Env.Cache().Get(cache.PROMPTCACHE)
+	if !ok {
+		return false
+	}
+
+	e.promptCache = &promptCache{}
+	err := json.Unmarshal([]byte(data), e.promptCache)
+	if err != nil {
+		return false
+	}
+
+	e.write(e.promptCache.Prompt)
+	e.currentLineLength = e.promptCache.CurrentLineLength
+	e.rprompt = e.promptCache.RPrompt
+	e.rpromptLength = e.promptCache.RPromptLength
+
+	return true
+}
+
+func (e *Engine) updatePromptCache(value *promptCache) {
+	cacheJSON, err := json.Marshal(value)
+	if err != nil {
+		return
+	}
+	e.Env.Cache().Set(cache.PROMPTCACHE, string(cacheJSON), 1440)
+}
+
+// New returns a prompt engine initialized with the
+// given configuration options, and is ready to print any
+// of the prompt components.
+func New(flags *runtime.Flags) *Engine {
+	env := &runtime.Terminal{
+		CmdFlags: flags,
+	}
+
+	env.Init()
+	cfg := config.Load(env)
+
+	if cfg.PatchPwshBleed {
+		patchPowerShellBleed(env.Shell(), flags)
+	}
+
+	env.Var = cfg.Var
+	flags.HasTransient = cfg.TransientPrompt != nil
+
+	terminal.Init(env.Shell())
+	terminal.BackgroundColor = shell.ConsoleBackgroundColor(env, cfg.TerminalBackground)
+	terminal.Colors = cfg.MakeColors()
+	terminal.Plain = flags.Plain
+
+	eng := &Engine{
+		Config: cfg,
+		Env:    env,
+		Plain:  flags.Plain,
+	}
+
+	return eng
+}
+
+func patchPowerShellBleed(sh string, flags *runtime.Flags) {
+	// when in PowerShell, and force patching the bleed bug
+	// we need to reduce the terminal width by 1 so the last
+	// character isn't cut off by the ANSI escape sequences
+	// See https://github.com/JanDeDobbeleer/oh-my-posh/issues/65
+	if sh != shell.PWSH && sh != shell.PWSH5 {
+		return
+	}
+
+	// only do this when relevant
+	if flags.TerminalWidth <= 0 {
+		return
+	}
+
+	flags.TerminalWidth--
 }

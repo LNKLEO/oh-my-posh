@@ -11,6 +11,16 @@ import (
 	"github.com/LNKLEO/OMP/terminal"
 )
 
+type ExtraPromptType int
+
+const (
+	Transient ExtraPromptType = iota
+	Valid
+	Error
+	Secondary
+	Debug
+)
+
 func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
 	// populate env with latest context
 	e.Env.LoadTemplateCache()
@@ -58,6 +68,10 @@ func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
 		promptText = err.Error()
 	}
 
+	if promptType == Transient && prompt.Newline {
+		promptText = fmt.Sprintf("%s%s", e.getNewline(), promptText)
+	}
+
 	if promptType == Transient && e.Config.ShellIntegration {
 		exitCode, _ := e.Env.StatusCodes()
 		e.write(terminal.CommandFinished(exitCode, e.Env.Flags().NoExitCode))
@@ -70,10 +84,11 @@ func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
 	terminal.Write(background, foreground, promptText)
 
 	str, length := terminal.String()
-	if promptType == Transient {
+
+	if promptType == Transient && len(prompt.Filler) != 0 {
 		consoleWidth, err := e.Env.TerminalWidth()
 		if err == nil || consoleWidth != 0 {
-			if padText, OK := e.shouldFill(prompt.Filler, consoleWidth, length); OK {
+			if padText, OK := e.shouldFill(prompt.Filler, consoleWidth-length); OK {
 				str += padText
 			}
 		}
