@@ -1,14 +1,5 @@
 -- Cache PID
-
-function generateCustomUUID()
-    local template = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-    return string.gsub(template, '[x]', function(c)
-        local v = math.random(0, 0xf)
-        return string.format('%x', v)
-    end)
-end
-
-os.setenv("POSH_PID", generateCustomUUID())
+os.setenv("POSH_PID", os.getpid())
 
 -- Helper functions
 
