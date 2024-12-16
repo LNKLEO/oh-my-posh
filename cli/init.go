@@ -7,14 +7,13 @@ import (
 	"github.com/LNKLEO/OMP/config"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/shell"
-
+	"github.com/LNKLEO/OMP/template"
 	"github.com/spf13/cobra"
 )
 
 var (
 	printOutput bool
 	strict      bool
-	manual      bool
 	debug       bool
 
 	supportedShells = []string{
@@ -51,6 +50,7 @@ See the documentation to initialize your shell: https://ohmyposh.dev/docs/instal
 				_ = cmd.Help()
 				return
 			}
+
 			runInit(args[0])
 		},
 	}
@@ -59,18 +59,12 @@ See the documentation to initialize your shell: https://ohmyposh.dev/docs/instal
 	initCmd.Flags().BoolVarP(&strict, "strict", "s", false, "run in strict mode")
 	initCmd.Flags().BoolVar(&debug, "debug", false, "enable/disable debug mode")
 
-	// Deprecated flags, should be kept to avoid breaking CLI integration.
-	initCmd.Flags().BoolVarP(&manual, "manual", "m", false, "enable/disable manual mode")
-
-	// Hide flags that are deprecated or for internal use only.
-	_ = initCmd.Flags().MarkHidden("manual")
-
 	_ = initCmd.MarkPersistentFlagRequired("config")
 
 	return initCmd
 }
 
-func runInit(shellName string) {
+func runInit(sh string) {
 	var startTime time.Time
 	if debug {
 		startTime = time.Now()
@@ -78,27 +72,34 @@ func runInit(shellName string) {
 
 	env := &runtime.Terminal{
 		CmdFlags: &runtime.Flags{
-			Shell:  shellName,
+			Shell:  sh,
 			Config: configFlag,
 			Strict: strict,
 			Debug:  debug,
-			Init:   true,
 		},
 	}
 
 	env.Init()
 	defer env.Close()
 
+	template.Init(env)
+
 	cfg := config.Load(env)
 
 	feats := cfg.Features()
 
-	if printOutput || debug {
-		init := shell.PrintInit(env, feats, &startTime)
-		fmt.Print(init)
+	var output string
+
+	switch {
+	case printOutput, debug:
+		output = shell.PrintInit(env, feats, &startTime)
+	default:
+		output = shell.Init(env, feats)
+	}
+
+	if silent {
 		return
 	}
 
-	init := shell.Init(env, feats)
-	fmt.Print(init)
+	fmt.Print(output)
 }

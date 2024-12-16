@@ -7,23 +7,18 @@ import (
 	"math"
 	"net/url"
 
-	"golang.org/x/text/cases"
-	lang "golang.org/x/text/language"
-
 	"github.com/LNKLEO/OMP/properties"
-	"github.com/LNKLEO/OMP/runtime"
+	"golang.org/x/text/cases"
 )
 
 type Owm struct {
-	props properties.Properties
-	env   runtime.Environment
+	base
 
-	Temperature float64
-	WeatherIcon string
 	Weather     string
 	URL         string
 	units       string
 	UnitIcon    string
+	Temperature int
 }
 
 const (
@@ -71,21 +66,7 @@ func (d *Owm) Template() string {
 }
 
 func (d *Owm) getResult() (*owmDataResponse, error) {
-	cacheTimeout := d.props.GetInt(properties.CacheTimeout, properties.DefaultCacheTimeout)
 	response := new(owmDataResponse)
-
-	if cacheTimeout > 0 {
-		val, found := d.env.Cache().Get(CacheKeyResponse)
-		if found {
-			err := json.Unmarshal([]byte(val), response)
-			if err != nil {
-				return nil, err
-			}
-
-			d.URL, _ = d.env.Cache().Get(CacheKeyURL)
-			return response, nil
-		}
-	}
 
 	apikey := properties.OneOf(d.props, ".", APIKey, "apiKey")
 	if len(apikey) == 0 {
@@ -93,7 +74,6 @@ func (d *Owm) getResult() (*owmDataResponse, error) {
 	}
 
 	location := d.props.GetString(Location, "De Bilt,NL")
-
 	location = url.QueryEscape(location)
 
 	if len(apikey) == 0 || len(location) == 0 {
@@ -109,16 +89,12 @@ func (d *Owm) getResult() (*owmDataResponse, error) {
 	if err != nil {
 		return new(owmDataResponse), err
 	}
+
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return new(owmDataResponse), err
 	}
 
-	if cacheTimeout > 0 {
-		// persist new forecasts in cache
-		d.env.Cache().Set(CacheKeyResponse, string(body), cacheTimeout)
-		d.env.Cache().Set(CacheKeyURL, d.URL, cacheTimeout)
-	}
 	return response, nil
 }
 
@@ -134,48 +110,48 @@ func (d *Owm) setStatus() error {
 		return errors.New("No data found")
 	}
 
-	d.Temperature = math.Round(q.temperature.Value * 2) / 2.0
+	d.Temperature = math.Round(q.temperature.Value*2) / 2.0
 
 	id := q.Data[0].TypeID
 	icon := ""
 	switch id {
 	case "01n":
 		icon = "󰖔"
-    case "01d":
-        icon = "󰖙"
-    case "02n":
-        icon = "󰼱"
-    case "02d":
-        icon = "󰖕"
-    case "03n":
-        icon = "󰖐"
-    case "03d":
-        icon = "󰖐"
-    case "04n":
-        icon = "󰼯"
-    case "04d":
-        icon = "󰼯"
-    case "09n":
-        icon = "󰖒"
-    case "09d":
-        icon = "󰖒"
-    case "10n":
+	case "01d":
+		icon = "󰖙"
+	case "02n":
+		icon = "󰼱"
+	case "02d":
+		icon = "󰖕"
+	case "03n":
+		icon = "󰖐"
+	case "03d":
+		icon = "󰖐"
+	case "04n":
+		icon = "󰼯"
+	case "04d":
+		icon = "󰼯"
+	case "09n":
+		icon = "󰖒"
+	case "09d":
+		icon = "󰖒"
+	case "10n":
 		icon = "󰖗"
-    case "10d":
-        icon = "󰼳"
-    case "11n":
-        icon = "󰖓"
-    case "11d":
-        icon = "󰼲"
-    case "13n":
-        icon = "󰖘"
-    case "13d":
-        icon = "󰼴"
-    case "50n":
-        icon = "󰖑"
-    case "50d":
-        icon = "󰖑"
-    }
+	case "10d":
+		icon = "󰼳"
+	case "11n":
+		icon = "󰖓"
+	case "11d":
+		icon = "󰼲"
+	case "13n":
+		icon = "󰖘"
+	case "13d":
+		icon = "󰼴"
+	case "50n":
+		icon = "󰖑"
+	case "50d":
+		icon = "󰖑"
+	}
 	d.Weather = cases.Title(lang.Und).String(q.Data[0].Description)
 	d.WeatherIcon = icon
 	d.units = units
@@ -191,9 +167,4 @@ func (d *Owm) setStatus() error {
 		d.UnitIcon = "󰔆"
 	}
 	return nil
-}
-
-func (d *Owm) Init(props properties.Properties, env runtime.Environment) {
-	d.props = props
-	d.env = env
 }

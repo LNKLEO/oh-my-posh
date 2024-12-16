@@ -21,8 +21,6 @@ const (
 )
 
 func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
-	// populate env with latest context
-	e.Env.LoadTemplateCache()
 	var prompt *config.Segment
 
 	switch promptType {
@@ -60,7 +58,6 @@ func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
 
 	tmpl := &template.Text{
 		Template: getTemplate(prompt.Template),
-		Env:      e.Env,
 	}
 
 	promptText, err := tmpl.Render()
@@ -78,8 +75,8 @@ func (e *Engine) ExtraPrompt(promptType ExtraPromptType) string {
 		e.write(terminal.PromptStart())
 	}
 
-	foreground := color.Ansi(prompt.ForegroundTemplates.FirstMatch(nil, e.Env, string(prompt.Foreground)))
-	background := color.Ansi(prompt.BackgroundTemplates.FirstMatch(nil, e.Env, string(prompt.Background)))
+	foreground := color.Ansi(prompt.ForegroundTemplates.FirstMatch(nil, string(prompt.Foreground)))
+	background := color.Ansi(prompt.BackgroundTemplates.FirstMatch(nil, string(prompt.Background)))
 	terminal.SetColors(background, foreground)
 	terminal.Write(background, foreground, promptText)
 

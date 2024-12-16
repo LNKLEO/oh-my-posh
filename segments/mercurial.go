@@ -30,16 +30,15 @@ func (s *MercurialStatus) add(code string) {
 }
 
 type Mercurial struct {
-	scm
-
 	Working           *MercurialStatus
-	IsTip             bool
 	LocalCommitNumber string
 	ChangeSetID       string
 	ChangeSetIDShort  string
 	Branch            string
-	Bookmarks         []string
-	Tags              []string
+	scm
+	Bookmarks []string
+	Tags      []string
+	IsTip     bool
 }
 
 func (hg *Mercurial) Template() string {
@@ -62,6 +61,15 @@ func (hg *Mercurial) Enabled() bool {
 	return true
 }
 
+func (hg *Mercurial) CacheKey() (string, bool) {
+	dir, err := hg.env.HasParentFilePath(".hg", true)
+	if err != nil {
+		return "", false
+	}
+
+	return dir.Path, true
+}
+
 func (hg *Mercurial) shouldDisplay() bool {
 	if !hg.hasCommand(MERCURIALCOMMAND) {
 		return false
@@ -69,10 +77,6 @@ func (hg *Mercurial) shouldDisplay() bool {
 
 	hgdir, err := hg.env.HasParentFilePath(".hg", false)
 	if err != nil {
-		return false
-	}
-
-	if hg.shouldIgnoreRootRepository(hgdir.ParentFolder) {
 		return false
 	}
 

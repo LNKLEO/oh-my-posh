@@ -8,7 +8,7 @@ import (
 	"github.com/LNKLEO/OMP/config"
 	"github.com/LNKLEO/OMP/prompt"
 	"github.com/LNKLEO/OMP/runtime"
-	"github.com/LNKLEO/OMP/shell"
+	"github.com/LNKLEO/OMP/template"
 	"github.com/LNKLEO/OMP/terminal"
 
 	"github.com/spf13/cobra"
@@ -49,13 +49,15 @@ func createDebugCmd() *cobra.Command {
 			env.Init()
 			defer env.Close()
 
+			template.Init(env)
+
 			cfg := config.Load(env)
 
 			// add variables to the environment
 			env.Var = cfg.Var
 
-			terminal.Init(shell.GENERIC)
-			terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate(env)
+			terminal.Init(args[0])
+			terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate()
 			terminal.Colors = cfg.MakeColors()
 			terminal.Plain = plain
 

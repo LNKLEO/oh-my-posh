@@ -92,6 +92,10 @@ func (e *Engine) writePrimaryPrompt(needsPrimaryRPrompt bool) {
 }
 
 func (e *Engine) needsPrimaryRightPrompt() bool {
+	if e.Env.Flags().Debug {
+		return true
+	}
+
 	switch e.Env.Shell() {
 	case shell.PWSH, shell.PWSH5, shell.GENERIC, shell.ZSH:
 		return true

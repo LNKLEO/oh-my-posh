@@ -5,12 +5,10 @@ import (
 	"strings"
 
 	"github.com/LNKLEO/OMP/properties"
-	"github.com/LNKLEO/OMP/runtime"
 )
 
 type Aws struct {
-	props properties.Properties
-	env   runtime.Environment
+	base
 
 	Profile string
 	Region  string
@@ -22,11 +20,6 @@ const (
 
 func (a *Aws) Template() string {
 	return " {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} "
-}
-
-func (a *Aws) Init(props properties.Properties, env runtime.Environment) {
-	a.props = props
-	a.env = env
 }
 
 func (a *Aws) Enabled() bool {

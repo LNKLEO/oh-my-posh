@@ -8,6 +8,7 @@ import (
 	"github.com/LNKLEO/OMP/prompt"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/shell"
+	"github.com/LNKLEO/OMP/template"
 	"github.com/LNKLEO/OMP/terminal"
 
 	"github.com/spf13/cobra"
@@ -59,18 +60,20 @@ Exports the config to an image file using customized output options.`,
 
 		env.Init()
 		defer env.Close()
+
+		template.Init(env)
+
 		cfg := config.Load(env)
 
 		// set sane defaults for things we don't print
 		cfg.ConsoleTitleTemplate = ""
 		cfg.PWD = ""
-		cfg.OSC99 = false
 
 		// add variables to the environment
 		env.Var = cfg.Var
 
 		terminal.Init(shell.GENERIC)
-		terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate(env)
+		terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate()
 		terminal.Colors = cfg.MakeColors()
 
 		eng := &prompt.Engine{
