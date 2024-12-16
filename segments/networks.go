@@ -11,8 +11,7 @@ import (
 )
 
 type Networks struct {
-	props properties.Properties
-	env   runtime.Environment
+	base
 
 	Error string
 

@@ -7,8 +7,10 @@ import (
 	"math"
 	"net/url"
 
-	"github.com/LNKLEO/OMP/properties"
 	"golang.org/x/text/cases"
+	lang "golang.org/x/text/language"
+
+	"github.com/LNKLEO/OMP/properties"
 )
 
 type Owm struct {
@@ -18,7 +20,8 @@ type Owm struct {
 	URL         string
 	units       string
 	UnitIcon    string
-	Temperature int
+	Temperature float64
+	WeatherIcon string
 }
 
 const (
@@ -33,7 +36,7 @@ const (
 	// CacheKeyURL key used when caching the url responsible for the response
 	CacheKeyURL string = "owm_url"
 
-	PoshOWMAPIKey = "POSH_OWM_API_KEY"
+	PoshOWMAPIKey = "OMP_OWM_API_KEY"
 )
 
 type weather struct {

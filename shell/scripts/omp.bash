@@ -1,7 +1,7 @@
-export POSH_THEME=::CONFIG::
-export POSH_SHELL_VERSION=$BASH_VERSION
+export OMP_THEME=::CONFIG::
+export OMP_SHELL_VERSION=$BASH_VERSION
 export POWERLINE_COMMAND='OMP'
-export POSH_SESSION_ID=::SESSION_ID::
+export OMP_SESSION_ID=::SESSION_ID::
 export CONDA_PROMPT_MODIFIER=false
 export OSTYPE=$OSTYPE
 
@@ -44,8 +44,8 @@ function _omp_set_cursor_position() {
 
     stty "$oldstty"
 
-    export POSH_CURSOR_LINE=${ROW#*[}
-    export POSH_CURSOR_COLUMN=${COL}
+    export OMP_CURSOR_LINE=${ROW#*[}
+    export OMP_CURSOR_COLUMN=${COL}
 }
 
 function _omp_start_timer() {

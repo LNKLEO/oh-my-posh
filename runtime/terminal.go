@@ -84,14 +84,14 @@ func (term *Terminal) Init() {
 func (term *Terminal) ResolveConfigPath() {
 	defer term.Trace(time.Now())
 
-	// if the config flag is set, we'll use that over POSH_THEME
-	// in our internal shell logic, we'll always use the POSH_THEME
+	// if the config flag is set, we'll use that over OMP_THEME
+	// in our internal shell logic, we'll always use the OMP_THEME
 	// due to not using --config to set the configuration
 	hasConfigFlag := len(term.CmdFlags.Config) > 0
 
-	if poshTheme := term.Getenv("POSH_THEME"); len(poshTheme) > 0 && !hasConfigFlag {
-		term.DebugF("config set using POSH_THEME: %s", poshTheme)
-		term.CmdFlags.Config = poshTheme
+	if ompTheme := term.Getenv("OMP_THEME"); len(ompTheme) > 0 && !hasConfigFlag {
+		term.DebugF("config set using OMP_THEME: %s", ompTheme)
+		term.CmdFlags.Config = ompTheme
 		return
 	}
 
@@ -764,11 +764,11 @@ func (term *Terminal) setPromptCount() {
 }
 
 func (term *Terminal) CursorPosition() (row, col int) {
-	if number, err := strconv.Atoi(term.Getenv("POSH_CURSOR_LINE")); err == nil {
+	if number, err := strconv.Atoi(term.Getenv("OMP_CURSOR_LINE")); err == nil {
 		row = number
 	}
 
-	if number, err := strconv.Atoi(term.Getenv("POSH_CURSOR_COLUMN")); err != nil {
+	if number, err := strconv.Atoi(term.Getenv("OMP_CURSOR_COLUMN")); err != nil {
 		col = number
 	}
 

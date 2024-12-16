@@ -22,7 +22,7 @@ const (
 	Pwsh       = "pwsh"
 	Cli        = "cli"
 	FirstMatch = "first_match"
-	azureEnv   = "POSH_AZURE_SUBSCRIPTION"
+	azureEnv   = "OMP_AZURE_SUBSCRIPTION"
 )
 
 type AzureConfig struct {

@@ -1,6 +1,6 @@
-set-env POSH_SESSION_ID ::SESSION_ID::
-set-env POSH_THEME ::CONFIG::
-set-env POSH_SHELL_VERSION $version
+set-env OMP_SESSION_ID ::SESSION_ID::
+set-env OMP_THEME ::CONFIG::
+set-env OMP_SHELL_VERSION $version
 set-env POWERLINE_COMMAND oh-my-posh
 
 var _omp_executable = (external ::OMP::)
@@ -41,7 +41,7 @@ fn _omp_get_prompt {|type @arguments|
     $_omp_executable print $type ^
         --save-cache ^
         --shell=elvish ^
-        --shell-version=$E:POSH_SHELL_VERSION ^
+        --shell-version=$E:OMP_SHELL_VERSION ^
         --status=$_omp_status ^
         --no-status=$_omp_no_status ^
         --execution-time=$_omp_execution_time ^

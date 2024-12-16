@@ -1,7 +1,7 @@
 setenv POWERLINE_COMMAND "OMP";
-setenv POSH_THEME ::CONFIG::;
-setenv POSH_SHELL_VERSION "$tcsh";
-setenv POSH_SESSION_ID ::SESSION_ID::;
+setenv OMP_THEME ::CONFIG::;
+setenv OMP_SHELL_VERSION "$tcsh";
+setenv OMP_SESSION_ID ::SESSION_ID::;
 setenv OSTYPE "$OSTYPE";
 
 if ( ! $?_omp_enabled ) alias precmd '

@@ -3,7 +3,7 @@
 ---@diagnostic disable: lowercase-global
 
 -- Cache PID
-os.setenv('POSH_SESSION_ID', '::SESSION_ID::')
+os.setenv('OMP_SESSION_ID', '::SESSION_ID::')
 
 -- Helper functions
 
@@ -65,8 +65,8 @@ local omp_executable = '::OMP::'
 
 -- Configuration
 
-os.setenv('POSH_THEME', '::CONFIG::')
-os.setenv('POSH_SHELL_VERSION', string.format('clink v%s.%s.%s.%s', clink.version_major, clink.version_minor, clink.version_patch, clink.version_commit))
+os.setenv('OMP_THEME', '::CONFIG::')
+os.setenv('OMP_SHELL_VERSION', string.format('clink v%s.%s.%s.%s', clink.version_major, clink.version_minor, clink.version_patch, clink.version_commit))
 
 -- Execution helpers
 
@@ -140,7 +140,7 @@ local function no_status_option()
 end
 
 local function get_posh_prompt(prompt_type, ...)
-    os.setenv('POSH_CURSOR_LINE', console.getnumlines())
+    os.setenv('OMP_CURSOR_LINE', console.getnumlines())
     local command = table.concat({
         'print',
         prompt_type,

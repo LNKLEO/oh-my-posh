@@ -12,7 +12,7 @@ import (
 func (e *Engine) PrintDebug(startTime time.Time, version string) string {
 	e.write(fmt.Sprintf("\n%s %s\n", log.Text("Version:").Green().Bold().Plain(), version))
 	sh := e.Env.Shell()
-	shellVersion := e.Env.Getenv("POSH_SHELL_VERSION")
+	shellVersion := e.Env.Getenv("OMP_SHELL_VERSION")
 	if len(shellVersion) != 0 {
 		sh += fmt.Sprintf(" (%s)", shellVersion)
 	}

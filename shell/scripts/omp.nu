@@ -4,10 +4,10 @@ if ($env.config? | is-not-empty) {
 }
 
 $env.POWERLINE_COMMAND = 'oh-my-posh'
-$env.POSH_THEME = (echo ::CONFIG::)
+$env.OMP_THEME = (echo ::CONFIG::)
 $env.PROMPT_INDICATOR = ""
-$env.POSH_SESSION_ID = (echo ::SESSION_ID::)
-$env.POSH_SHELL_VERSION = (version | get version)
+$env.OMP_SESSION_ID = (echo ::SESSION_ID::)
+$env.OMP_SHELL_VERSION = (version | get version)
 
 let _omp_executable: string = (echo ::OMP::)
 
@@ -30,7 +30,7 @@ def --wrapped _omp_get_prompt [
         ^$_omp_executable print $type
             --save-cache
             --shell=nu
-            $"--shell-version=($env.POSH_SHELL_VERSION)"
+            $"--shell-version=($env.OMP_SHELL_VERSION)"
             $"--status=($env.LAST_EXIT_CODE)"
             $"--no-status=($no_status)"
             $"--execution-time=($execution_time)"
@@ -42,7 +42,7 @@ def --wrapped _omp_get_prompt [
 $env.PROMPT_MULTILINE_INDICATOR = (
     ^$_omp_executable print secondary
         --shell=nu
-        $"--shell-version=($env.POSH_SHELL_VERSION)"
+        $"--shell-version=($env.OMP_SHELL_VERSION)"
 )
 
 $env.PROMPT_COMMAND = {||

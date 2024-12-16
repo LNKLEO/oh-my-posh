@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gookit/goutil/jsonutil"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/shell"
+	"github.com/gookit/goutil/jsonutil"
 
 	json "github.com/goccy/go-json"
 	yaml "github.com/goccy/go-yaml"
@@ -38,7 +38,7 @@ func Load(env runtime.Environment) *Config {
 	// nu    - built-in (and bugged) feature - nushell/nushell#5585, https://www.nushell.sh/blog/2022-08-16-nushell-0_67.html#shell-integration-fdncred-and-tyriar
 	// elv   - broken OSC sequences
 	// xonsh - broken OSC sequences
-	// tcsh  - overall broken, FTCS_COMMAND_EXECUTED could be added to POSH_POSTCMD in the future
+	// tcsh  - overall broken, FTCS_COMMAND_EXECUTED could be added to OMP_POSTCMD in the future
 	switch env.Shell() {
 	case shell.ELVISH, shell.XONSH, shell.TCSH, shell.NU:
 		cfg.ShellIntegration = false

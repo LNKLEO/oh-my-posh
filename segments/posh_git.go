@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	poshGitEnv = "POSH_GIT_STATUS"
+	poshGitEnv = "OMP_GIT_STATUS"
 )
 
 type poshGit struct {

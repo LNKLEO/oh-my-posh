@@ -38,13 +38,13 @@ New-Module -Name "OMP-core" -ScriptBlock {
     $script:JobCount = 0
 
     $env:POWERLINE_COMMAND = "OMP"
-    $env:POSH_SHELL_VERSION = $script:PSVersion
-    $env:POSH_SESSION_ID = ::SESSION_ID::
+    $env:OMP_SHELL_VERSION = $script:PSVersion
+    $env:OMP_SESSION_ID = ::SESSION_ID::
     $env:CONDA_PROMPT_MODIFIER = $false
 
     # set the default theme
     if (::CONFIG:: -and (Test-Path -LiteralPath ::CONFIG::)) {
-        $env:OMPTHEME = (Resolve-Path -Path ::CONFIG::).ProviderPath
+        $env:OMP_THEME = (Resolve-Path -Path ::CONFIG::).ProviderPath
     }
 
     function Invoke-Utf8Posh {
@@ -181,14 +181,14 @@ New-Module -Name "OMP-core" -ScriptBlock {
 
         if ($global:_ompAzure) {
             try {
-                $env:POSH_AZURE_SUBSCRIPTION = Get-AzContext | ConvertTo-Json
+                $env:OMP_AZURE_SUBSCRIPTION = Get-AzContext | ConvertTo-Json
             } catch {}
         }
 
         if ($global:_ompPoshGit) {
             try {
                 $global:GitStatus = Get-GitStatus
-                $env:POSH_GIT_STATUS = $global:GitStatus | ConvertTo-Json
+                $env:OMP_GIT_STATUS = $global:GitStatus | ConvertTo-Json
             } catch {}
         }
     }
@@ -273,8 +273,8 @@ New-Module -Name "OMP-core" -ScriptBlock {
         Set-OMPContext $script:ErrorCode
 
         # set the cursor positions, they are zero based so align with other platforms
-        $env:POSH_CURSOR_LINE = $Host.UI.RawUI.CursorPosition.Y + 1
-        $env:POSH_CURSOR_COLUMN = $Host.UI.RawUI.CursorPosition.X + 1
+        $env:OMP_CURSOR_LINE = $Host.UI.RawUI.CursorPosition.Y + 1
+        $env:OMP_CURSOR_COLUMN = $Host.UI.RawUI.CursorPosition.X + 1
 
         $output = Get-OMPPrompt $script:PromptType
         # make sure PSReadLine knows if we have a multiline prompt
@@ -295,7 +295,7 @@ New-Module -Name "OMP-core" -ScriptBlock {
         $output
 
         # remove any posh-git status
-        $env:POSH_GIT_STATUS = $null
+        $env:OMP_GIT_STATUS = $null
 
         # restore the orignal last exit code
         $global:LASTEXITCODE = $script:OriginalLastExitCode
