@@ -37,7 +37,7 @@ New-Module -Name "OMP-Core" -ScriptBlock {
     $script:ToolTipCommand = ""
     $script:JobCount = 0
 
-    $env:POWERLINE_COMMAND = OMP
+    $env:POWERLINE_COMMAND = 'OMP'
     $env:OMP_SHELL = "pwsh"
     $env:OMP_SHELL_VERSION = $script:PSVersion
     $env:OMP_SESSION_ID = ::SESSION_ID::
