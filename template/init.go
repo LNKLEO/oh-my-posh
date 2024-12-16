@@ -13,9 +13,6 @@ const (
 	IncorrectTemplate = "unable to create text based on template"
 
 	globalRef = ".$"
-
-	elvish = "elvish"
-	xonsh  = "xonsh"
 )
 
 var (

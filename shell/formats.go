@@ -47,26 +47,6 @@ func GetFormats(shell string) *Formats {
 				'\\': `\\`,
 			},
 		}
-	case ZSH, TCSH:
-		formats = &Formats{
-			Escape:                "%%{%s%%}",
-			Linechange:            "%%{\x1b[%d%s%%}",
-			Left:                  "%%{\x1b[%dD%%}",
-			ClearBelow:            "%{\x1b[0J%}",
-			ClearLine:             "%{\x1b[K%}",
-			SaveCursorPosition:    "%{\x1b7%}",
-			RestoreCursorPosition: "%{\x1b8%}",
-			Title:                 "%%{\x1b]0;%s\007%%}",
-			HyperlinkStart:        "%{\x1b]8;;",
-			HyperlinkCenter:       "\x1b\\%}",
-			HyperlinkEnd:          "%{\x1b]8;;\x1b\\%}",
-			Osc99:                 "%%{\x1b]9;9;%s\x1b\\%%}",
-			Osc7:                  "%%{\x1b]7;file://%s/%s\x1b\\%%}",
-			Osc51:                 "%%{\x1b]51;A%s@%s:%s\x1b\\%%}",
-			EscapeSequences: map[rune]string{
-				'%': "%%",
-			},
-		}
 	default:
 		formats = &Formats{
 			Escape:                "%s",
@@ -87,11 +67,6 @@ func GetFormats(shell string) *Formats {
 			Osc7:            "\x1b]7;file://%s/%s\x1b\\",
 			Osc51:           "\x1b]51;A%s@%s:%s\x1b\\",
 		}
-	}
-
-	if shell == TCSH {
-		formats.EscapeSequences['\\'] = `\\`
-		formats.EscapeSequences['!'] = `\!`
 	}
 
 	return formats

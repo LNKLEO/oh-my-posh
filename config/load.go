@@ -15,7 +15,6 @@ import (
 	"github.com/LNKLEO/OMP/cache"
 	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/runtime/path"
-	"github.com/LNKLEO/OMP/shell"
 
 	json "github.com/goccy/go-json"
 	yaml "github.com/goccy/go-yaml"
@@ -35,20 +34,6 @@ func Load(configFile, sh string, migrate bool) *Config {
 
 	if !cfg.ShellIntegration {
 		return cfg
-	}
-
-	// bash  - ok
-	// fish  - ok
-	// pwsh  - ok
-	// zsh   - ok
-	// cmd   - ok, as of v1.4.25 (chrisant996/clink#457, fixed in chrisant996/clink@8a5d7ea)
-	// nu    - built-in (and bugged) feature - nushell/nushell#5585, https://www.nushell.sh/blog/2022-08-16-nushell-0_67.html#shell-integration-fdncred-and-tyriar
-	// elv   - broken OSC sequences
-	// xonsh - broken OSC sequences
-	// tcsh  - overall broken, FTCS_COMMAND_EXECUTED could be added to OMP_POSTCMD in the future
-	switch sh {
-	case shell.ELVISH, shell.XONSH, shell.TCSH, shell.NU:
-		cfg.ShellIntegration = false
 	}
 
 	return cfg
