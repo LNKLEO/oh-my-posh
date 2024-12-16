@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	"github.com/LNKLEO/OMP/config"
-	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/runtime/path"
+	"github.com/LNKLEO/OMP/shell"
 
 	"github.com/spf13/cobra"
 )
@@ -39,14 +40,8 @@ Exports the current config to "~/new_config.omp.json" (in JSON format).`,
 			os.Exit(2)
 		}
 
-		env := &runtime.Terminal{
-			CmdFlags: &runtime.Flags{
-				Config: configFlag,
-			},
-		}
-		env.Init()
-		defer env.Close()
-		cfg := config.Load(env)
+		configFile := config.Path(configFlag)
+		cfg := config.Load(configFile, shell.GENERIC, false)
 
 		validateExportFormat := func() {
 			format = strings.ToLower(format)
@@ -74,7 +69,7 @@ Exports the current config to "~/new_config.omp.json" (in JSON format).`,
 			return
 		}
 
-		cfg.Output = cleanOutputPath(output, env)
+		cfg.Output = cleanOutputPath(output)
 
 		if len(format) == 0 {
 			format = strings.TrimPrefix(filepath.Ext(output), ".")
@@ -85,16 +80,16 @@ Exports the current config to "~/new_config.omp.json" (in JSON format).`,
 	},
 }
 
-func cleanOutputPath(path string, env runtime.Environment) string {
-	path = runtime.ReplaceTildePrefixWithHomeDir(env, path)
+func cleanOutputPath(output string) string {
+	output = path.ReplaceTildePrefixWithHomeDir(output)
 
-	if !filepath.IsAbs(path) {
-		if absPath, err := filepath.Abs(path); err == nil {
-			path = absPath
+	if !filepath.IsAbs(output) {
+		if absPath, err := filepath.Abs(output); err == nil {
+			output = absPath
 		}
 	}
 
-	return filepath.Clean(path)
+	return filepath.Clean(output)
 }
 
 func init() {

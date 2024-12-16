@@ -17,11 +17,7 @@ func (f Feature) Zsh() Code {
 		return "_omp_create_widget zle-line-init _omp_zle-line-init"
 	case FTCSMarks:
 		return unixFTCSMarks
-	case Upgrade:
-		return unixUpgrade
-	case Notice:
-		return unixNotice
-	case PromptMark, RPrompt, PoshGit, Azure, LineError, Jobs:
+	case RPrompt, PoshGit, Azure, LineError, Jobs:
 		fallthrough
 	default:
 		return ""

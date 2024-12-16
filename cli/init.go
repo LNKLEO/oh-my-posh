@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/LNKLEO/OMP/config"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/shell"
 	"github.com/LNKLEO/OMP/template"
@@ -66,27 +67,34 @@ See the documentation to initialize your shell: https://ohmyposh.dev/docs/instal
 
 func runInit(sh string) {
 	var startTime time.Time
+
 	if debug {
 		startTime = time.Now()
+		log.Enable()
+		log.Debug("debug mode enabled")
 	}
 
-	env := &runtime.Terminal{
-		CmdFlags: &runtime.Flags{
-			Shell:  sh,
-			Config: configFlag,
-			Strict: strict,
-			Debug:  debug,
-		},
+	configFile := config.Path(configFlag)
+	cfg := config.Load(configFile, sh, false)
+
+	flags := &runtime.Flags{
+		Shell:  sh,
+		Config: configFile,
+		Strict: strict,
+		Debug:  debug,
 	}
 
-	env.Init()
-	defer env.Close()
+	env := &runtime.Terminal{}
+	env.Init(flags)
 
-	template.Init(env)
+	template.Init(env, cfg.Var)
 
-	cfg := config.Load(env)
+	defer func() {
+		template.SaveCache()
+		env.Close()
+	}()
 
-	feats := cfg.Features()
+	feats := cfg.Features(env)
 
 	var output string
 

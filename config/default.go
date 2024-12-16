@@ -3,11 +3,10 @@ package config
 import (
 	"github.com/LNKLEO/OMP/color"
 	"github.com/LNKLEO/OMP/properties"
-	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/segments"
 )
 
-func Default(env runtime.Environment, warning bool) *Config {
+func Default(warning bool) *Config {
 	exitBackgroundTemplate := "{{ if gt .Code 0 }}p:red{{ end }}"
 	exitTemplate := " {{ if gt .Code 0 }}\uf00d{{ else }}\uf00c{{ end }} "
 
@@ -197,6 +196,5 @@ func Default(env runtime.Environment, warning bool) *Config {
 		},
 	}
 
-	cfg.env = env
 	return cfg
 }

@@ -3,14 +3,19 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"os"
 	stdOS "os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/LNKLEO/OMP/runtime"
-	"github.com/LNKLEO/OMP/shell"
 	"github.com/gookit/goutil/jsonutil"
+
+	"github.com/LNKLEO/OMP/cache"
+	"github.com/LNKLEO/OMP/log"
+	"github.com/LNKLEO/OMP/runtime/path"
+	"github.com/LNKLEO/OMP/shell"
 
 	json "github.com/goccy/go-json"
 	yaml "github.com/goccy/go-yaml"
@@ -18,11 +23,13 @@ import (
 )
 
 // LoadConfig returns the default configuration including possible user overrides
-func Load(env runtime.Environment) *Config {
-	cfg := loadConfig(env)
+func Load(configFile, sh string, migrate bool) *Config {
+	defer log.Trace(time.Now())
+
+	cfg := loadConfig(configFile)
 
 	// only migrate automatically when the switch isn't set
-	if !env.Flags().Migrate && cfg.Version < Version {
+	if !migrate && cfg.Version < Version {
 		cfg.BackupAndMigrate()
 	}
 
@@ -39,7 +46,7 @@ func Load(env runtime.Environment) *Config {
 	// elv   - broken OSC sequences
 	// xonsh - broken OSC sequences
 	// tcsh  - overall broken, FTCS_COMMAND_EXECUTED could be added to OMP_POSTCMD in the future
-	switch env.Shell() {
+	switch sh {
 	case shell.ELVISH, shell.XONSH, shell.TCSH, shell.NU:
 		cfg.ShellIntegration = false
 	}
@@ -47,24 +54,71 @@ func Load(env runtime.Environment) *Config {
 	return cfg
 }
 
-func loadConfig(env runtime.Environment) *Config {
-	defer env.Trace(time.Now())
-	configFile := env.Flags().Config
+func Path(config string) string {
+	defer log.Trace(time.Now())
+
+	// if the config flag is set, we'll use that over OMP_THEME
+	// in our internal shell logic, we'll always use the OMP_THEME
+	// due to not using --config to set the configuration
+	hasConfig := len(config) > 0
+
+	if poshTheme := os.Getenv("OMP_THEME"); len(poshTheme) > 0 && !hasConfig {
+		log.Debug("config set using OMP_THEME:", poshTheme)
+		return poshTheme
+	}
+
+	if len(config) == 0 {
+		return ""
+	}
+
+	if strings.HasPrefix(config, "https://") {
+		filePath, err := Download(cache.Path(), config)
+		if err != nil {
+			log.Error(err)
+			return ""
+		}
+
+		return filePath
+	}
+
+	isCygwin := func() bool {
+		return runtime.GOOS == "windows" && len(os.Getenv("OSTYPE")) > 0
+	}
+
+	// Cygwin path always needs the full path as we're on Windows but not really.
+	// Doing filepath actions will convert it to a Windows path and break the init script.
+	if isCygwin() {
+		log.Debug("cygwin detected, using full path for config")
+		return config
+	}
+
+	configFile := path.ReplaceTildePrefixWithHomeDir(config)
+
+	abs, err := filepath.Abs(configFile)
+	if err != nil {
+		log.Error(err)
+		return filepath.Clean(configFile)
+	}
+
+	return abs
+}
+
+func loadConfig(configFile string) *Config {
+	defer log.Trace(time.Now())
 
 	if len(configFile) == 0 {
-		env.Debug("no config file specified, using default")
-		return Default(env, false)
+		log.Debug("no config file specified, using default")
+		return Default(false)
 	}
 
 	var cfg Config
 	cfg.origin = configFile
 	cfg.Format = strings.TrimPrefix(filepath.Ext(configFile), ".")
-	cfg.env = env
 
 	data, err := stdOS.ReadFile(configFile)
 	if err != nil {
-		env.Error(err)
-		return Default(env, true)
+		log.Error(err)
+		return Default(true)
 	}
 
 	switch cfg.Format {
@@ -87,8 +141,8 @@ func loadConfig(env runtime.Environment) *Config {
 	}
 
 	if err != nil {
-		env.Error(err)
-		return Default(env, true)
+		log.Error(err)
+		return Default(true)
 	}
 
 	return &cfg

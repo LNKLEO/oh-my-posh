@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/cases"
 	lang "golang.org/x/text/language"
 
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/properties"
 )
 
@@ -57,7 +58,7 @@ func (d *Owm) Enabled() bool {
 	err := d.setStatus()
 
 	if err != nil {
-		d.env.Error(err)
+		log.Error(err)
 		return false
 	}
 

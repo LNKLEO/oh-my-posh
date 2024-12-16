@@ -84,7 +84,7 @@ func (e *Engine) writePrimaryPrompt(needsPrimaryRPrompt bool) {
 		e.currentLineLength++
 	}
 
-	if e.Config.ShellIntegration && e.Config.TransientPrompt == nil {
+	if e.Config.ShellIntegration {
 		e.write(terminal.CommandStart())
 	}
 

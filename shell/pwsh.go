@@ -25,11 +25,7 @@ func (f Feature) Pwsh() Code {
 		return "$global:_ompPoshGit = $true"
 	case FTCSMarks:
 		return "$global:_ompFTCSMarks = $true"
-	case Upgrade:
-		return "& $global:_ompExecutable upgrade"
-	case Notice:
-		return "& $global:_ompExecutable notice"
-	case PromptMark, RPrompt, CursorPositioning:
+	case RPrompt, CursorPositioning:
 		fallthrough
 	default:
 		return ""

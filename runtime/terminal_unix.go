@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jandedobbeleer/oh-my-posh/src/cache"
+	"github.com/LNKLEO/OMP/cache"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/shirou/gopsutil/v3/host"
 	mem "github.com/shirou/gopsutil/v3/mem"
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
@@ -16,12 +17,8 @@ import (
 )
 
 func (term *Terminal) Root() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	return os.Geteuid() == 0
-}
-
-func (term *Terminal) Home() string {
-	return os.Getenv("HOME")
 }
 
 func (term *Terminal) QueryWindowTitles(_, _ string) (string, error) {
@@ -29,10 +26,10 @@ func (term *Terminal) QueryWindowTitles(_, _ string) (string, error) {
 }
 
 func (term *Terminal) IsWsl() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	const key = "is_wsl"
 	if val, found := term.Cache().Get(key); found {
-		term.Debug(val)
+		log.Debug(val)
 		return val == "true"
 	}
 
@@ -42,13 +39,13 @@ func (term *Terminal) IsWsl() bool {
 	}()
 
 	val = term.HasCommand("wslpath")
-	term.Debug(strconv.FormatBool(val))
+	log.Debug(strconv.FormatBool(val))
 
 	return val
 }
 
 func (term *Terminal) IsWsl2() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	if !term.IsWsl() {
 		return false
 	}
@@ -57,21 +54,21 @@ func (term *Terminal) IsWsl2() bool {
 }
 
 func (term *Terminal) IsCygwin() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	return false
 }
 
 func (term *Terminal) TerminalWidth() (int, error) {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 
 	if term.CmdFlags.TerminalWidth > 0 {
-		term.DebugF("terminal width: %d", term.CmdFlags.TerminalWidth)
+		log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
 		return term.CmdFlags.TerminalWidth, nil
 	}
 
 	width, err := terminal.Width()
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 	}
 
 	// fetch width from the environment variable
@@ -79,20 +76,20 @@ func (term *Terminal) TerminalWidth() (int, error) {
 	if width == 0 {
 		i, err := strconv.Atoi(term.Getenv("COLUMNS"))
 		if err != nil {
-			term.Error(err)
+			log.Error(err)
 		}
 		width = uint(i)
 	}
 
 	term.CmdFlags.TerminalWidth = int(width)
-	term.DebugF("terminal width: %d", term.CmdFlags.TerminalWidth)
+	log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
 	return term.CmdFlags.TerminalWidth, err
 }
 
 func (term *Terminal) Platform() string {
 	const key = "environment_platform"
 	if val, found := term.Cache().Get(key); found {
-		term.Debug(val)
+		log.Debug(val)
 		return val
 	}
 
@@ -103,7 +100,7 @@ func (term *Terminal) Platform() string {
 
 	if wsl := term.Getenv("WSL_DISTRO_NAME"); len(wsl) != 0 {
 		platform = strings.Split(strings.ToLower(wsl), "-")[0]
-		term.Debug(platform)
+		log.Debug(platform)
 		return platform
 	}
 
@@ -116,7 +113,7 @@ func (term *Terminal) Platform() string {
 		}
 	}
 
-	term.Debug(platform)
+	log.Debug(platform)
 	return platform
 }
 
@@ -132,24 +129,24 @@ func (term *Terminal) InWSLSharedDrive() bool {
 	return !strings.HasPrefix(windowsPath, `//wsl.localhost/`) && !strings.HasPrefix(windowsPath, `//wsl$/`)
 }
 
-func (term *Terminal) ConvertToWindowsPath(path string) string {
-	windowsPath, err := term.RunCommand("wslpath", "-m", path)
+func (term *Terminal) ConvertToWindowsPath(input string) string {
+	windowsPath, err := term.RunCommand("wslpath", "-m", input)
 	if err == nil {
 		return windowsPath
 	}
-	return path
+	return input
 }
 
-func (term *Terminal) ConvertToLinuxPath(path string) string {
-	if linuxPath, err := term.RunCommand("wslpath", "-u", path); err == nil {
+func (term *Terminal) ConvertToLinuxPath(input string) string {
+	if linuxPath, err := term.RunCommand("wslpath", "-u", input); err == nil {
 		return linuxPath
 	}
-	return path
+	return input
 }
 
-func (term *Terminal) DirIsWritable(path string) bool {
-	defer term.Trace(time.Now(), path)
-	return unix.Access(path, unix.W_OK) == nil
+func (term *Terminal) DirIsWritable(input string) bool {
+	defer log.Trace(time.Now(), input)
+	return unix.Access(input, unix.W_OK) == nil
 }
 
 func (term *Terminal) Connection(_ ConnectionType) (*Connection, error) {
@@ -165,7 +162,7 @@ func (term *Terminal) Memory() (*Memory, error) {
 	m := &Memory{}
 	memStat, err := mem.VirtualMemory()
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 	m.PhysicalTotalMemory = memStat.Total
@@ -174,7 +171,7 @@ func (term *Terminal) Memory() (*Memory, error) {
 	m.PhysicalPercentUsed = memStat.UsedPercent
 	swapStat, err := mem.SwapMemory()
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 	}
 	m.SwapTotalMemory = swapStat.Total
 	m.SwapFreeMemory = swapStat.Free

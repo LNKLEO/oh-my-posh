@@ -52,9 +52,9 @@ type Config struct {
 	env     runtime.Environment
 }
 
-func (cfg *Config) MakeColors() color.String {
-	cacheDisabled := cfg.env.Getenv("OMP_CACHE_DISABLED") == "1"
-	return color.MakeColors(cfg.getPalette(), !cacheDisabled, cfg.AccentColor, cfg.env)
+func (cfg *Config) MakeColors(env runtime.Environment) color.String {
+	cacheDisabled := env.Getenv("OMP_CACHE_DISABLED") == "1"
+	return color.MakeColors(cfg.getPalette(), !cacheDisabled, cfg.AccentColor, env)
 }
 
 func (cfg *Config) getPalette() color.Palette {
@@ -72,7 +72,7 @@ func (cfg *Config) getPalette() color.Palette {
 	return cfg.Palette
 }
 
-func (cfg *Config) Features() shell.Features {
+func (cfg *Config) Features(env runtime.Environment) shell.Features {
 	var feats shell.Features
 
 	if cfg.TransientPrompt != nil {

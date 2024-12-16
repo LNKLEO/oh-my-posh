@@ -1,4 +1,5 @@
 set --export OMP_THEME ::CONFIG::
+set --export OMP_SHELL fish
 set --export OMP_SHELL_VERSION $FISH_VERSION
 set --export POWERLINE_COMMAND oh-my-posh
 set --export OMP_SESSION_ID ::SESSION_ID::

@@ -5,6 +5,7 @@ import (
 
 	"github.com/LNKLEO/OMP/prompt"
 	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/template"
 
 	"github.com/spf13/cobra"
 )
@@ -76,11 +77,16 @@ func createPrintCmd() *cobra.Command {
 				NoExitCode:    noStatus,
 				Column:        column,
 				JobCount:      jobCount,
+				IsPrimary:     args[0] == prompt.PRIMARY,
 				SaveCache:     saveCache,
 			}
 
 			eng := prompt.New(flags)
-			defer eng.Env.Close()
+
+			defer func() {
+				template.SaveCache()
+				eng.Env.Close()
+			}()
 
 			switch args[0] {
 			case prompt.DEBUG:

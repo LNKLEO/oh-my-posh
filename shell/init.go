@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/runtime/path"
+	"github.com/google/uuid"
 )
 
 const (
@@ -22,7 +23,7 @@ func getExecutablePath(env runtime.Environment) (string, error) {
 	}
 
 	if env.Flags().Strict {
-		return runtime.Base(env, executable), nil
+		return path.Base(executable), nil
 	}
 
 	// On Windows, it fails when the excutable is called in MSYS2 for example

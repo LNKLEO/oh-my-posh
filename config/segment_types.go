@@ -71,6 +71,8 @@ const (
 	EXIT SegmentType = "exit"
 	// FLUTTER writes the flutter version
 	FLUTTER SegmentType = "flutter"
+	// FORTRAN writes the gfortran version
+	FORTRAN SegmentType = "fortran"
 	// FOSSIL writes the fossil status
 	FOSSIL SegmentType = "fossil"
 	// GCP writes the active GCP context
@@ -95,8 +97,6 @@ const (
 	MERCURIAL SegmentType = "mercurial"
 	// MOJO writes the active version of Mojo and the name of the Magic virtual env
 	MOJO SegmentType = "mojo"
-	// MVN writes the active maven version
-	MVN SegmentType = "mvn"
 	// NBA writes NBA game data
 	NBA SegmentType = "nba"
 	// NBGV writes the nbgv version information
@@ -179,18 +179,19 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	BUN:             func() SegmentWriter { return &segments.Bun{} },
 	CARBONINTENSITY: func() SegmentWriter { return &segments.CarbonIntensity{} },
 	CDS:             func() SegmentWriter { return &segments.Cds{} },
+	CMAKE:           func() SegmentWriter { return &segments.Cmake{} },
 	CMD:             func() SegmentWriter { return &segments.Cmd{} },
 	CONNECTION:      func() SegmentWriter { return &segments.Connection{} },
 	CRYSTAL:         func() SegmentWriter { return &segments.Crystal{} },
-	CMAKE:           func() SegmentWriter { return &segments.Cmake{} },
 	DART:            func() SegmentWriter { return &segments.Dart{} },
 	DENO:            func() SegmentWriter { return &segments.Deno{} },
 	DOCKER:          func() SegmentWriter { return &segments.Docker{} },
 	DOTNET:          func() SegmentWriter { return &segments.Dotnet{} },
-	EXECUTIONTIME:   func() SegmentWriter { return &segments.Executiontime{} },
 	ELIXIR:          func() SegmentWriter { return &segments.Elixir{} },
+	EXECUTIONTIME:   func() SegmentWriter { return &segments.Executiontime{} },
 	EXIT:            func() SegmentWriter { return &segments.Status{} },
 	FLUTTER:         func() SegmentWriter { return &segments.Flutter{} },
+	FORTRAN:         func() SegmentWriter { return &segments.Fortran{} },
 	FOSSIL:          func() SegmentWriter { return &segments.Fossil{} },
 	GCP:             func() SegmentWriter { return &segments.Gcp{} },
 	GIT:             func() SegmentWriter { return &segments.Git{} },
@@ -203,13 +204,13 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	LUA:             func() SegmentWriter { return &segments.Lua{} },
 	MERCURIAL:       func() SegmentWriter { return &segments.Mercurial{} },
 	MOJO:            func() SegmentWriter { return &segments.Mojo{} },
-	MVN:             func() SegmentWriter { return &segments.Mvn{} },
 	NBA:             func() SegmentWriter { return &segments.Nba{} },
 	NBGV:            func() SegmentWriter { return &segments.Nbgv{} },
 	NETWORKS:        func() SegmentWriter { return &segments.Networks{} },
 	NIGHTSCOUT:      func() SegmentWriter { return &segments.Nightscout{} },
 	NODE:            func() SegmentWriter { return &segments.Node{} },
 	NPM:             func() SegmentWriter { return &segments.Npm{} },
+	NX:              func() SegmentWriter { return &segments.Nx{} },
 	OS:              func() SegmentWriter { return &segments.Os{} },
 	OWM:             func() SegmentWriter { return &segments.Owm{} },
 	PATH:            func() SegmentWriter { return &segments.Path{} },

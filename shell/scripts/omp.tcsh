@@ -1,5 +1,6 @@
-setenv POWERLINE_COMMAND "OMP";
+setenv POWERLINE_COMMAND OMP;
 setenv OMP_THEME ::CONFIG::;
+setenv OMP_SHELL "tcsh";
 setenv OMP_SHELL_VERSION "$tcsh";
 setenv OMP_SESSION_ID ::SESSION_ID::;
 setenv OSTYPE "$OSTYPE";

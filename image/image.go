@@ -35,6 +35,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/LNKLEO/OMP/cache"
 	fontCLI "github.com/LNKLEO/OMP/font"
 	"github.com/LNKLEO/OMP/regex"
 	"github.com/LNKLEO/OMP/runtime"
@@ -218,7 +219,7 @@ func (ir *Renderer) setOutputPath(config string) {
 func (ir *Renderer) loadFonts() error {
 	var data []byte
 
-	fontCachePath := filepath.Join(ir.env.CachePath(), "Hack.zip")
+	fontCachePath := filepath.Join(cache.Path(), "Hack.zip")
 	if _, err := stdOS.Stat(fontCachePath); err == nil {
 		data, _ = stdOS.ReadFile(fontCachePath)
 	}

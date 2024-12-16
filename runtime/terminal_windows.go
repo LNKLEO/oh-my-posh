@@ -3,18 +3,19 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/Azure/go-ansiterm/winterm"
+	"github.com/LNKLEO/OMP/log"
+	"github.com/LNKLEO/OMP/runtime/path"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
 func (term *Terminal) Root() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	var sid *windows.SID
 
 	// Although this looks scary, it is directly copied from the
@@ -29,7 +30,7 @@ func (term *Terminal) Root() bool {
 		0, 0, 0, 0, 0, 0,
 		&sid)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return false
 	}
 	defer func() {
@@ -43,75 +44,59 @@ func (term *Terminal) Root() bool {
 
 	member, err := token.IsMember(sid)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return false
 	}
 
 	return member
 }
 
-func (term *Terminal) Home() string {
-	home := os.Getenv("HOME")
-	defer func() {
-		term.Debug(home)
-	}()
-	if len(home) > 0 {
-		return home
-	}
-	// fallback to older implemenations on Windows
-	home = os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-	if home == "" {
-		home = os.Getenv("USERPROFILE")
-	}
-	return home
-}
-
 func (term *Terminal) QueryWindowTitles(processName, windowTitleRegex string) (string, error) {
-	defer term.Trace(time.Now(), windowTitleRegex)
+	defer log.Trace(time.Now(), windowTitleRegex)
 	title, err := queryWindowTitles(processName, windowTitleRegex)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 	}
 	return title, err
 }
 
 func (term *Terminal) IsWsl() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	return false
 }
 
 func (term *Terminal) IsWsl2() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	return false
 }
 
 func (term *Terminal) IsCygwin() bool {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 	return len(term.Getenv("OSTYPE")) > 0
 }
 
 func (term *Terminal) TerminalWidth() (int, error) {
-	defer term.Trace(time.Now())
+	defer log.Trace(time.Now())
 
 	if term.CmdFlags.TerminalWidth > 0 {
-		term.DebugF("terminal width: %d", term.CmdFlags.TerminalWidth)
+		log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
 		return term.CmdFlags.TerminalWidth, nil
 	}
 
 	handle, err := syscall.Open("CONOUT$", syscall.O_RDWR, 0)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return 0, err
 	}
 
 	info, err := winterm.GetConsoleScreenBufferInfo(uintptr(handle))
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return 0, err
 	}
 
 	term.CmdFlags.TerminalWidth = int(info.Size.X)
-	term.DebugF("terminal width: %d", term.CmdFlags.TerminalWidth)
+	log.Debugf("terminal width: %d", term.CmdFlags.TerminalWidth)
 	return term.CmdFlags.TerminalWidth, nil
 }
 
@@ -128,8 +113,8 @@ func (term *Terminal) Platform() string {
 // If the path ends in "\", the "(Default)" key in that path is retrieved.
 //
 // Returns a variant type if successful; nil and an error if not.
-func (term *Terminal) WindowsRegistryKeyValue(path string) (*WindowsRegistryValue, error) {
-	term.Trace(time.Now(), path)
+func (term *Terminal) WindowsRegistryKeyValue(input string) (*WindowsRegistryValue, error) {
+	log.Trace(time.Now(), input)
 
 	// Format:
 	// "HKLM\Software\Microsoft\Windows NT\CurrentVersion\EditionID"
@@ -143,16 +128,16 @@ func (term *Terminal) WindowsRegistryKeyValue(path string) (*WindowsRegistryValu
 	//
 	// If 3 is "" (i.e. the path ends with "\"), then get (Default) key.
 	//
-	rootKey, regPath, found := strings.Cut(path, `\`)
+	rootKey, regPath, found := strings.Cut(input, `\`)
 	if !found {
-		err := fmt.Errorf("Error, malformed registry path: '%s'", path)
-		term.Error(err)
+		err := fmt.Errorf("Error, malformed registry path: '%s'", input)
+		log.Error(err)
 		return nil, err
 	}
 
 	var regKey string
 	if !strings.HasSuffix(regPath, `\`) {
-		regKey = Base(term, regPath)
+		regKey = path.Base(regPath)
 		if len(regKey) != 0 {
 			regPath = strings.TrimSuffix(regPath, `\`+regKey)
 		}
@@ -172,19 +157,19 @@ func (term *Terminal) WindowsRegistryKeyValue(path string) (*WindowsRegistryValu
 		key = windows.HKEY_USERS
 	default:
 		err := fmt.Errorf("Error, unknown registry key: '%s", rootKey)
-		term.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
 	k, err := registry.OpenKey(key, regPath, registry.READ)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
 	_, valType, err := k.GetValue(regKey, nil)
 	if err != nil {
-		term.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -210,7 +195,7 @@ func (term *Terminal) WindowsRegistryKeyValue(path string) (*WindowsRegistryValu
 		return nil, errors.New(errorLogMsg)
 	}
 
-	term.Debug(fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
+	log.Debug(fmt.Sprintf("%s(%s): %s", regKey, regValue.ValueType, regValue.String))
 	return regValue, nil
 }
 
@@ -218,17 +203,17 @@ func (term *Terminal) InWSLSharedDrive() bool {
 	return false
 }
 
-func (term *Terminal) ConvertToWindowsPath(path string) string {
-	return strings.ReplaceAll(path, `\`, "/")
+func (term *Terminal) ConvertToWindowsPath(input string) string {
+	return strings.ReplaceAll(input, `\`, "/")
 }
 
-func (term *Terminal) ConvertToLinuxPath(path string) string {
-	return path
+func (term *Terminal) ConvertToLinuxPath(input string) string {
+	return input
 }
 
-func (term *Terminal) DirIsWritable(path string) bool {
-	defer term.Trace(time.Now())
-	return term.isWriteable(path)
+func (term *Terminal) DirIsWritable(input string) bool {
+	defer log.Trace(time.Now())
+	return term.isWriteable(input)
 }
 
 func (term *Terminal) Connection(connectionType ConnectionType) (*Connection, error) {
@@ -246,6 +231,6 @@ func (term *Terminal) Connection(connectionType ConnectionType) (*Connection, er
 		}
 	}
 
-	term.Error(fmt.Errorf("Network type '%s' not found", connectionType))
+	log.Error(fmt.Errorf("Network type '%s' not found", connectionType))
 	return nil, &NotImplemented{}
 }

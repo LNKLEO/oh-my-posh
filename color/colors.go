@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/gookit/color"
+
 	"github.com/LNKLEO/OMP/cache"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/template"
 )
@@ -164,7 +166,7 @@ func MakeColors(palette Palette, cacheEnabled bool, accentColor Ansi, env runtim
 }
 
 func (d *Defaults) SetAccentColor(env runtime.Environment, defaultColor Ansi) {
-	defer env.Trace(time.Now())
+	defer log.Trace(time.Now())
 
 	// get accent color from session cache first
 	if accent, OK := env.Session().Get("accent_color"); OK {

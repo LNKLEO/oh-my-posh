@@ -1,5 +1,6 @@
 set-env OMP_SESSION_ID ::SESSION_ID::
 set-env OMP_THEME ::CONFIG::
+set-env OMP_SHELL elvish
 set-env OMP_SHELL_VERSION $version
 set-env POWERLINE_COMMAND oh-my-posh
 

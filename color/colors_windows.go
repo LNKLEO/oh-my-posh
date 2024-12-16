@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/runtime"
 )
 
 func GetAccentColor(env runtime.Environment) (*RGB, error) {
-	defer env.Trace(time.Now())
+	defer log.Trace(time.Now())
 
 	if env == nil {
 		return nil, errors.New("unable to get color without environment")

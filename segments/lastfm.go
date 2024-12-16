@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/properties"
 )
 
@@ -54,7 +55,7 @@ func (d *LastFM) Enabled() bool {
 	err := d.setStatus()
 
 	if err != nil {
-		d.env.Error(err)
+		log.Error(err)
 		return false
 	}
 

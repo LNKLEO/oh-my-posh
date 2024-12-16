@@ -8,6 +8,7 @@ import (
 	runtime_ "runtime"
 
 	"github.com/LNKLEO/OMP/cache"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/regex"
 	"github.com/LNKLEO/OMP/runtime"
@@ -212,6 +213,7 @@ func (l *language) setVersion() error {
 		var version version
 		err := json.Unmarshal([]byte(versionCache), &version)
 		if err == nil {
+			log.Debugf("version cache restored for %s: %s", l.name, version)
 			l.version = version
 			return nil
 		}
@@ -239,7 +241,8 @@ func (l *language) setVersion() error {
 		l.version.Executable = command.executable
 
 		if marchalled, err := json.Marshal(l.version); err == nil {
-			l.env.Cache().Set(cacheKey, string(marchalled), cache.ONEWEEK)
+			duration := l.props.GetString(properties.CacheDuration, string(cache.NONE))
+			l.env.Cache().Set(cacheKey, string(marchalled), cache.Duration(duration))
 		}
 
 		return nil

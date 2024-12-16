@@ -11,11 +11,7 @@ var tcshInit string
 
 func (f Feature) Tcsh() Code {
 	switch f {
-	case Upgrade:
-		return `"$_omp_executable" upgrade;`
-	case Notice:
-		return `"$_omp_executable" notice;`
-	case PromptMark, RPrompt, PoshGit, Azure, LineError, Jobs, Tooltips, Transient, FTCSMarks, CursorPositioning:
+	case RPrompt, PoshGit, Azure, LineError, Jobs, Tooltips, Transient, FTCSMarks, CursorPositioning:
 		fallthrough
 	default:
 		return ""

@@ -1,6 +1,6 @@
 # remove any existing dynamic module of OMP
-if ($null -ne (Get-Module -Name "OMP-core")) {
-    Remove-Module -Name "OMP-core" -Force
+if ($null -ne (Get-Module -Name "OMP-Core")) {
+    Remove-Module -Name "OMP-Core" -Force
 }
 
 # Helper functions which need to be defined before the module is loaded
@@ -19,7 +19,7 @@ $global:_ompPoshGit = $false
 $global:_ompAzure = $false
 $global:_ompExecutable = ::OMP::
 
-New-Module -Name "OMP-core" -ScriptBlock {
+New-Module -Name "OMP-Core" -ScriptBlock {
     # Check `ConstrainedLanguage` mode.
     $script:ConstrainedLanguageMode = $ExecutionContext.SessionState.LanguageMode -eq "ConstrainedLanguage"
 
@@ -37,7 +37,8 @@ New-Module -Name "OMP-core" -ScriptBlock {
     $script:ToolTipCommand = ""
     $script:JobCount = 0
 
-    $env:POWERLINE_COMMAND = "OMP"
+    $env:POWERLINE_COMMAND = OMP
+    $env:OMP_SHELL = "pwsh"
     $env:OMP_SHELL_VERSION = $script:PSVersion
     $env:OMP_SESSION_ID = ::SESSION_ID::
     $env:CONDA_PROMPT_MODIFIER = $false

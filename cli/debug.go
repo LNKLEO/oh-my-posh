@@ -2,12 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/LNKLEO/OMP/build"
 	"github.com/LNKLEO/OMP/config"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/prompt"
 	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/shell"
 	"github.com/LNKLEO/OMP/template"
 	"github.com/LNKLEO/OMP/terminal"
 
@@ -23,42 +26,41 @@ func init() {
 
 func createDebugCmd() *cobra.Command {
 	debugCmd := &cobra.Command{
-		Use:       "debug [bash|zsh|fish|powershell|pwsh|cmd|nu|tcsh|elvish|xonsh]",
-		Short:     "Print the prompt in debug mode",
-		Long:      "Print the prompt in debug mode.",
-		ValidArgs: supportedShells,
-		Args:      NoArgsOrOneValidArg,
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:   "debug",
+		Short: "Print the prompt in debug mode",
+		Long:  "Print the prompt in debug mode.",
+		Run: func(_ *cobra.Command, _ []string) {
 			startTime := time.Now()
 
-			if len(args) == 0 {
-				_ = cmd.Help()
-				return
+			log.Enable()
+			log.Debug("debug mode enabled")
+
+			sh := os.Getenv("OMP_SHELL")
+
+			configFile := config.Path(configFlag)
+			cfg := config.Load(configFile, sh, false)
+
+			flags := &runtime.Flags{
+				Config: configFile,
+				Debug:  true,
+				PWD:    pwd,
+				Shell:  sh,
+				Plain:  plain,
 			}
 
-			env := &runtime.Terminal{
-				CmdFlags: &runtime.Flags{
-					Config: configFlag,
-					Debug:  true,
-					PWD:    pwd,
-					Shell:  args[0],
-					Plain:  plain,
-				},
-			}
+			env := &runtime.Terminal{}
+			env.Init(flags)
 
-			env.Init()
-			defer env.Close()
+			template.Init(env, cfg.Var)
 
-			template.Init(env)
+			defer func() {
+				template.SaveCache()
+				env.Close()
+			}()
 
-			cfg := config.Load(env)
-
-			// add variables to the environment
-			env.Var = cfg.Var
-
-			terminal.Init(args[0])
+			terminal.Init(shell.GENERIC)
 			terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate()
-			terminal.Colors = cfg.MakeColors()
+			terminal.Colors = cfg.MakeColors(env)
 			terminal.Plain = plain
 
 			eng := &prompt.Engine{

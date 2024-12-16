@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/LNKLEO/OMP/cache"
+	"github.com/LNKLEO/OMP/log"
 )
 
 type Data any
@@ -20,13 +21,8 @@ type context struct {
 
 func (c *context) init(t *Text) {
 	c.Data = t.Context
-
-	if c.Initialized {
-		return
-	}
-
 	c.Getenv = env.Getenv
-	c.Template = *env.TemplateCache()
+	c.Template = *Cache
 }
 
 var renderPool sync.Pool
@@ -54,7 +50,7 @@ func (t *renderer) release() {
 func (t *renderer) execute(text *Text) (string, error) {
 	tmpl, err := t.template.Parse(text.Template)
 	if err != nil {
-		env.Error(err)
+		log.Error(err)
 		return "", errors.New(InvalidTemplate)
 	}
 
@@ -62,7 +58,7 @@ func (t *renderer) execute(text *Text) (string, error) {
 
 	err = tmpl.Execute(&t.buffer, t.context)
 	if err != nil {
-		env.Error(err)
+		log.Error(err)
 		return "", errors.New(IncorrectTemplate)
 	}
 

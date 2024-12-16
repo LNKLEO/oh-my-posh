@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/LNKLEO/OMP/cache"
 	"github.com/LNKLEO/OMP/config"
 	"github.com/LNKLEO/OMP/log"
 )
@@ -20,7 +21,7 @@ func (e *Engine) PrintDebug(startTime time.Time, version string) string {
 
 	// console title timing
 	titleStartTime := time.Now()
-	e.Env.Debug("segment: Title")
+	log.Debug("segment: Title")
 	consoleTitle := &config.Segment{
 		Alias:      "ConsoleTitle",
 		NameLength: 12,
@@ -66,7 +67,7 @@ func (e *Engine) PrintDebug(startTime time.Time, version string) string {
 	}
 
 	e.write(fmt.Sprintf("\n%s %s\n", log.Text("Run duration:").Green().Bold().Plain(), time.Since(startTime)))
-	e.write(fmt.Sprintf("\n%s %s\n", log.Text("Cache path:").Green().Bold().Plain(), e.Env.CachePath()))
+	e.write(fmt.Sprintf("\n%s %s\n", log.Text("Cache path:").Green().Bold().Plain(), cache.Path()))
 
 	cfg := e.Env.Flags().Config
 	if len(cfg) == 0 {

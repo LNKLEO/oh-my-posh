@@ -20,9 +20,11 @@ type Engine struct {
 	activeSegment         *config.Segment
 	previousActiveSegment *config.Segment
 	rprompt               string
+	Overflow              config.Overflow
 	prompt                strings.Builder
 	currentLineLength     int
 	rpromptLength         int
+	Padding               int
 	Plain                 bool
 }
 
@@ -74,6 +76,11 @@ func (e *Engine) canWriteRightBlock(length int, rprompt bool) (int, bool) {
 
 	canWrite := availableSpace >= promptBreathingRoom
 
+	// reset the available space when we can't write so we can fill the line
+	if !canWrite {
+		availableSpace = consoleWidth - length
+	}
+
 	return availableSpace, canWrite
 }
 
@@ -110,22 +117,25 @@ func (e *Engine) pwd() {
 }
 
 func (e *Engine) getNewline() string {
+	newline := "\n"
+
 	if e.Plain || e.Env.Flags().Debug {
-		return "\n"
+		return newline
 	}
 
 	// Warp terminal will remove a newline character ('\n') from the prompt, so we hack it in.
 	// For Elvish on Windows, we do this to prevent cutting off a right-aligned block.
-	if e.isWarp() || (e.Env.Shell() == shell.ELVISH && e.Env.GOOS() == runtime.WINDOWS) {
+	// For Tcsh, we do this to prevent a newline character from being printed.
+	switch {
+	case e.isWarp():
+		fallthrough
+	case e.Env.Shell() == shell.ELVISH && e.Env.GOOS() == runtime.WINDOWS:
+		fallthrough
+	case e.Env.Shell() == shell.TCSH:
 		return terminal.LineBreak()
+	default:
+		return newline
 	}
-
-	// To avoid improper translations in Tcsh, we use an invisible word joiner character (U+2060) to separate a newline from possible preceding escape sequences.
-	if e.Env.Shell() == shell.TCSH {
-		return "\u2060\\n"
-	}
-
-	return "\n"
 }
 
 func (e *Engine) writeNewline() {
@@ -145,7 +155,13 @@ func (e *Engine) shouldFill(filler string, padLength int) (string, bool) {
 		return "", false
 	}
 
-	if padLength <= 0 {
+	tmpl := &template.Text{
+		Template: filler,
+		Context:  e,
+	}
+
+	var err error
+	if filler, err = tmpl.Render(); err != nil {
 		return "", false
 	}
 
@@ -176,8 +192,8 @@ func (e *Engine) getTitleTemplateText() string {
 func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 	text, length := e.writeBlockSegments(block)
 
-	// do not print anything when we don't have any text
-	if length == 0 {
+	// do not print anything when we don't have any text unless forced
+	if !block.Force && length == 0 {
 		return false
 	}
 
@@ -206,6 +222,7 @@ func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 
 		// we can't print the right block as there's not enough room available
 		if !OK {
+			e.Overflow = block.Overflow
 			switch block.Overflow {
 			case config.Break:
 				e.writeNewline()
@@ -222,6 +239,7 @@ func (e *Engine) renderBlock(block *config.Block, cancelNewline bool) bool {
 
 		defer func() {
 			e.currentLineLength = 0
+			e.Overflow = ""
 		}()
 
 		// validate if we have a filler and fill if needed
@@ -458,31 +476,23 @@ func (e *Engine) rectifyTerminalWidth(diff int) {
 // given configuration options, and is ready to print any
 // of the prompt components.
 func New(flags *runtime.Flags) *Engine {
-	env := &runtime.Terminal{
-		CmdFlags: flags,
-	}
+	flags.Config = config.Path(flags.Config)
+	cfg := config.Load(flags.Config, flags.Shell, flags.Migrate)
 
-	env.Init()
-	cfg := config.Load(env)
+	env := &runtime.Terminal{}
+	env.Init(flags)
 
-	// load the template cache for extra prompts prior to
-	// rendering any template
-	if flags.Type == DEBUG ||
-		flags.Type == SECONDARY ||
-		flags.Type == TRANSIENT ||
-		flags.Type == VALID ||
-		flags.Type == ERROR {
-		env.LoadTemplateCache()
-	}
+	template.Init(env, cfg.Var)
 
-	template.Init(env)
-
-	env.Var = cfg.Var
-	flags.HasTransient = cfg.TransientPrompt != nil
+	flags.HasExtra = cfg.DebugPrompt != nil ||
+		cfg.SecondaryPrompt != nil ||
+		cfg.TransientPrompt != nil ||
+		cfg.ValidLine != nil ||
+		cfg.ErrorLine != nil
 
 	terminal.Init(env.Shell())
 	terminal.BackgroundColor = cfg.TerminalBackground.ResolveTemplate()
-	terminal.Colors = cfg.MakeColors()
+	terminal.Colors = cfg.MakeColors(env)
 	terminal.Plain = flags.Plain
 
 	eng := &Engine{

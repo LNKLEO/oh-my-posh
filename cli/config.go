@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/LNKLEO/OMP/runtime"
+	"github.com/LNKLEO/OMP/config"
 
 	"github.com/spf13/cobra"
 )
@@ -31,13 +31,8 @@ You can export, migrate or edit the config (via the editor specified in the envi
 		}
 		switch args[0] {
 		case "edit":
-			env := &runtime.Terminal{
-				CmdFlags: &runtime.Flags{
-					Config: configFlag,
-				},
-			}
-			env.ResolveConfigPath()
-			os.Exit(editFileWithEditor(env.CmdFlags.Config))
+			path := config.Path((configFlag))
+			os.Exit(editFileWithEditor(path))
 		case "get":
 			// only here for backwards compatibility
 			fmt.Print(time.Now().UnixNano() / 1000000)

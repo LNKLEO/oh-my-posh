@@ -2,8 +2,9 @@
 ---@diagnostic disable: undefined-field
 ---@diagnostic disable: lowercase-global
 
--- Cache PID
+-- Environment variables
 os.setenv('OMP_SESSION_ID', '::SESSION_ID::')
+os.setenv('OMP_SHELL', 'cmd')
 
 -- Helper functions
 

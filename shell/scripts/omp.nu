@@ -7,6 +7,7 @@ $env.POWERLINE_COMMAND = 'oh-my-posh'
 $env.OMP_THEME = (echo ::CONFIG::)
 $env.PROMPT_INDICATOR = ""
 $env.OMP_SESSION_ID = (echo ::SESSION_ID::)
+$env.OMP_SHELL = "nu"
 $env.OMP_SHELL_VERSION = (version | get version)
 
 let _omp_executable: string = (echo ::OMP::)

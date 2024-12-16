@@ -9,6 +9,7 @@ import (
 
 	"github.com/LNKLEO/OMP/cache"
 	"github.com/LNKLEO/OMP/color"
+	"github.com/LNKLEO/OMP/log"
 	"github.com/LNKLEO/OMP/properties"
 	"github.com/LNKLEO/OMP/regex"
 	"github.com/LNKLEO/OMP/runtime"
@@ -71,6 +72,7 @@ type Segment struct {
 	Enabled                bool           `json:"-" toml:"-"`
 	Newline                bool           `json:"newline,omitempty" toml:"newline,omitempty"`
 	InvertPowerline        bool           `json:"invert_powerline,omitempty" toml:"invert_powerline,omitempty"`
+	restored               bool           `json:"-" toml:"-"`
 }
 
 func (segment *Segment) Name() string {
@@ -105,7 +107,7 @@ func (segment *Segment) Execute(env runtime.Environment) {
 		return
 	}
 
-	segment.env.DebugF("segment: %s", segment.Name())
+	log.Debugf("segment: %s", segment.Name())
 
 	if segment.isToggled() {
 		return
@@ -115,11 +117,14 @@ func (segment *Segment) Execute(env runtime.Environment) {
 		return
 	}
 
-	if shouldHideForWidth(env, segment.MinWidth, segment.MaxWidth) {
+	if shouldHideForWidth(segment.env, segment.MinWidth, segment.MaxWidth) {
 		return
 	}
 
-	segment.Enabled = segment.writer.Enabled()
+	if segment.writer.Enabled() {
+		segment.Enabled = true
+		template.Cache.AddSegmentData(segment.Name(), segment.writer)
+	}
 }
 
 func (segment *Segment) Render() {
@@ -131,13 +136,15 @@ func (segment *Segment) Render() {
 	segment.Enabled = len(strings.ReplaceAll(text, " ", "")) > 0
 
 	if !segment.Enabled {
-		segment.env.TemplateCache().RemoveSegmentData(segment.Name())
+		template.Cache.RemoveSegmentData(segment.Name())
 		return
 	}
 
 	segment.SetText(text)
-	segment.env.TemplateCache().AddSegmentData(segment.Name(), segment.writer)
 	segment.setCache()
+
+	// We do this to make `.Text` available for a cross-segment reference in an extra prompt.
+	template.Cache.AddSegmentData(segment.Name(), segment.writer)
 }
 
 func (segment *Segment) Text() string {
@@ -196,13 +203,14 @@ func (segment *Segment) hasCache() bool {
 func (segment *Segment) isToggled() bool {
 	toggles, OK := segment.env.Session().Get(cache.TOGGLECACHE)
 	if !OK || len(toggles) == 0 {
+		log.Debug("no toggles found")
 		return false
 	}
 
 	list := strings.Split(toggles, ",")
 	for _, toggle := range list {
 		if SegmentType(toggle) == segment.Type || toggle == segment.Alias {
-			segment.env.DebugF("segment toggled off: %s", segment.Name())
+			log.Debugf("segment toggled off: %s", segment.Name())
 			return true
 		}
 	}
@@ -217,28 +225,33 @@ func (segment *Segment) restoreCache() bool {
 
 	data, OK := segment.env.Session().Get(segment.cacheKey())
 	if !OK {
+		log.Debug("no cache found for segment: ", segment.Name())
 		return false
 	}
 
 	err := json.Unmarshal([]byte(data), &segment.writer)
 	if err != nil {
-		segment.env.Error(err)
+		log.Error(err)
 	}
 
 	segment.Enabled = true
-	segment.env.TemplateCache().AddSegmentData(segment.Name(), segment.writer)
+	template.Cache.AddSegmentData(segment.Name(), segment.writer)
+
+	log.Debug("restored segment from cache: ", segment.Name())
+
+	segment.restored = true
 
 	return true
 }
 
 func (segment *Segment) setCache() {
-	if !segment.hasCache() {
+	if segment.restored || !segment.hasCache() {
 		return
 	}
 
 	data, err := json.Marshal(segment.writer)
 	if err != nil {
-		segment.env.Error(err)
+		log.Error(err)
 		return
 	}
 
