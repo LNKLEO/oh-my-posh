@@ -53,16 +53,12 @@ func Init(env runtime.Environment, feats Features) string {
 
 		var command, config string
 
-		switch shell {
-		case PWSH, PWSH5:
-			command = "(@(& %s init %s --config=%s --print%s) -join \"`n\") | Invoke-Expression"
-		}
-
+		command = "(@(& %s init %s --config=%s --print%s) -join \"`n\") | Invoke-Expression"
 		config = quotePwshOrElvishStr(env.Flags().Config)
 		executable = quotePwshOrElvishStr(executable)
 
 		return fmt.Sprintf(command, executable, shell, config, additionalParams)
-	case ZSH, BASH, FISH, CMD:
+	case ZSH, BASH, CMD:
 		return PrintInit(env, feats, nil)
 	default:
 		return fmt.Sprintf(`echo "%s is not supported by Oh My Posh"`, shell)
@@ -97,11 +93,6 @@ func PrintInit(env runtime.Environment, features Features, startTime *time.Time)
 		configFile = QuotePosixStr(configFile)
 		sessionID = QuotePosixStr(sessionID)
 		script = bashInit
-	case FISH:
-		executable = quoteFishStr(executable)
-		configFile = quoteFishStr(configFile)
-		sessionID = quoteFishStr(sessionID)
-		script = fishInit
 	case CMD:
 		executable = escapeLuaStr(executable)
 		configFile = escapeLuaStr(configFile)

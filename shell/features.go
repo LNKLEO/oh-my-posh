@@ -29,8 +29,6 @@ func (f Features) Lines(shell string) Lines {
 			code = feature.Zsh()
 		case BASH:
 			code = feature.Bash()
-		case FISH:
-			code = feature.Fish()
 		case CMD:
 			code = feature.Cmd()
 		}

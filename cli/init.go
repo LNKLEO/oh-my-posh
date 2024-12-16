@@ -20,7 +20,6 @@ var (
 	supportedShells = []string{
 		"bash",
 		"zsh",
-		"fish",
 		"powershell",
 		"pwsh",
 		"cmd",
@@ -35,7 +34,7 @@ func init() {
 
 func createInitCmd() *cobra.Command {
 	initCmd := &cobra.Command{
-		Use:   "init [bash|zsh|fish|powershell|pwsh|cmd]",
+		Use:   "init [bash|zsh|powershell|pwsh|cmd]",
 		Short: "Initialize your shell and config",
 		Long: `Initialize your shell and config.
 

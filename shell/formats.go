@@ -57,15 +57,12 @@ func GetFormats(shell string) *Formats {
 			SaveCursorPosition:    "\x1b7",
 			RestoreCursorPosition: "\x1b8",
 			Title:                 "\x1b]0;%s\007",
-			// when in fish on Linux, it seems hyperlinks ending with \\ print a \
-			// unlike on macOS. However, this is a fish bug, so do not try to fix it here:
-			// https://github.com/JanDeDobbeleer/oh-my-posh/pull/3288#issuecomment-1369137068
-			HyperlinkStart:  "\x1b]8;;",
-			HyperlinkCenter: "\x1b\\",
-			HyperlinkEnd:    "\x1b]8;;\x1b\\",
-			Osc99:           "\x1b]9;9;%s\x1b\\",
-			Osc7:            "\x1b]7;file://%s/%s\x1b\\",
-			Osc51:           "\x1b]51;A%s@%s:%s\x1b\\",
+			HyperlinkStart:        "\x1b]8;;",
+			HyperlinkCenter:       "\x1b\\",
+			HyperlinkEnd:          "\x1b]8;;\x1b\\",
+			Osc99:                 "\x1b]9;9;%s\x1b\\",
+			Osc7:                  "\x1b]7;file://%s/%s\x1b\\",
+			Osc51:                 "\x1b]51;A%s@%s:%s\x1b\\",
 		}
 	}
 
