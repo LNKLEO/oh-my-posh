@@ -64,8 +64,7 @@ type Environment interface {
 	InWSLSharedDrive() bool
 	ConvertToLinuxPath(input string) string
 	ConvertToWindowsPath(input string) string
-	Connection(connectionType ConnectionType) (*Connection, error)
-	GetAllNetworkInterfaces() (*[]NetworkInfo, error)
+	Connection() ([]*Connection, error)
 	CursorPosition() (row, col int)
 	SystemInfo() (*SystemInfo, error)
 }
@@ -136,18 +135,9 @@ func (n *NotImplemented) Error() string {
 	return "not implemented"
 }
 
-type ConnectionType string
-
-const (
-	ETHERNET  ConnectionType = "ethernet"
-	WIFI      ConnectionType = "wifi"
-	CELLULAR  ConnectionType = "cellular"
-	BLUETOOTH ConnectionType = "bluetooth"
-)
-
 type Connection struct {
 	Name         string
-	Type         ConnectionType
+	Type         string
 	SSID         string
 	TransmitRate uint64
 	ReceiveRate  uint64

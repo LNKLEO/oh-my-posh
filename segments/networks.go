@@ -50,24 +50,24 @@ func (n *Networks) Enabled() bool {
 	Spliter := n.props.GetString("Spliter", "|")
 	// IconConnected := n.props.GetString("IconConnected", "")
 	// IconDisconnected := n.props.GetString("IconDisconnected", "")
-	networks, err := n.env.GetAllNetworkInterfaces()
+	connections, err := n.env.Connection()
 	displayError := n.props.GetBool(properties.DisplayError, false)
 	if err != nil && displayError {
 		n.Error = err.Error()
 		return true
 	}
-	if err != nil || networks == nil {
+	if err != nil || connections == nil {
 		return false
 	}
-	if len(*networks) == 0 {
+	if len(connections) == 0 {
 		n.Status = "Disconnected"
 	} else {
 		n.Status = "Connected"
-		networkstrs := make([]string, 0)
-		for _, network := range *networks {
-			networkstrs = append(networkstrs, n.ConstructNetworkInfo(network))
+		connectionstrs := make([]string, 0)
+		for _, connection := range connections {
+			connectionstrs = append(connectionstrs, n.ConstructConnectionInfo(connection))
 		}
-		n.Networks = strings.Join(networkstrs, Spliter)
+		n.Networks = strings.Join(connectionstrs, Spliter)
 	}
 	return true
 }
@@ -77,23 +77,14 @@ func (n *Networks) Init(props properties.Properties, env runtime.Environment) {
 	n.env = env
 }
 
-func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
+func (n *Networks) ConstructConnectionInfo(connection *runtime.Connection) string {
 	str := ""
-	IconEthernet := n.props.GetString("IconEthernet", "󰛳")
-	IconWiFi := n.props.GetString("IconWiFi", "󰖩")
-	IconBluetooth := n.props.GetString("IconBluetooth", "󰂴")
-	IconCellular := n.props.GetString("IconCellular", "󱄙")
-	IconOther := n.props.GetString("IconOther", "󰇩")
-	NDISPhysicalMeidaTypeMap := make(map[runtime.NDIS_PHYSICAL_MEDIUM]string)
-	NDISPhysicalMeidaTypeMap[runtime.NdisPhysicalMedium802_3] = IconEthernet
-	NDISPhysicalMeidaTypeMap[runtime.NdisPhysicalMediumNative802_11] = IconWiFi
-	NDISPhysicalMeidaTypeMap[runtime.NdisPhysicalMediumBluetooth] = IconBluetooth
-	NDISPhysicalMeidaTypeMap[runtime.NdisPhysicalMediumWirelessWan] = IconCellular
-	NameMap := make(map[runtime.NDIS_PHYSICAL_MEDIUM]string)
-	NameMap[runtime.NdisPhysicalMedium802_3] = "Ethernet"
-	NameMap[runtime.NdisPhysicalMediumNative802_11] = "Wi-Fi"
-	NameMap[runtime.NdisPhysicalMediumBluetooth] = "Bluetooth"
-	NameMap[runtime.NdisPhysicalMediumWirelessWan] = "Cellular"
+	IconMap := make(map[string]string)
+	IconMap["Ethernet"] = "󰛳"
+	IconMap["Wi-Fi"] = "󰖩"
+	IconMap["Bluetooth"] = "󰂴"
+	IconMap["Cellular"] = "󱄙"
+	IconMap["Other"] = "󰇩"
 
 	IconAsAT := n.props.GetBool("IconAsAT", false)
 	ShowType := n.props.GetBool("ShowType", true)
@@ -102,23 +93,20 @@ func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
 	LinkSpeedFull := n.props.GetBool("LinkSpeedFull", false)
 	LinkSpeedUnit := Unit(n.props.GetString("LinkSpeedUnit", "Auto"))
 
-	icon, OK := NDISPhysicalMeidaTypeMap[network.NDISPhysicalMeidaType]
+	icon := IconMap[connection.Type]
 	AT := "@"
-	if !OK {
-		icon = IconOther
-	}
 	if IconAsAT {
 		AT = icon
 	} else {
 		str += icon
-		if !ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == runtime.NdisPhysicalMediumNative802_11) {
+		if !ShowType && !(ShowSSID && connection.Type == "Wi-Fi") {
 			AT = ""
 		}
 	}
 
-	if ShowSSID && network.NDISPhysicalMeidaType == runtime.NdisPhysicalMediumNative802_11 {
+	if ShowSSID && connection.Type == "Wi-Fi" {
 		if SSIDAbbr > 0 {
-			abbr := network.SSID
+			abbr := connection.SSID
 			for len(abbr) > SSIDAbbr {
 				idx := strings.LastIndexAny(abbr, " #_-")
 				if idx == -1 {
@@ -128,16 +116,12 @@ func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
 			}
 			str += abbr
 		} else {
-			str += network.SSID
+			str += connection.SSID
 		}
 	}
 
-	if ShowType && !(ShowSSID && network.NDISPhysicalMeidaType == runtime.NdisPhysicalMediumNative802_11) {
-		if name, OK := NameMap[network.NDISPhysicalMeidaType]; OK {
-			str += name
-		} else {
-			str += "Unknown"
-		}
+	if ShowType && !(ShowSSID && connection.Type == "Wi-Fi") {
+		str += connection.Type
 	}
 
 	if LinkSpeedUnit != Hide {
@@ -147,101 +131,33 @@ func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
 		var ReceiveLinkSpeedUnit Unit
 
 		switch LinkSpeedUnit {
-		case bps:
-			TransmitLinkSpeed = fmt.Sprintf("%d", network.TransmitLinkSpeed)
-			TransmitLinkSpeedUnit = bps
-			ReceiveLinkSpeed = fmt.Sprintf("%d", network.ReceiveLinkSpeed)
-			ReceiveLinkSpeedUnit = bps
-		case b:
-			TransmitLinkSpeed = fmt.Sprintf("%d", network.TransmitLinkSpeed)
+		case b, bps:
+			TransmitLinkSpeed = fmt.Sprintf("%d", connection.TransmitRate)
 			TransmitLinkSpeedUnit = b
-			ReceiveLinkSpeed = fmt.Sprintf("%d", network.ReceiveLinkSpeed)
+			ReceiveLinkSpeed = fmt.Sprintf("%d", connection.ReceiveRate)
 			ReceiveLinkSpeedUnit = b
-		case Kbps:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(3), 'f', -1, 64)
-			TransmitLinkSpeedUnit = Kbps
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(3), 'f', -1, 64)
-			ReceiveLinkSpeedUnit = Kbps
-		case K:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(3), 'f', -1, 64)
+		case K, Kbps:
+			TransmitLinkSpeed = strconv.FormatFloat(float64(connection.TransmitRate)/math.Pow10(3), 'f', -1, 64)
 			TransmitLinkSpeedUnit = K
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(3), 'f', -1, 64)
+			ReceiveLinkSpeed = strconv.FormatFloat(float64(connection.ReceiveRate)/math.Pow10(3), 'f', -1, 64)
 			ReceiveLinkSpeedUnit = K
-		case Mbps:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(6), 'f', -1, 64)
-			TransmitLinkSpeedUnit = Mbps
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(6), 'f', -1, 64)
-			ReceiveLinkSpeedUnit = Mbps
-		case M:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(6), 'f', -1, 64)
+		case M, Mbps:
+			TransmitLinkSpeed = strconv.FormatFloat(float64(connection.TransmitRate)/math.Pow10(6), 'f', -1, 64)
 			TransmitLinkSpeedUnit = M
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(6), 'f', -1, 64)
+			ReceiveLinkSpeed = strconv.FormatFloat(float64(connection.ReceiveRate)/math.Pow10(6), 'f', -1, 64)
 			ReceiveLinkSpeedUnit = M
-		case Gbps:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(9), 'f', -1, 64)
-			TransmitLinkSpeedUnit = Gbps
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(9), 'f', -1, 64)
-			ReceiveLinkSpeedUnit = Gbps
-		case G:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(9), 'f', -1, 64)
+		case G, Gbps:
+			TransmitLinkSpeed = strconv.FormatFloat(float64(connection.TransmitRate)/math.Pow10(9), 'f', -1, 64)
 			TransmitLinkSpeedUnit = G
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(9), 'f', -1, 64)
+			ReceiveLinkSpeed = strconv.FormatFloat(float64(connection.ReceiveRate)/math.Pow10(9), 'f', -1, 64)
 			ReceiveLinkSpeedUnit = G
-		case Tbps:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(12), 'f', -1, 64)
-			TransmitLinkSpeedUnit = Tbps
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(12), 'f', -1, 64)
-			ReceiveLinkSpeedUnit = Tbps
-		case T:
-			TransmitLinkSpeed = strconv.FormatFloat(float64(network.TransmitLinkSpeed)/math.Pow10(12), 'f', -1, 64)
+		case T, Tbps:
+			TransmitLinkSpeed = strconv.FormatFloat(float64(connection.TransmitRate)/math.Pow10(12), 'f', -1, 64)
 			TransmitLinkSpeedUnit = T
-			ReceiveLinkSpeed = strconv.FormatFloat(float64(network.ReceiveLinkSpeed)/math.Pow10(12), 'f', -1, 64)
+			ReceiveLinkSpeed = strconv.FormatFloat(float64(connection.ReceiveRate)/math.Pow10(12), 'f', -1, 64)
 			ReceiveLinkSpeedUnit = T
-		case Auto:
-			TransmitSpeedUnitIndex := (len(fmt.Sprintf("%d", network.TransmitLinkSpeed)) - 1) / 3
-			if TransmitSpeedUnitIndex > 4 {
-				TransmitSpeedUnitIndex = 4
-			}
-			switch TransmitSpeedUnitIndex {
-			case 0:
-				TransmitLinkSpeedUnit = bps
-			case 1:
-				TransmitLinkSpeedUnit = Kbps
-			case 2:
-				TransmitLinkSpeedUnit = Mbps
-			case 3:
-				TransmitLinkSpeedUnit = Gbps
-			case 4:
-				TransmitLinkSpeedUnit = Tbps
-			}
-			ReceiveSpeedUnitIndex := (len(fmt.Sprintf("%d", network.TransmitLinkSpeed)) - 1) / 3
-			if ReceiveSpeedUnitIndex > 4 {
-				ReceiveSpeedUnitIndex = 4
-			}
-			switch ReceiveSpeedUnitIndex {
-			case 0:
-				ReceiveLinkSpeedUnit = bps
-			case 1:
-				ReceiveLinkSpeedUnit = Kbps
-			case 2:
-				ReceiveLinkSpeedUnit = Mbps
-			case 3:
-				ReceiveLinkSpeedUnit = Gbps
-			case 4:
-				ReceiveLinkSpeedUnit = Tbps
-			}
-			if TransmitSpeedUnitIndex == 0 {
-				TransmitLinkSpeed = fmt.Sprintf("%d", network.TransmitLinkSpeed)
-			} else {
-				TransmitLinkSpeed = fmt.Sprintf("%.3g", float64(network.TransmitLinkSpeed)/math.Pow10(3*TransmitSpeedUnitIndex))
-			}
-			if ReceiveSpeedUnitIndex == 0 {
-				ReceiveLinkSpeed = fmt.Sprintf("%d", network.ReceiveLinkSpeed)
-			} else {
-				ReceiveLinkSpeed = fmt.Sprintf("%.3g", float64(network.ReceiveLinkSpeed)/math.Pow10(3*ReceiveSpeedUnitIndex))
-			}
-		case A:
-			TransmitSpeedUnitIndex := (len(fmt.Sprintf("%d", network.TransmitLinkSpeed)) - 1) / 3
+		case A, Auto:
+			TransmitSpeedUnitIndex := (len(fmt.Sprintf("%d", connection.TransmitRate)) - 1) / 3
 			if TransmitSpeedUnitIndex > 4 {
 				TransmitSpeedUnitIndex = 4
 			}
@@ -257,7 +173,7 @@ func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
 			case 4:
 				TransmitLinkSpeedUnit = T
 			}
-			ReceiveSpeedUnitIndex := (len(fmt.Sprintf("%d", network.ReceiveLinkSpeed)) - 1) / 3
+			ReceiveSpeedUnitIndex := (len(fmt.Sprintf("%d", connection.ReceiveRate)) - 1) / 3
 			if ReceiveSpeedUnitIndex > 4 {
 				ReceiveSpeedUnitIndex = 4
 			}
@@ -274,14 +190,23 @@ func (n *Networks) ConstructNetworkInfo(network runtime.NetworkInfo) string {
 				ReceiveLinkSpeedUnit = T
 			}
 			if TransmitSpeedUnitIndex == 0 {
-				TransmitLinkSpeed = fmt.Sprintf("%d", network.TransmitLinkSpeed)
+				TransmitLinkSpeed = fmt.Sprintf("%d", connection.TransmitRate)
 			} else {
-				TransmitLinkSpeed = fmt.Sprintf("%.3g", float64(network.TransmitLinkSpeed)/math.Pow10(3*TransmitSpeedUnitIndex))
+				TransmitLinkSpeed = fmt.Sprintf("%.3g", float64(connection.TransmitRate)/math.Pow10(3*TransmitSpeedUnitIndex))
 			}
 			if ReceiveSpeedUnitIndex == 0 {
-				ReceiveLinkSpeed = fmt.Sprintf("%d", network.ReceiveLinkSpeed)
+				ReceiveLinkSpeed = fmt.Sprintf("%d", connection.ReceiveRate)
 			} else {
-				ReceiveLinkSpeed = fmt.Sprintf("%.3g", float64(network.ReceiveLinkSpeed)/math.Pow10(3*ReceiveSpeedUnitIndex))
+				ReceiveLinkSpeed = fmt.Sprintf("%.3g", float64(connection.ReceiveRate)/math.Pow10(3*ReceiveSpeedUnitIndex))
+			}
+		}
+		switch LinkSpeedUnit {
+		case bps, Kbps, Mbps, Gbps, Tbps, Auto:
+			if TransmitLinkSpeedUnit != "" {
+				TransmitLinkSpeedUnit += "bps"
+			}
+			if ReceiveLinkSpeedUnit != "" {
+				ReceiveLinkSpeedUnit += "bps"
 			}
 		}
 
