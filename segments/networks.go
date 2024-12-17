@@ -15,7 +15,6 @@ type Networks struct {
 
 	Error string
 
-	NetworksInfo []runtime.NetworkInfo
 	Networks     string
 	Status       string
 }

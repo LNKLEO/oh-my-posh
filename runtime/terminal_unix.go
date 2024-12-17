@@ -149,12 +149,7 @@ func (term *Terminal) DirIsWritable(input string) bool {
 	return unix.Access(input, unix.W_OK) == nil
 }
 
-func (term *Terminal) Connection(_ ConnectionType) (*Connection, error) {
-	// added to disable the linting error, we can implement this later
-	if len(term.networks) == 0 {
-		return nil, &NotImplemented{}
-	}
-
+func (term *Terminal) Connection() ([]*Connection, error) {
 	return nil, &NotImplemented{}
 }
 
