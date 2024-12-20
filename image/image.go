@@ -36,7 +36,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/LNKLEO/OMP/cache"
-	fontCLI "github.com/LNKLEO/OMP/font"
+	font_ "github.com/LNKLEO/OMP/font"
 	"github.com/LNKLEO/OMP/regex"
 	"github.com/LNKLEO/OMP/runtime"
 	"github.com/LNKLEO/OMP/terminal"
@@ -229,7 +229,7 @@ func (ir *Renderer) loadFonts() error {
 		url := "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.0/Hack.zip"
 		var err error
 
-		data, err = fontCLI.Download(url)
+		data, err = font_.Download(url)
 		if err != nil {
 			return err
 		}
