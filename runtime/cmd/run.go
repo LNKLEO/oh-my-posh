@@ -10,8 +10,8 @@ import (
 
 // Run is used to correctly run a command with a timeout.
 func Run(command string, args ...string) (string, error) {
-	// set a timeout of 4 seconds
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*4)
+	// set a timeout of 16 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*16)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, command, args...)
 	var out bytes.Buffer
