@@ -767,7 +767,7 @@ func (g *Git) setGitHEADContext() {
 				headIcon = branchIcon
 				theirs = g.formatBranch(matches["theirs"])
 			}
-			g.HEAD = fmt.Sprintf("%s%s%s into %s", icon, headIcon, theirs, formatDetached())
+			g.HEAD = fmt.Sprintf("%s%s%s->%s", icon, headIcon, theirs, formatDetached())
 			return
 		}
 	}
