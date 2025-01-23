@@ -29,8 +29,6 @@ const (
 	Accordion SegmentStyle = "accordion"
 	// Diamond writes the prompt shaped with a leading and trailing symbol
 	Diamond SegmentStyle = "diamond"
-	// AWS writes the active aws context
-	AWS SegmentType = "aws"
 	// AZ writes the Azure subscription info we're currently in
 	AZ SegmentType = "az"
 	// AZD writes the Azure Developer CLI environment info we're current in
@@ -53,8 +51,6 @@ const (
 	EXECUTIONTIME SegmentType = "executiontime"
 	// EXIT writes the last exit code
 	EXIT SegmentType = "exit"
-	// FLUTTER writes the flutter version
-	GCP SegmentType = "gcp"
 	// GIT represents the git status and information
 	GIT SegmentType = "git"
 	// GITVERSION represents the gitversion information
@@ -104,7 +100,6 @@ const (
 // Segments contains all available prompt segment writers.
 // Consumers of the library can also add their own segment writer.
 var Segments = map[SegmentType]func() SegmentWriter{
-	AWS:             func() SegmentWriter { return &segments.Aws{} },
 	AZ:              func() SegmentWriter { return &segments.Az{} },
 	AZD:             func() SegmentWriter { return &segments.Azd{} },
 	AZFUNC:          func() SegmentWriter { return &segments.AzFunc{} },
@@ -116,7 +111,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	DOTNET:          func() SegmentWriter { return &segments.Dotnet{} },
 	EXECUTIONTIME:   func() SegmentWriter { return &segments.Executiontime{} },
 	EXIT:            func() SegmentWriter { return &segments.Status{} },
-	GCP:             func() SegmentWriter { return &segments.Gcp{} },
 	GIT:             func() SegmentWriter { return &segments.Git{} },
 	GOLANG:          func() SegmentWriter { return &segments.Golang{} },
 	HASKELL:         func() SegmentWriter { return &segments.Haskell{} },

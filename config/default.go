@@ -168,19 +168,6 @@ func Default(warning bool) *Config {
 		},
 		Tooltips: []*Segment{
 			{
-				Type:            AWS,
-				Style:           Diamond,
-				LeadingDiamond:  "\ue0b0",
-				TrailingDiamond: "\ue0b4",
-				Foreground:      "p:white",
-				Background:      "p:orange",
-				Template:        " \ue7ad {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} ",
-				Properties: properties.Map{
-					properties.DisplayDefault: true,
-				},
-				Tips: []string{"aws"},
-			},
-			{
 				Type:            AZ,
 				Style:           Diamond,
 				LeadingDiamond:  "\ue0b0",
