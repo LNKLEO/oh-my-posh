@@ -63,8 +63,6 @@ const (
 	HASKELL SegmentType = "haskell"
 	// IPIFY segment
 	IPIFY SegmentType = "ipify"
-	// LASTFM writes the lastfm status
-	LASTFM SegmentType = "lastfm"
 	// NETWORKS get all current active network connections
 	NETWORKS SegmentType = "networks"
 	// NODE writes which node version is currently active
@@ -89,8 +87,6 @@ const (
 	SESSION SegmentType = "session"
 	// SHELL writes which shell we're currently in
 	SHELL SegmentType = "shell"
-	// SPOTIFY writes the SPOTIFY status for Mac
-	SPOTIFY SegmentType = "spotify"
 	// STATUS writes the last know command status
 	STATUS SegmentType = "status"
 	// SYSTEMINFO writes system information (memory, cpu, load)
@@ -125,7 +121,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	GOLANG:          func() SegmentWriter { return &segments.Golang{} },
 	HASKELL:         func() SegmentWriter { return &segments.Haskell{} },
 	IPIFY:           func() SegmentWriter { return &segments.IPify{} },
-	LASTFM:          func() SegmentWriter { return &segments.LastFM{} },
 	NETWORKS:        func() SegmentWriter { return &segments.Networks{} },
 	NODE:            func() SegmentWriter { return &segments.Node{} },
 	NPM:             func() SegmentWriter { return &segments.Npm{} },
@@ -138,7 +133,6 @@ var Segments = map[SegmentType]func() SegmentWriter{
 	RUST:            func() SegmentWriter { return &segments.Rust{} },
 	SESSION:         func() SegmentWriter { return &segments.Session{} },
 	SHELL:           func() SegmentWriter { return &segments.Shell{} },
-	SPOTIFY:         func() SegmentWriter { return &segments.Spotify{} },
 	STATUS:          func() SegmentWriter { return &segments.Status{} },
 	SYSTEMINFO:      func() SegmentWriter { return &segments.SystemInfo{} },
 	TEXT:            func() SegmentWriter { return &segments.Text{} },
