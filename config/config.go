@@ -43,7 +43,6 @@ type Config struct {
 	OSC99 bool `json:"osc99,omitempty" toml:"osc99,omitempty"`
 
 	Output        string `json:"-" toml:"-"`
-	MigrateGlyphs bool   `json:"-" toml:"-"`
 	Format        string `json:"-" toml:"-"`
 
 	origin string
